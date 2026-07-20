@@ -1,244 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modern Checklist</title>
-
     <style>
-
+        * {
+            box-sizing: border-box;
+        }
         body {
-            font-family: Arial;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             max-width: 500px;
             margin: auto;
             padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
         }
-
+        h2 {
+            color: #0078D4;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
         label {
             display: block;
-            margin-top: 15px;
             font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #444;
         }
-
-        input,
-        select,
-        textarea {
-
+        input, select, textarea {
             width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            box-sizing: border-box;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px; /* Prevents iOS auto-zoom on focus */
+            background: white;
         }
-
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #0078D4;
+            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
+        }
         textarea {
             height: 100px;
+            resize: vertical;
         }
-
         button {
-
             width: 100%;
-            margin-top: 25px;
+            margin-top: 20px;
             padding: 15px;
-
             background: #0078D4;
             color: white;
-
             border: none;
-
+            border-radius: 6px;
             font-size: 16px;
             font-weight: bold;
-
             cursor: pointer;
+            transition: background 0.2s ease;
         }
-
         button:hover {
             background: #005A9E;
         }
-
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
     </style>
-
 </head>
-
-
 <body>
 
     <h2>Modern Checklist</h2>
 
+    <div class="form-group">
+        <label for="date">DATE</label>
+        <input type="date" id="date">
+    </div>
 
-    <label>DATE</label>
+    <div class="form-group">
+        <label for="id">ID (4 Digits: 1000 - 9999)</label>
+        <!-- type="number" brings up the number pad on mobile devices -->
+        <input type="number" id="id" min="1000" max="9999" placeholder="e.g. 1234">
+    </div>
 
-    <input
-        type="date"
-        id="date">
+    <div class="form-group">
+        <label for="name">NAME</label>
+        <input type="text" id="name" placeholder="Enter name">
+    </div>
 
+    <div class="form-group">
+        <label for="group">GROUP</label>
+        <input type="text" id="group">
+    </div>
 
-    <label>ID</label>
+    <div class="form-group">
+        <label for="pmNo">PM NO</label>
+        <input type="text" id="pmNo">
+    </div>
 
-    <input
-        type="text"
-        id="id">
+    <div class="form-group">
+        <label for="trailerNo">TRAILER NO</label>
+        <input type="text" id="trailerNo">
+    </div>
 
+    <div class="form-group">
+        <label for="remark">REMARK</label>
+        <textarea id="remark"></textarea>
+    </div>
 
-    <label>NAME</label>
+    <div class="form-group">
+        <label for="details">DETAILS</label>
+        <textarea id="details"></textarea>
+    </div>
 
-    <input
-        type="text"
-        id="name">
-
-
-    <label>GROUP</label>
-
-    <input
-        type="text"
-        id="group">
-
-
-    <label>PM NO</label>
-
-    <input
-        type="text"
-        id="pmNo">
-
-
-    <label>TRAILER NO</label>
-
-    <input
-        type="text"
-        id="trailerNo">
-
-
-    <label>REMARK</label>
-
-    <textarea
-        id="remark">
-    </textarea>
-
-
-    <label>DETAILS</label>
-
-    <textarea
-        id="details">
-    </textarea>
-
-
-    <button
-        onclick="sendData()">
-
-        SEND
-
-    </button>
-
+    <button id="sendBtn" onclick="sendData()">SEND</button>
 
     <script>
+        async function sendData() {
+            // Get elements
+            const date = document.getElementById("date").value.trim();
+            const idInput = document.getElementById("id").value.trim();
+            const name = document.getElementById("name").value.trim();
+            const group = document.getElementById("group").value.trim();
+            const pmNo = document.getElementById("pmNo").value.trim();
+            const trailerNo = document.getElementById("trailerNo").value.trim();
+            const remark = document.getElementById("remark").value.trim();
+            const details = document.getElementById("details").value.trim();
+            const sendBtn = document.getElementById("sendBtn");
 
-        function sendData() {
-
-
-            // Get values from HTML
-
-            let date =
-                document.getElementById("date").value;
-
-            let id =
-                document.getElementById("id").value;
-
-            let name =
-                document.getElementById("name").value;
-
-            let group =
-                document.getElementById("group").value;
-
-            let pmNo =
-                document.getElementById("pmNo").value;
-
-            let trailerNo =
-                document.getElementById("trailerNo").value;
-
-            let remark =
-                document.getElementById("remark").value;
-
-            let details =
-                document.getElementById("details").value;
-
-
-            // Check required fields
-
-            if (
-                date === "" ||
-                id === "" ||
-                name === ""
-            ) {
-
-                alert(
-                    "Please complete DATE, ID and NAME."
-                );
-
+            // 1. Check basic required fields
+            if (date === "" || idInput === "" || name === "") {
+                alert("Please complete DATE, ID and NAME.");
                 return;
-
             }
 
+            // 2. Validate ID between 1000 and 9999
+            const idNumber = parseInt(idInput, 10);
+            if (isNaN(idNumber) || idNumber < 1000 || idNumber > 9999) {
+                alert("Invalid ID! The ID must be a 4-digit number between 1000 and 9999.");
+                return;
+            }
 
-            // Data to be sent to Power Automate
-
-            let data = {
-
+            // Prepare data object
+            const data = {
                 date: date,
-
-                id: id,
-
+                id: idNumber.toString(), // Sent as text string to keep compatibility with your flow
                 name: name,
-
                 group: group,
-
                 pmNo: pmNo,
-
                 trailerNo: trailerNo,
-
                 remark: remark,
-
                 details: details
-
             };
 
+            // Disable button during network request so users don't double-click
+            sendBtn.disabled = true;
+            sendBtn.innerText = "SENDING...";
 
-            // Send to Power Automate
+            try {
+                // Send to Power Automate and wait for response
+                const response = await fetch(
+                    "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/08/workflows/d7ac73d3d7d7423eb077a2895b0738df/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=OLDn8ig2sbXDzxKke7ijuD4cLHTaQS-3v2oVkSIDrMw",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(data)
+                    }
+                );
 
-            fetch(
-                "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/08/workflows/d7ac73d3d7d7423eb077a2895b0738df/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=OLDn8ig2sbXDzxKke7ijuD4cLHTaQS-3v2oVkSIDrMw",
-
-                {
-
-                    method: "POST",
-
-                    headers: {
-
-                        "Content-Type":
-                            "application/json"
-
-                    },
-
-                    body:
-                        JSON.stringify(data)
-
+                if (response.ok) {
+                    alert("Data successfully sent!");
+                    // Optional: Clear form inputs here if desired
+                } else {
+                    alert("Failed to send data. Server returned an error.");
                 }
-
-            );
-
-
-            alert(
-                "Data successfully sent!"
-            );
-
-
+            } catch (error) {
+                console.error("Error sending data:", error);
+                alert("Network error. Could not connect to the database.");
+            } finally {
+                // Re-enable button
+                sendBtn.disabled = false;
+                sendBtn.innerText = "SEND";
+            }
         }
-
     </script>
-
 </body>
-
 </html>
