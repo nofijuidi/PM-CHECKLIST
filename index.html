@@ -174,22 +174,18 @@
     </div>
 
     <script>
-        // A simple Base64 obfuscated string for "spts2026" 
-        // This stops anyone from reading the password word directly in the code,
-        // but works completely offline without requiring high browser security modes.
-        const ENCODED_PASS = "c3B0czIwMjY=";
-
-        // Check password function (Universal Mobile Support)
+        // Check password function (Direct Case-Insensitive Comparison)
         function checkPassword() {
             let input = document.getElementById("passwordInput").value.trim();
+            
+            // Force input to lower case to automatically handle any mixed-case variations
             input = input.toLowerCase();
-
-            // Convert input to base64 to check against our encoded string
-            let encodedInput = btoa(input);
+            
             const errorElement = document.getElementById("loginError");
 
-            if (encodedInput === ENCODED_PASS) {
-                // Instantly swap screens
+            // Direct plain text check
+            if (input === "spts2026") {
+                // Hide lock screen and reveal the checklist fields
                 document.getElementById("lock-screen").style.display = "none";
                 document.getElementById("app-content").style.display = "block";
             } else {
