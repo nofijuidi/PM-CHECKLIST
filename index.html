@@ -16,6 +16,36 @@
             background-color: #f8f9fa;
             color: #333;
         }
+        
+        /* Lock Screen Styling */
+        #lock-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+        .login-box {
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Checklist App Content (Hidden by default) */
+        #app-content {
+            display: none;
+        }
+
         h2 {
             color: #0078D4;
             margin-bottom: 20px;
@@ -68,60 +98,117 @@
             background: #cccccc;
             cursor: not-allowed;
         }
+        .error-msg {
+            color: #d9381e;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
 
-    <h2>Modern Checklist</h2>
-
-    <div class="form-group">
-        <label for="date">DATE</label>
-        <input type="date" id="date">
+    <!-- 1. LOCK SCREEN OVERLAY -->
+    <div id="lock-screen">
+        <div class="login-box">
+            <h2>System Access</h2>
+            <div class="form-group">
+                <label for="passwordInput">ENTER ACCESS CODE</label>
+                <input type="password" id="passwordInput" placeholder="••••••••">
+            </div>
+            <div id="loginError" class="error-msg">Incorrect password. Access Denied.</div>
+            <button onclick="checkPassword()">UNLOCK</button>
+        </div>
     </div>
 
-    <div class="form-group">
-        <label for="id">ID (4 Digits: 1000 - 9999)</label>
-        <input 
-            type="number" 
-            id="id" 
-            placeholder="e.g. 1234"
-            oninput="if(this.value.length > 4) this.value = this.value.slice(0,4);"
-        >
-    </div>
+    <!-- 2. MAIN APP CONTENT -->
+    <div id="app-content">
+        <h2>Modern Checklist</h2>
 
-    <div class="form-group">
-        <label for="name">NAME</label>
-        <input type="text" id="name" placeholder="Enter name">
-    </div>
+        <div class="form-group">
+            <label for="date">DATE</label>
+            <input type="date" id="date">
+        </div>
 
-    <div class="form-group">
-        <label for="group">GROUP</label>
-        <input type="text" id="group">
-    </div>
+        <div class="form-group">
+            <label for="id">ID (4 Digits: 1000 - 9999)</label>
+            <input 
+                type="number" 
+                id="id" 
+                placeholder="e.g. 1234"
+                oninput="if(this.value.length > 4) this.value = this.value.slice(0,4);"
+            >
+        </div>
 
-    <div class="form-group">
-        <label for="pmNo">PM NO</label>
-        <input type="text" id="pmNo">
-    </div>
+        <div class="form-group">
+            <label for="name">NAME</label>
+            <input type="text" id="name" placeholder="Enter name">
+        </div>
 
-    <div class="form-group">
-        <label for="trailerNo">TRAILER NO</label>
-        <input type="text" id="trailerNo">
-    </div>
+        <div class="form-group">
+            <label for="group">GROUP</label>
+            <input type="text" id="group">
+        </div>
 
-    <div class="form-group">
-        <label for="remark">REMARK</label>
-        <textarea id="remark"></textarea>
-    </div>
+        <div class="form-group">
+            <label for="pmNo">PM NO</label>
+            <input type="text" id="pmNo">
+        </div>
 
-    <div class="form-group">
-        <label for="details">DETAILS</label>
-        <textarea id="details"></textarea>
-    </div>
+        <div class="form-group">
+            <label for="trailerNo">TRAILER NO</label>
+            <input type="text" id="trailerNo">
+        </div>
 
-    <button id="sendBtn" onclick="sendData()">SEND</button>
+        <div class="form-group">
+            <label for="remark">REMARK</label>
+            <textarea id="remark"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="details">DETAILS</label>
+            <textarea id="details"></textarea>
+        </div>
+
+        <button id="sendBtn" onclick="sendData()">SEND</button>
+    </div>
 
     <script>
+        // Secure SHA-256 hash corresponding to the text: SPTS2026
+        const CORRECT_HASH = "b58593a2eb6814deecde23f2ec421063ca52fbfab78db29d286efbdff53c07f4";
+
+        // Helper function to scramble the user input into SHA-256
+        async function sha256(string) {
+            const utf8 = new TextEncoder().encode(string);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', utf8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(bytes => bytes.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Check password function
+        async function checkPassword() {
+            const input = document.getElementById("passwordInput").value;
+            const hashedInput = await sha256(input);
+            const errorElement = document.getElementById("loginError");
+
+            if (hashedInput === CORRECT_HASH) {
+                // Hide lock screen and reveal the main operational checklist
+                document.getElementById("lock-screen").style.display = "none";
+                document.getElementById("app-content").style.display = "block";
+            } else {
+                errorElement.style.display = "block";
+                document.getElementById("passwordInput").value = "";
+            }
+        }
+
+        // Allow pressing 'Enter' key to unlock
+        document.getElementById("passwordInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                checkPassword();
+            }
+        });
+
+        // Main Send Data Function
         async function sendData() {
             const date = document.getElementById("date").value.trim();
             const idInput = document.getElementById("id").value.trim();
@@ -133,13 +220,11 @@
             const details = document.getElementById("details").value.trim();
             const sendBtn = document.getElementById("sendBtn");
 
-            // 1. Check basic required fields
             if (date === "" || idInput === "" || name === "") {
                 alert("Please complete DATE, ID and NAME.");
                 return;
             }
 
-            // 2. Validate ID strictly between 1000 and 9999 and exactly 4 digits
             const idNumber = parseInt(idInput, 10);
             if (isNaN(idNumber) || idNumber < 1000 || idNumber > 9999 || idInput.length !== 4) {
                 alert("Invalid ID! The ID must be a 4-digit number between 1000 and 9999.");
