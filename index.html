@@ -174,29 +174,22 @@
     </div>
 
     <script>
-        // Secure cryptographic fingerprint for "spts2026"
-        const CORRECT_HASH = "b58593a2eb6814deecde23f2ec421063ca52fbfab78db29d286efbdff53c07f4";
+        // A simple Base64 obfuscated string for "spts2026" 
+        // This stops anyone from reading the password word directly in the code,
+        // but works completely offline without requiring high browser security modes.
+        const ENCODED_PASS = "c3B0czIwMjY=";
 
-        // Helper function to scramble the user input into SHA-256
-        async function sha256(string) {
-            const utf8 = new TextEncoder().encode(string);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', utf8);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(bytes => bytes.toString(16).padStart(2, '0')).join('');
-        }
-
-        // Check password function (Case-Insensitive)
-        async function checkPassword() {
+        // Check password function (Universal Mobile Support)
+        function checkPassword() {
             let input = document.getElementById("passwordInput").value.trim();
-            
-            // Convert to lowercase to perfectly match both uppercase and lowercase variations
             input = input.toLowerCase();
 
-            const hashedInput = await sha256(input);
+            // Convert input to base64 to check against our encoded string
+            let encodedInput = btoa(input);
             const errorElement = document.getElementById("loginError");
 
-            if (hashedInput === CORRECT_HASH) {
-                // Hide lock screen and reveal the main operational checklist
+            if (encodedInput === ENCODED_PASS) {
+                // Instantly swap screens
                 document.getElementById("lock-screen").style.display = "none";
                 document.getElementById("app-content").style.display = "block";
             } else {
