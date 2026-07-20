@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Modern Checklist</title>
+
+    <style>
+
+        body {
+            font-family: Arial;
+            max-width: 500px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        input,
+        select,
+        textarea {
+
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            height: 100px;
+        }
+
+        button {
+
+            width: 100%;
+            margin-top: 25px;
+            padding: 15px;
+
+            background: #0078D4;
+            color: white;
+
+            border: none;
+
+            font-size: 16px;
+            font-weight: bold;
+
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #005A9E;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+    <h2>Modern Checklist</h2>
+
+
+    <label>DATE</label>
+
+    <input
+        type="date"
+        id="date">
+
+
+    <label>ID</label>
+
+    <input
+        type="text"
+        id="id">
+
+
+    <label>NAME</label>
+
+    <input
+        type="text"
+        id="name">
+
+
+    <label>GROUP</label>
+
+    <input
+        type="text"
+        id="group">
+
+
+    <label>PM NO</label>
+
+    <input
+        type="text"
+        id="pmNo">
+
+
+    <label>TRAILER NO</label>
+
+    <input
+        type="text"
+        id="trailerNo">
+
+
+    <label>REMARK</label>
+
+    <textarea
+        id="remark">
+    </textarea>
+
+
+    <label>DETAILS</label>
+
+    <textarea
+        id="details">
+    </textarea>
+
+
+    <button
+        onclick="sendData()">
+
+        SEND
+
+    </button>
+
+
+    <script>
+
+        function sendData() {
+
+
+            // Get values from HTML
+
+            let date =
+                document.getElementById("date").value;
+
+            let id =
+                document.getElementById("id").value;
+
+            let name =
+                document.getElementById("name").value;
+
+            let group =
+                document.getElementById("group").value;
+
+            let pmNo =
+                document.getElementById("pmNo").value;
+
+            let trailerNo =
+                document.getElementById("trailerNo").value;
+
+            let remark =
+                document.getElementById("remark").value;
+
+            let details =
+                document.getElementById("details").value;
+
+
+            // Check required fields
+
+            if (
+                date === "" ||
+                id === "" ||
+                name === ""
+            ) {
+
+                alert(
+                    "Please complete DATE, ID and NAME."
+                );
+
+                return;
+
+            }
+
+
+            // Data to be sent to Power Automate
+
+            let data = {
+
+                date: date,
+
+                id: id,
+
+                name: name,
+
+                group: group,
+
+                pmNo: pmNo,
+
+                trailerNo: trailerNo,
+
+                remark: remark,
+
+                details: details
+
+            };
+
+
+            // Send to Power Automate
+
+            fetch(
+                "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/08/workflows/d7ac73d3d7d7423eb077a2895b0738df/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=OLDn8ig2sbXDzxKke7ijuD4cLHTaQS-3v2oVkSIDrMw",
+
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify(data)
+
+                }
+
+            );
+
+
+            alert(
+                "Data successfully sent!"
+            );
+
+
+        }
+
+    </script>
+
+</body>
+
+</html>
