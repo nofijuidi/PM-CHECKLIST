@@ -36,7 +36,7 @@
             padding: 12px;
             border: 1px solid #ccc;
             border-radius: 6px;
-            font-size: 16px; /* Prevents iOS auto-zoom on focus */
+            font-size: 16px;
             background: white;
         }
         input:focus, textarea:focus {
@@ -81,8 +81,12 @@
 
     <div class="form-group">
         <label for="id">ID (4 Digits: 1000 - 9999)</label>
-        <!-- type="number" brings up the number pad on mobile devices -->
-        <input type="number" id="id" min="1000" max="9999" placeholder="e.g. 1234">
+        <input 
+            type="number" 
+            id="id" 
+            placeholder="e.g. 1234"
+            oninput="if(this.value.length > 4) this.value = this.value.slice(0,4);"
+        >
     </div>
 
     <div class="form-group">
@@ -119,7 +123,6 @@
 
     <script>
         async function sendData() {
-            // Get elements
             const date = document.getElementById("date").value.trim();
             const idInput = document.getElementById("id").value.trim();
             const name = document.getElementById("name").value.trim();
@@ -136,17 +139,16 @@
                 return;
             }
 
-            // 2. Validate ID between 1000 and 9999
+            // 2. Validate ID strictly between 1000 and 9999 and exactly 4 digits
             const idNumber = parseInt(idInput, 10);
-            if (isNaN(idNumber) || idNumber < 1000 || idNumber > 9999) {
+            if (isNaN(idNumber) || idNumber < 1000 || idNumber > 9999 || idInput.length !== 4) {
                 alert("Invalid ID! The ID must be a 4-digit number between 1000 and 9999.");
                 return;
             }
 
-            // Prepare data object
             const data = {
                 date: date,
-                id: idNumber.toString(), // Sent as text string to keep compatibility with your flow
+                id: idNumber.toString(),
                 name: name,
                 group: group,
                 pmNo: pmNo,
@@ -155,12 +157,10 @@
                 details: details
             };
 
-            // Disable button during network request so users don't double-click
             sendBtn.disabled = true;
             sendBtn.innerText = "SENDING...";
 
             try {
-                // Send to Power Automate and wait for response
                 const response = await fetch(
                     "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/08/workflows/d7ac73d3d7d7423eb077a2895b0738df/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=OLDn8ig2sbXDzxKke7ijuD4cLHTaQS-3v2oVkSIDrMw",
                     {
@@ -174,7 +174,6 @@
 
                 if (response.ok) {
                     alert("Data successfully sent!");
-                    // Optional: Clear form inputs here if desired
                 } else {
                     alert("Failed to send data. Server returned an error.");
                 }
@@ -182,7 +181,6 @@
                 console.error("Error sending data:", error);
                 alert("Network error. Could not connect to the database.");
             } finally {
-                // Re-enable button
                 sendBtn.disabled = false;
                 sendBtn.innerText = "SEND";
             }
