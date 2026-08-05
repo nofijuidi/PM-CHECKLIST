@@ -71,10 +71,11 @@
       align-items: center;
       justify-content: center;
       color: white;
-      font-size: 26px;
+      font-size: 20px;
       font-weight: bold;
       box-shadow: 0 10px 15px -3px rgba(0, 120, 212, 0.3);
       margin-bottom: 12px;
+      letter-spacing: 0.5px;
     }
 
     .brand-title {
@@ -336,7 +337,7 @@
     <!-- ================= VIEW 1: LOGIN ================= -->
     <div id="loginView" class="view-screen">
       <div class="brand-section">
-        <div class="brand-logo-icon">JP</div>
+        <div class="brand-logo-icon">SPTS</div>
         <div class="brand-title">Equipment Portal</div>
         <div class="brand-subtitle">Sign in with your credentials</div>
       </div>
@@ -833,15 +834,14 @@
     // POPULATE ISSUES
     function populateIssues(eqCategory) {
       const issueDataList = document.getElementById('issueOptions');
-      issueDataList.innerHTML = ''; // Clear existing issues
-      document.getElementById('selectIssue').value = ''; // Reset current value
+      issueDataList.innerHTML = ''; 
+      document.getElementById('selectIssue').value = ''; 
 
       let issuesToDisplay = [];
 
       if (eqCategory && ISSUE_DATABASE[eqCategory]) {
         issuesToDisplay = ISSUE_DATABASE[eqCategory];
       } else {
-        // Default fall-back if no category selected
         issuesToDisplay = ["I've checked and declared all OK"];
       }
 
@@ -856,7 +856,6 @@
     function handleEquipmentChange(val) {
       const category = val.trim().toUpperCase();
       
-      // Update numbers & issues
       if (EQUIPMENT_DATABASE[category]) {
         populateEquipmentNumbers(category);
         populateIssues(category);
