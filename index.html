@@ -106,7 +106,7 @@
       margin-top: 4px;
     }
 
-    /* Header Navigation */
+    /* Navigation Header */
     .inspection-top-nav {
       display: flex;
       align-items: center;
@@ -145,7 +145,7 @@
       margin-right: 38px;
     }
 
-    /* Shift & Date Banner */
+    /* Banner Bar */
     .banner-bar {
       display: flex;
       width: 100%;
@@ -370,7 +370,6 @@
       color: #ffffff !important;
     }
 
-    /* Navigation Card */
     .nav-card {
       background: #ffffff;
       border: 1.5px solid #e2e8f0;
@@ -689,6 +688,7 @@
 
     function onIssueInputChange(val) { refreshGrids(); }
 
+    // AUTH / LOGIN HANDLER
     async function handleLogin(e) {
       e.preventDefault();
       const usernameInput = document.getElementById('usernameInput').value.trim();
@@ -709,8 +709,9 @@
         });
 
         const result = await response.json();
+        console.log("Login Flow Response Object:", result);
 
-        if (response.ok && (result.status === 'success' || result.Title || result.COMPANY_ID)) {
+        if (response.ok && (result.status === 'success' || result.Title || result.COMPANY_ID || result.name)) {
           currentUser = result;
           sessionStorage.setItem('userSession', JSON.stringify(result));
           showHomeView();
@@ -725,25 +726,38 @@
       }
     }
 
+    // Helper: Finds a key inside an object regardless of uppercase/lowercase variations
+    function getPropValue(obj, keys, defaultValue = 'N/A') {
+      if (!obj) return defaultValue;
+      for (const k of keys) {
+        if (obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== '') {
+          return obj[k];
+        }
+      }
+      return defaultValue;
+    }
+
     function showHomeView() {
       document.getElementById('loginView').classList.add('hidden');
       document.getElementById('checklistView').classList.add('hidden');
       document.getElementById('mainView').classList.remove('hidden');
 
       if (currentUser) {
-        // Name / Title display
-        const nameOrTitle = currentUser.Title || currentUser.title || currentUser.name || currentUser.NAME || 'User';
+        // Find Title / Full Name
+        const nameOrTitle = getPropValue(currentUser, ['Title', 'title', 'name', 'NAME'], 'User');
         document.getElementById('displayName').innerText = nameOrTitle;
         
-        // Company
-        document.getElementById('displayCompany').innerText = currentUser.Company || currentUser.company || 'SPTS';
+        // Find Company
+        const companyVal = getPropValue(currentUser, ['Company', 'company', 'COMPANY'], 'SPTS');
+        document.getElementById('displayCompany').innerText = companyVal;
         
-        // COMPANY_ID badge extraction
-        const userIdVal = currentUser.COMPANY_ID || currentUser.company_id || currentUser.Company_ID || currentUser.ID || currentUser.id || currentUser.Username || currentUser.username || 'N/A';
+        // Find COMPANY_ID (Badge Number)
+        const userIdVal = getPropValue(currentUser, ['COMPANY_ID', 'company_id', 'Company_ID', 'ID', 'id', 'Username', 'username'], 'N/A');
         document.getElementById('displayUserId').innerText = `ID: ${userIdVal}`;
         
-        // Group
-        document.getElementById('displayGroup').innerText = `Group: ${currentUser.Group || currentUser.group || currentUser.GROUP || 'N/A'}`;
+        // Find Group
+        const groupVal = getPropValue(currentUser, ['Group', 'group', 'GROUP'], 'N/A');
+        document.getElementById('displayGroup').innerText = `Group: ${groupVal}`;
       }
     }
 
@@ -752,8 +766,9 @@
       document.getElementById('checklistView').classList.remove('hidden');
 
       if (currentUser) {
-        const nameOrTitle = currentUser.Title || currentUser.title || currentUser.name || currentUser.NAME || 'OPERATOR NAME';
-        document.getElementById('inspCompany').innerText = currentUser.Company || currentUser.company || 'SPTS SERVICES SDN BHD';
+        const nameOrTitle = getPropValue(currentUser, ['Title', 'title', 'name', 'NAME'], 'OPERATOR NAME');
+        const companyVal = getPropValue(currentUser, ['Company', 'company', 'COMPANY'], 'SPTS SERVICES SDN BHD');
+        document.getElementById('inspCompany').innerText = companyVal;
         document.getElementById('inspOperator').innerText = nameOrTitle;
       }
 
@@ -845,25 +860,14 @@
         issue === ""
       );
 
-      // Extract Company ID & Title from current session
-      const userIdVal = currentUser 
-        ? (currentUser.COMPANY_ID || currentUser.company_id || currentUser.Company_ID || currentUser.ID || currentUser.id || currentUser.Username || currentUser.username || 'N/A') 
-        : 'N/A';
-
-      const nameTitleVal = currentUser 
-        ? (currentUser.Title || currentUser.title || currentUser.name || currentUser.NAME || 'Unknown') 
-        : 'Unknown';
-
-      const companyVal = currentUser 
-        ? (currentUser.Company || currentUser.company || 'SPTS') 
-        : 'SPTS';
-
-      const groupVal = currentUser 
-        ? (currentUser.Group || currentUser.group || currentUser.GROUP || 'N/A') 
-        : 'N/A';
+      // Extract Company ID & Title from current session using helper
+      const userIdVal = getPropValue(currentUser, ['COMPANY_ID', 'company_id', 'Company_ID', 'ID', 'id', 'Username', 'username'], 'N/A');
+      const nameTitleVal = getPropValue(currentUser, ['Title', 'title', 'name', 'NAME'], 'Unknown');
+      const companyVal = getPropValue(currentUser, ['Company', 'company', 'COMPANY'], 'SPTS');
+      const groupVal = getPropValue(currentUser, ['Group', 'group', 'GROUP'], 'N/A');
 
       const payload = {
-        date: getFormattedDateTime(),                          // "2026-08-06 14:27:00"
+        date: getFormattedDateTime(),                          // "2026-08-06 14:30:00"
         shift: shiftText,                                      // "DAY SHIFT"
         COMPANY_ID: String(userIdVal),                         // "T5218"
         Title: String(nameTitleVal),                           // "NOFIJUIDI BIN JUMRI"
@@ -875,6 +879,8 @@
         declaration: String(declaration),
         isNewIssue: !isNilIssue                                // true / false
       };
+
+      console.log("Submitting Payload to Power Automate:", payload);
 
       sendBtn.disabled = true;
       sendBtn.innerText = 'Submitting...';
