@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Equipment Portal</title>
 
-  <!-- Web App Fullscreen Meta Tags (Hides Browser Address Bar) -->
+  <!-- Web App Fullscreen Meta Tags (Hides Browser Address Bar when installed) -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -22,20 +22,28 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    body {
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
       background-color: #0f172a;
+    }
+
+    body {
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
       color: #334155;
     }
 
     /* Mobile Viewport Container */
     .app-viewport {
-      width: 100%;
-      max-width: 412px;
+      width: 100vw;
       height: 100vh;
+      height: -webkit-fill-available;
+      max-width: 412px;
       max-height: 892px;
       background-color: #ffffff;
       display: flex;
@@ -800,6 +808,7 @@
       }
     }
 
+    // VALIDATE & SUBMIT CHECKLIST DATA TO SHAREPOINT EXCEL TABLES
     async function sendChecklistData() {
       const equipment = document.getElementById('selectEquipment').value.trim();
       const equipmentNo = document.getElementById('selectEquipmentNo').value.trim();
@@ -808,21 +817,43 @@
       const shiftText = document.getElementById('shiftBanner').innerText;
       const sendBtn = document.getElementById('sendBtn');
 
-      if (!equipment || !equipmentNo || !issue) {
-        alert('Please complete Equipment, Equipment Number, and Issue fields.');
+      // Specific Field Validations
+      if (!equipment) {
+        alert("Please select the Equipment.");
         return;
       }
 
+      if (!equipmentNo) {
+        alert("Please put the Equipment Number");
+        return;
+      }
+
+      if (!issue) {
+        alert("Please update the Equipment Condition");
+        return;
+      }
+
+      // Check if issue reported is a new issue or ALL OK / NIL
+      const upperIssue = issue.toUpperCase();
+      const isNilIssue = (
+        upperIssue.includes("ALL OK") || 
+        upperIssue.includes("NIL") || 
+        issue === ""
+      );
+
+      // Formatted Payload matching LogTable & NEWISSUE SharePoint Headers
       const payload = {
-        date: new Date().toISOString(),
+        date: new Date().toLocaleString("en-GB"), // Current Date & Time
         shift: shiftText,
+        id: currentUser ? (currentUser.id || currentUser.username || 'N/A') : 'N/A',
         name: currentUser ? currentUser.name : 'Unknown',
         company: currentUser ? currentUser.company : 'N/A',
         group: currentUser ? currentUser.group : 'N/A',
         equipment: equipment,
-        equipmentNo: equipmentNo,
-        issue: issue,
-        declaration: declaration
+        equipnum: equipmentNo,
+        area: issue,                       // Select Issue goes to AREA
+        declaration: declaration,
+        isNewIssue: !isNilIssue            // Flag for Power Automate branching
       };
 
       sendBtn.disabled = true;
@@ -836,14 +867,17 @@
         });
 
         if (response.ok) {
-          alert('Checklist successfully submitted!');
+          alert('Inspection logged successfully!');
+          
+          // Clear form selections after successful log
           document.getElementById('selectEquipment').value = '';
           document.getElementById('selectEquipmentNo').value = '';
           document.getElementById('selectIssue').value = '';
           document.getElementById('declarationText').value = '';
+          
           closeChecklist();
         } else {
-          alert('Failed to submit checklist. Server returned an error.');
+          alert('Failed to submit inspection log. Server returned an error.');
         }
       } catch (err) {
         alert('Network error. Failed to send data.');
