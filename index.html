@@ -743,19 +743,15 @@
       document.getElementById('mainView').classList.remove('hidden');
 
       if (currentUser) {
-        // Find Title / Full Name
         const nameOrTitle = getPropValue(currentUser, ['Title', 'title', 'name', 'NAME'], 'User');
         document.getElementById('displayName').innerText = nameOrTitle;
         
-        // Find Company
         const companyVal = getPropValue(currentUser, ['Company', 'company', 'COMPANY'], 'SPTS');
         document.getElementById('displayCompany').innerText = companyVal;
         
-        // Find COMPANY_ID (Badge Number)
         const userIdVal = getPropValue(currentUser, ['COMPANY_ID', 'company_id', 'Company_ID', 'ID', 'id', 'Username', 'username'], 'N/A');
         document.getElementById('displayUserId').innerText = `ID: ${userIdVal}`;
         
-        // Find Group
         const groupVal = getPropValue(currentUser, ['Group', 'group', 'GROUP'], 'N/A');
         document.getElementById('displayGroup').innerText = `Group: ${groupVal}`;
       }
@@ -853,16 +849,22 @@
         return;
       }
 
-      // Check if the issue is a CUSTOM TYPED issue or from the predefined list
+      // 🔍 COMPARE WITH ISSUE_DATABASE USING SELECT EQUIPMENT
       const eqKey = equipment.toUpperCase();
-      const standardList = ISSUE_DATABASE[eqKey] || ["I've checked and declared all OK"];
       
-      // Case-insensitive check against standard issues list
-      const isStandardIssue = standardList.some(
-        stdIssue => stdIssue.trim().toUpperCase() === issue.toUpperCase()
-      );
+      // Check if the equipment category exists in ISSUE_DATABASE
+      const equipmentExistsInDb = ISSUE_DATABASE.hasOwnProperty(eqKey);
 
-      // isNewIssue is true ONLY IF the issue was custom typed (not found in standard list)
+      let isStandardIssue = false;
+      if (equipmentExistsInDb) {
+        const standardList = ISSUE_DATABASE[eqKey];
+        // Case-insensitive check if the selected/typed issue is in ISSUE_DATABASE
+        isStandardIssue = standardList.some(
+          stdIssue => stdIssue.trim().toUpperCase() === issue.toUpperCase()
+        );
+      }
+
+      // isNewIssue = true ONLY IF equipment is NOT in ISSUE_DATABASE OR issue is NOT in standard list
       const isCustomNewIssue = !isStandardIssue;
 
       // Extract Company ID & Title from current session
@@ -872,7 +874,7 @@
       const groupVal = getPropValue(currentUser, ['Group', 'group', 'GROUP'], 'N/A');
 
       const payload = {
-        date: getFormattedDateTime(),                          // "2026-08-06 14:50:00"
+        date: getFormattedDateTime(),                          // "2026-08-06 16:15:00"
         shift: shiftText,                                      // "DAY SHIFT"
         COMPANY_ID: String(userIdVal),                         // "T5218"
         Title: String(nameTitleVal),                           // "NOFIJUIDI BIN JUMRI"
@@ -882,9 +884,11 @@
         equipnum: String(equipmentNo),                         // "PM01"
         area: String(issue),                                   // "Aircond - Tidak Sejuk"
         declaration: String(declaration),
-        isNewIssue: isCustomNewIssue                           // true ONLY for custom typed issues
+        isNewIssue: isCustomNewIssue                           // true ONLY if NOT in ISSUE_DATABASE
       };
 
+      console.log("Equipment in Db?", equipmentExistsInDb);
+      console.log("Is Standard Issue?", isStandardIssue);
       console.log("Submitting Payload (isNewIssue = " + isCustomNewIssue + "):", payload);
 
       sendBtn.disabled = true;
