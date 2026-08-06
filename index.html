@@ -804,20 +804,19 @@
         refreshGrids();
       });
 
-      // 2. Render Equipment Number Grid ONLY IF Equipment is selected OR User is typing an Equipment Number
+      // 2. Render Equipment Number Grid STRICT CHECK
       const numQuery = numVal.toUpperCase();
       let numFiltered = [];
 
-      if (eqVal) {
-        // Filter numbers belonging specifically to the selected equipment
+      // Only show pills if user selected Equipment Category OR typed an Equipment Number
+      if (eqVal !== "") {
         const numSource = EQUIPMENT_DATABASE[eqVal.toUpperCase()] || [];
         numFiltered = numSource.filter(n => n.toUpperCase().includes(numQuery));
-      } else if (numVal) {
-        // If equipment category is empty but user starts typing a number, search all numbers
+      } else if (numVal !== "") {
         const numSource = Object.values(EQUIPMENT_DATABASE).flat();
         numFiltered = numSource.filter(n => n.toUpperCase().includes(numQuery));
       }
-      // If BOTH eqVal and numVal are empty, numFiltered remains [] (Empty Box Grid)
+      // If eqVal is "" and numVal is "", numFiltered is [], grid stays empty!
 
       renderGridBoxes('equipmentNoGrid', numFiltered, numVal, (selected) => {
         document.getElementById('selectEquipmentNo').value = selected;
