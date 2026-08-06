@@ -750,7 +750,7 @@
       document.getElementById('mainView').classList.remove('hidden');
 
       if (currentUser) {
-        // Name / Title display
+        // Title / Name display
         const nameOrTitle = currentUser.Title || currentUser.title || currentUser.name || 'User';
         document.getElementById('displayName').innerText = nameOrTitle;
         
@@ -866,30 +866,30 @@
         issue === ""
       );
 
-      // Extract User ID from COMPANY_ID field in login credentials
+      // Extract User ID from COMPANY_ID field in login response
       const userIdVal = currentUser 
         ? (currentUser.COMPANY_ID || currentUser.company_id || currentUser.id || currentUser.username || 'N/A') 
         : 'N/A';
 
-      // Extract details from Title column in LOGIN_ID list
+      // Extract Title from Title column in LOGIN_ID list
       const titleVal = currentUser 
         ? (currentUser.Title || currentUser.title || currentUser.name || 'Unknown') 
         : 'Unknown';
 
-      // Payload matching LogTable & NEWISSUE SharePoint Headers
-      // 'titleVal' is passed directly into the 'name' field for Excel's NAME column
+      // Payload strictly matching Power Automate's JSON Schema keys:
+      // "date", "shift", "COMPANY_ID", "Title", "company", "group", "equipment", "equipnum", "area", "declaration", "isNewIssue"
       const payload = {
-        date: getFormattedDateTime(),      // Clean Date & Time string ("YYYY-MM-DD HH:mm:ss")
-        shift: shiftText,
-        id: userIdVal,                     // Takes ID from COMPANY_ID
-        name: titleVal,                    // Maps 'Title' from LOGIN_ID into Excel's NAME column
-        company: currentUser ? currentUser.company : 'N/A',
-        group: currentUser ? (currentUser.group || currentUser.GROUP || 'N/A') : 'N/A',
-        equipment: equipment,              // Select Equipment -> EQUIPMENT
-        equipnum: equipmentNo,             // Select Equipment Number -> EQUIPNUM
-        area: issue,                       // Select Issue -> AREA
-        declaration: declaration,
-        isNewIssue: !isNilIssue            // Flag for Power Automate branching
+        date: getFormattedDateTime(),                          // "date"
+        shift: shiftText,                                      // "shift"
+        COMPANY_ID: userIdVal,                                 // "COMPANY_ID"
+        Title: titleVal,                                       // "Title"
+        company: currentUser ? currentUser.company : 'N/A',   // "company"
+        group: currentUser ? (currentUser.group || currentUser.GROUP || 'N/A') : 'N/A', // "group"
+        equipment: equipment,                                  // "equipment"
+        equipnum: equipmentNo,                                 // "equipnum"
+        area: issue,                                           // "area"
+        declaration: declaration,                              // "declaration"
+        isNewIssue: !isNilIssue                                // "isNewIssue"
       };
 
       sendBtn.disabled = true;
