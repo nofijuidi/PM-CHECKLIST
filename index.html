@@ -335,7 +335,7 @@
       text-align: center;
     }
 
-    /* Refined & Enlarged Profile Card */
+    /* Profile Card */
     .user-card {
       background: #f1f5f9;
       border-radius: 16px;
@@ -446,6 +446,106 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
+    }
+
+    /* Modal Pop-Up Overlay */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+    }
+
+    .modal-card {
+      background-color: #ffffff;
+      width: 100%;
+      border-radius: 20px;
+      padding: 24px 20px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      animation: modalFadeIn 0.2s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-greeting {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+
+    .modal-declaration {
+      font-size: 15px;
+      color: #334155;
+      line-height: 1.4;
+      margin-bottom: 16px;
+    }
+
+    .modal-declaration strong {
+      color: #0078D4;
+    }
+
+    .modal-status-box {
+      background-color: #f1f5f9;
+      border-left: 4px solid #0078D4;
+      padding: 12px 14px;
+      border-radius: 8px;
+      margin-bottom: 22px;
+    }
+
+    .modal-status-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .modal-status-value {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .modal-btn-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-confirm {
+      flex: 1;
+      height: 46px;
+      background-color: #0078D4;
+      color: white;
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .btn-cancel {
+      flex: 1;
+      height: 46px;
+      background-color: #e2e8f0;
+      color: #334155;
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
       cursor: pointer;
     }
   </style>
@@ -574,8 +674,28 @@
       </div>
 
       <div class="action-row">
-        <button id="sendBtn" class="btn-submit-inspection" onclick="sendChecklistData()">Submit</button>
+        <button id="sendBtn" class="btn-submit-inspection" onclick="showConfirmModal()">Submit</button>
         <div class="btn-back-round" onclick="closeChecklist()">➔</div>
+      </div>
+    </div>
+
+    <!-- CONFIRMATION MODAL POP-UP -->
+    <div id="confirmModal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-greeting" id="modalGreeting">Dear Operator,</div>
+        <div class="modal-declaration">
+          you are declaring <strong id="modalEquipNum">PM 01</strong>
+        </div>
+        
+        <div class="modal-status-box">
+          <div class="modal-status-label">Status</div>
+          <div class="modal-status-value" id="modalIssue">Aircond - Tidak Berfungsi</div>
+        </div>
+
+        <div class="modal-btn-row">
+          <button id="confirmSubmitBtn" class="btn-confirm" onclick="executeSubmission()">Confirm</button>
+          <button class="btn-cancel" onclick="hideConfirmModal()">Cancel</button>
+        </div>
       </div>
     </div>
 
@@ -826,14 +946,13 @@
       return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
     }
 
-    async function sendChecklistData() {
+    // CONFIRMATION POP-UP MODAL LOGIC
+    function showConfirmModal() {
       const equipment = document.getElementById('selectEquipment').value.trim();
       const equipmentNo = document.getElementById('selectEquipmentNo').value.trim();
       const issue = document.getElementById('selectIssue').value.trim();
-      const declaration = document.getElementById('declarationText').value.trim();
-      const shiftText = document.getElementById('shiftBanner').innerText;
-      const sendBtn = document.getElementById('sendBtn');
 
+      // Form Validations before showing pop-up
       if (!equipment) {
         alert("Please select the Equipment.");
         return;
@@ -849,7 +968,31 @@
         return;
       }
 
-      // 🔍 COMPARE WITH ISSUE_DATABASE USING SELECT EQUIPMENT
+      // Get Name for greeting (e.g. "Dear Nofijuidi,")
+      const rawName = getPropValue(currentUser, ['Title', 'title', 'name', 'NAME'], 'Operator');
+      const firstName = rawName.split(' ')[0]; // Extract first word/name
+
+      document.getElementById('modalGreeting').innerText = `Dear ${firstName},`;
+      document.getElementById('modalEquipNum').innerText = equipmentNo;
+      document.getElementById('modalIssue').innerText = issue;
+
+      document.getElementById('confirmModal').classList.remove('hidden');
+    }
+
+    function hideConfirmModal() {
+      document.getElementById('confirmModal').classList.add('hidden');
+    }
+
+    // EXECUTE ACTUAL SUBMISSION TO POWER AUTOMATE
+    async function executeSubmission() {
+      const equipment = document.getElementById('selectEquipment').value.trim();
+      const equipmentNo = document.getElementById('selectEquipmentNo').value.trim();
+      const issue = document.getElementById('selectIssue').value.trim();
+      const declaration = document.getElementById('declarationText').value.trim();
+      const shiftText = document.getElementById('shiftBanner').innerText;
+      const confirmBtn = document.getElementById('confirmSubmitBtn');
+
+      // Compare with ISSUE_DATABASE
       const eqKey = equipment.toUpperCase();
       const equipmentExistsInDb = ISSUE_DATABASE.hasOwnProperty(eqKey);
 
@@ -863,7 +1006,7 @@
 
       const isCustomNewIssue = !isStandardIssue;
 
-      // Extract Company ID & Title from session
+      // Extract Company ID & Title
       const userIdVal = getPropValue(currentUser, ['COMPANY_ID', 'company_id', 'Company_ID', 'ID', 'id', 'Username', 'username'], 'N/A');
       const nameTitleVal = getPropValue(currentUser, ['Title', 'title', 'name', 'NAME'], 'Unknown');
       const companyVal = getPropValue(currentUser, ['Company', 'company', 'COMPANY'], 'SPTS');
@@ -883,10 +1026,8 @@
         isNewIssue: isCustomNewIssue
       };
 
-      console.log("Submitting Payload (isNewIssue = " + isCustomNewIssue + "):", payload);
-
-      sendBtn.disabled = true;
-      sendBtn.innerText = 'Submitting...';
+      confirmBtn.disabled = true;
+      confirmBtn.innerText = 'Submitting...';
 
       try {
         const response = await fetch(CHECKLIST_FLOW_URL, {
@@ -898,20 +1039,22 @@
         if (response.ok) {
           alert('Inspection logged successfully!');
           
+          // Clear input fields for next entry
           document.getElementById('selectEquipment').value = '';
           document.getElementById('selectEquipmentNo').value = '';
           document.getElementById('selectIssue').value = '';
           document.getElementById('declarationText').value = '';
           
-          closeChecklist();
+          hideConfirmModal();
+          refreshGrids(); // Stays on Equipment Inspection page cleanly!
         } else {
           alert('Failed to submit inspection log. Server returned an error.');
         }
       } catch (err) {
         alert('Network error. Failed to send data.');
       } finally {
-        sendBtn.disabled = false;
-        sendBtn.innerText = 'Submit';
+        confirmBtn.disabled = false;
+        confirmBtn.innerText = 'Confirm';
       }
     }
 
