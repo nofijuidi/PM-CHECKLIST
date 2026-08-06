@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Equipment Portal</title>
+
+  <!-- Web App Fullscreen Meta Tags (Hides Browser Address Bar) -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="application-name" content="Equipment Portal">
+  <meta name="apple-mobile-web-app-title" content="Equipment Portal">
+  <link rel="manifest" href="manifest.json">
+
   <style>
     * {
       box-sizing: border-box;
@@ -125,7 +135,7 @@
       font-size: 18px;
       font-weight: 800;
       letter-spacing: 0.5px;
-      margin-right: 38px; /* Offsets home button for centered alignment */
+      margin-right: 38px;
     }
 
     /* Shift & Date Banner */
@@ -649,7 +659,6 @@
       const numFiltered = numSource.filter(n => n.toUpperCase().includes(numQuery));
       renderGridBoxes('equipmentNoGrid', numFiltered, numVal, (selected) => {
         document.getElementById('selectEquipmentNo').value = selected;
-        // Auto-fill equipment category
         if (REVERSE_LOOKUP[selected.toUpperCase()]) {
           document.getElementById('selectEquipment').value = REVERSE_LOOKUP[selected.toUpperCase()];
         }
