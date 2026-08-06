@@ -353,8 +353,9 @@
 
     .badge-group {
       display: flex;
+      flex-wrap: wrap;
       gap: 6px;
-      margin-top: 6px;
+      margin-top: 8px;
     }
 
     .badge {
@@ -481,9 +482,12 @@
     <!-- ================= VIEW 2: HOME PAGE ================= -->
     <div id="mainView" class="view-screen hidden">
       <div class="user-card">
+        <!-- Title: Name -->
         <div class="user-name" id="displayName">-</div>
+        <!-- Details Sub-row: Company, User ID (COMPANY_ID), Group -->
         <div class="badge-group">
           <span class="badge" id="displayCompany">-</span>
+          <span class="badge" id="displayUserId">ID: -</span>
           <span class="badge" id="displayGroup">-</span>
         </div>
       </div>
@@ -746,9 +750,16 @@
       document.getElementById('mainView').classList.remove('hidden');
 
       if (currentUser) {
-        document.getElementById('displayName').innerText = currentUser.name || 'User';
-        document.getElementById('displayCompany').innerText = currentUser.company || 'N/A';
-        document.getElementById('displayGroup').innerText = currentUser.group || 'N/A';
+        // Name as Title
+        document.getElementById('displayName').innerText = currentUser.name || 'User Name';
+        
+        // Sub-details: Company, User ID (COMPANY_ID), Group
+        document.getElementById('displayCompany').innerText = currentUser.company || 'SPTS SERVICES SDN BHD';
+        
+        const userIdVal = currentUser.COMPANY_ID || currentUser.company_id || currentUser.id || currentUser.username || 'N/A';
+        document.getElementById('displayUserId').innerText = `ID: ${userIdVal}`;
+        
+        document.getElementById('displayGroup').innerText = currentUser.group || currentUser.GROUP || 'N/A';
       }
     }
 
@@ -808,6 +819,18 @@
       }
     }
 
+    // Helper: Formats current date/time to standard "YYYY-MM-DD HH:mm:ss"
+    function getFormattedDateTime() {
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const hh = String(now.getHours()).padStart(2, '0');
+      const min = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+    }
+
     // VALIDATE & SUBMIT CHECKLIST DATA TO SHAREPOINT EXCEL TABLES
     async function sendChecklistData() {
       const equipment = document.getElementById('selectEquipment').value.trim();
@@ -817,7 +840,7 @@
       const shiftText = document.getElementById('shiftBanner').innerText;
       const sendBtn = document.getElementById('sendBtn');
 
-      // Specific Field Validations
+      // Field Validations
       if (!equipment) {
         alert("Please select the Equipment.");
         return;
@@ -833,7 +856,7 @@
         return;
       }
 
-      // Check if issue reported is a new issue or ALL OK / NIL
+      // Check if issue is OK / NIL
       const upperIssue = issue.toUpperCase();
       const isNilIssue = (
         upperIssue.includes("ALL OK") || 
@@ -841,17 +864,22 @@
         issue === ""
       );
 
-      // Formatted Payload matching LogTable & NEWISSUE SharePoint Headers
+      // Extract User ID from COMPANY_ID field in login credentials
+      const userIdVal = currentUser 
+        ? (currentUser.COMPANY_ID || currentUser.company_id || currentUser.id || currentUser.username || 'N/A') 
+        : 'N/A';
+
+      // Payload matching LogTable & NEWISSUE SharePoint Headers
       const payload = {
-        date: new Date().toLocaleString("en-GB"), // Current Date & Time
+        date: getFormattedDateTime(),      // Clean Date & Time string ("YYYY-MM-DD HH:mm:ss")
         shift: shiftText,
-        id: currentUser ? (currentUser.id || currentUser.username || 'N/A') : 'N/A',
+        id: userIdVal,                     // Takes ID from COMPANY_ID
         name: currentUser ? currentUser.name : 'Unknown',
         company: currentUser ? currentUser.company : 'N/A',
-        group: currentUser ? currentUser.group : 'N/A',
-        equipment: equipment,
-        equipnum: equipmentNo,
-        area: issue,                       // Select Issue goes to AREA
+        group: currentUser ? (currentUser.group || currentUser.GROUP || 'N/A') : 'N/A',
+        equipment: equipment,              // Select Equipment -> EQUIPMENT
+        equipnum: equipmentNo,             // Select Equipment Number -> EQUIPNUM
+        area: issue,                       // Select Issue -> AREA
         declaration: declaration,
         isNewIssue: !isNilIssue            // Flag for Power Automate branching
       };
@@ -869,7 +897,7 @@
         if (response.ok) {
           alert('Inspection logged successfully!');
           
-          // Clear form selections after successful log
+          // Clear selections after submission
           document.getElementById('selectEquipment').value = '';
           document.getElementById('selectEquipmentNo').value = '';
           document.getElementById('selectIssue').value = '';
