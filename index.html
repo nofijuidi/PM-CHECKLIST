@@ -482,9 +482,9 @@
     <!-- ================= VIEW 2: HOME PAGE ================= -->
     <div id="mainView" class="view-screen hidden">
       <div class="user-card">
-        <!-- Title: Name -->
+        <!-- Title: Display Name / Title -->
         <div class="user-name" id="displayName">-</div>
-        <!-- Details Sub-row: Company, User ID (COMPANY_ID), Group -->
+        <!-- Sub-details: Company, User ID (COMPANY_ID), Group -->
         <div class="badge-group">
           <span class="badge" id="displayCompany">-</span>
           <span class="badge" id="displayUserId">ID: -</span>
@@ -750,8 +750,9 @@
       document.getElementById('mainView').classList.remove('hidden');
 
       if (currentUser) {
-        // Name as Title
-        document.getElementById('displayName').innerText = currentUser.name || 'User Name';
+        // Name / Title display
+        const nameOrTitle = currentUser.Title || currentUser.title || currentUser.name || 'User';
+        document.getElementById('displayName').innerText = nameOrTitle;
         
         // Sub-details: Company, User ID (COMPANY_ID), Group
         document.getElementById('displayCompany').innerText = currentUser.company || 'SPTS SERVICES SDN BHD';
@@ -768,8 +769,9 @@
       document.getElementById('checklistView').classList.remove('hidden');
 
       if (currentUser) {
+        const nameOrTitle = currentUser.Title || currentUser.title || currentUser.name || 'OPERATOR NAME';
         document.getElementById('inspCompany').innerText = currentUser.company || 'SPTS SERVICES SDN BHD';
-        document.getElementById('inspOperator').innerText = currentUser.name || 'OPERATOR NAME';
+        document.getElementById('inspOperator').innerText = nameOrTitle;
       }
 
       updateLiveShiftAndDate();
@@ -869,12 +871,18 @@
         ? (currentUser.COMPANY_ID || currentUser.company_id || currentUser.id || currentUser.username || 'N/A') 
         : 'N/A';
 
+      // Extract details from Title column in LOGIN_ID list
+      const titleVal = currentUser 
+        ? (currentUser.Title || currentUser.title || currentUser.name || 'Unknown') 
+        : 'Unknown';
+
       // Payload matching LogTable & NEWISSUE SharePoint Headers
+      // 'titleVal' is passed directly into the 'name' field for Excel's NAME column
       const payload = {
         date: getFormattedDateTime(),      // Clean Date & Time string ("YYYY-MM-DD HH:mm:ss")
         shift: shiftText,
         id: userIdVal,                     // Takes ID from COMPANY_ID
-        name: currentUser ? currentUser.name : 'Unknown',
+        name: titleVal,                    // Maps 'Title' from LOGIN_ID into Excel's NAME column
         company: currentUser ? currentUser.company : 'N/A',
         group: currentUser ? (currentUser.group || currentUser.GROUP || 'N/A') : 'N/A',
         equipment: equipment,              // Select Equipment -> EQUIPMENT
