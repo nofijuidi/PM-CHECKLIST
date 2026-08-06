@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Equipment Portal</title>
 
-  <!-- Web App Fullscreen Meta Tags (Hides Browser Address Bar when installed) -->
+  <!-- Web App Fullscreen Meta Tags -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -38,7 +38,6 @@
       color: #334155;
     }
 
-    /* Mobile Viewport Container */
     .app-viewport {
       width: 100vw;
       height: 100vh;
@@ -72,7 +71,7 @@
       display: none !important;
     }
 
-    /* Branding & Header */
+    /* Branding */
     .brand-section {
       text-align: center;
       margin-top: 20px;
@@ -107,7 +106,7 @@
       margin-top: 4px;
     }
 
-    /* Top Navigation Row (Home Icon & Title) */
+    /* Header Navigation */
     .inspection-top-nav {
       display: flex;
       align-items: center;
@@ -325,7 +324,6 @@
       cursor: not-allowed;
     }
 
-    /* Error Alert */
     .alert-error {
       background-color: #fef2f2;
       border: 1px solid #fecaca;
@@ -337,7 +335,7 @@
       text-align: center;
     }
 
-    /* User Profile Card */
+    /* Profile Card */
     .user-card {
       background: #f1f5f9;
       border-radius: 14px;
@@ -365,6 +363,11 @@
       border-radius: 12px;
       background-color: #e2e8f0;
       color: #334155;
+    }
+
+    .badge-highlight {
+      background-color: #0078D4 !important;
+      color: #ffffff !important;
     }
 
     /* Navigation Card */
@@ -412,7 +415,6 @@
       margin-top: 2px;
     }
 
-    /* Action Row Footer */
     .action-row {
       display: flex;
       gap: 12px;
@@ -452,7 +454,7 @@
 
   <div class="app-viewport">
 
-    <!-- ================= VIEW 1: LOGIN ================= -->
+    <!-- LOGIN SCREEN -->
     <div id="loginView" class="view-screen">
       <div class="brand-section">
         <div class="brand-logo-icon">SPTS</div>
@@ -479,16 +481,14 @@
       </form>
     </div>
 
-    <!-- ================= VIEW 2: HOME PAGE ================= -->
+    <!-- MAIN HOME PAGE -->
     <div id="mainView" class="view-screen hidden">
       <div class="user-card">
-        <!-- Title: Display Name / Title -->
         <div class="user-name" id="displayName">-</div>
-        <!-- Sub-details: Company, User ID (COMPANY_ID), Group -->
         <div class="badge-group">
-          <span class="badge" id="displayCompany">-</span>
-          <span class="badge" id="displayUserId">ID: -</span>
-          <span class="badge" id="displayGroup">-</span>
+          <span class="badge" id="displayCompany">SPTS</span>
+          <span class="badge badge-highlight" id="displayUserId">ID: -</span>
+          <span class="badge" id="displayGroup">Group: -</span>
         </div>
       </div>
 
@@ -509,28 +509,24 @@
       </button>
     </div>
 
-    <!-- ================= VIEW 3: EQUIPMENT CHECKLIST ================= -->
+    <!-- CHECKLIST SCREEN -->
     <div id="checklistView" class="view-screen hidden">
-      
-      <!-- Top Navigation Row with Home Icon -->
       <div class="inspection-top-nav">
         <div class="btn-home-icon" onclick="closeChecklist()" title="Go to Home Page">🏠</div>
         <div class="inspection-header-title">EQUIPMENT INSPECTION</div>
       </div>
 
-      <!-- Shift & Date Banner -->
       <div class="banner-bar">
         <div class="banner-shift" id="shiftBanner">-- SHIFT</div>
         <div class="banner-date" id="liveDateTime">Date: --/--/---- --:-- hrs</div>
       </div>
 
-      <!-- User Information Banner -->
       <div class="user-info-banner">
         <div id="inspCompany">-</div>
         <div id="inspOperator">-</div>
       </div>
 
-      <!-- 1. Select Equipment Input & Grid -->
+      <!-- 1. Equipment Category -->
       <div class="form-group">
         <label class="form-label">Select Equipment</label>
         <input 
@@ -544,7 +540,7 @@
         <div id="equipmentGrid" class="grid-container-eq"></div>
       </div>
 
-      <!-- 2. Select Equipment Number Input & Grid -->
+      <!-- 2. Equipment Number -->
       <div class="form-group">
         <label class="form-label">Select Equipment Number</label>
         <input 
@@ -558,7 +554,7 @@
         <div id="equipmentNoGrid" class="grid-container-num"></div>
       </div>
 
-      <!-- 3. Select Issue Input & List -->
+      <!-- 3. Issue -->
       <div class="form-group">
         <label class="form-label">Select Issue</label>
         <input 
@@ -586,7 +582,6 @@
   </div>
 
   <script>
-    // 1. Equipment Database
     const EQUIPMENT_DATABASE = {
       "PM": ["PM01","PM02","PM03","PM04","PM05","PM06","PM07","PM08","PM09","PM10","PM11","PM12","PM13","PM14","PM15","PM16","PM17","PM18","PM19","PM20","PM21","PM22","PM23","PM24","PM25","PM26","PM27","PM28","PM29","PM30","PM31","PM32","PM33","PM34","PM35","PM36","PM37","PM38","PM39","PM40","PM41"],
       "TRAILER": ["T01","T02","T03","T04","T05","T06","T07","T08","T09","T10","T11","T12","T13","T14","T15","T16","T17","T18","T19","T20","T21","T22","T23","T24","T25","T26","T27","T28","T29","T30","T31","T32","T33","T34","T35","T36","T37","T38","T39","T40","T41","T42","T43","T44","T45","T46","T47","T48"],
@@ -603,7 +598,6 @@
       "QC": ["QC01","QC02"]
     };
 
-    // 2. Issues Database
     const ISSUE_DATABASE = {
       "FORKLIFT": ["I've checked and declared all OK", "Engine - Overheating"],
       "PM": ["I've checked and declared all OK", "Aircond - Tidak Sejuk", "Aircond - Tidak Berfungsi", "Aircond - Leaking", "Aircond - Blower Slow", "Aircond - Blower Bising", "Aircond - Parts Patah/Pecah", "Aircond - Belting Berbunyi / Longgar", "Aircond - Hose Tertanggal", "Aircond - Panel Patah", "Aircond - Suis Lampu Tidak Berfungsi", "Alternator - Rosak", "Bateri - Low", "Bateri - Cover Tiada / Rosak / Jarum Patah", "Belting - Berbunyi", "Belting - Problem", "Body - Calar", "Body - Tangga Tepi Cabin tiada", "Brake - Tiada Grip", "Brake - Problem", "Brake - Hose Bocor", "Brake - Malfunction", "Brake - Bising", "Brake - Button Patah", "Cermin Depan - Retak", "Cermin Klip / Cover - Tiada / Rosak", "Cermin Side Mirror - Perlu Ditukar", "Ekzos - Bocor", "Ekzos - Patah / Rosak", "Engine - Breakdown", "Engine - Mati Sendiri", "Engine - Tiada Cut Off", "Engine - Tidak Hidup", "Fire Extinguisher - Parts Patah/Pecah", "Fire Extinguisher - Expired", "Fire Extinguisher - Tiada Hos", "Gear - Rosak / Kasar / Berbunyi", "Horn - Tak Kuat", "Horn - Tidak berbunyi", "Kerusi - Cover Koyak", "Kerusi - Tidak Boleh Laras", "Lampu Amaran (Gear) - Menyala", "Lampu PM Beacon - Rosak", "Lampu PM Belakang - Tidak Berfungsi", "Lampu PM Dalam Cabin - Tidak Menyala", "Lampu PM Depan - Tidak Menyala", "Lampu PM Depan - Tidak Terang", "Lampu PM Depan - Tidak Boleh Ditutup", "Lampu PM High Beam - Malfunction", "Lampu PM Signal - Malfunction", "Lampu PM Suis - Rosak", "Lampu Spotlight - Tidak Hidup", "Meter - Kelajuan - Rosak", "Meter - Hourmeter - Rosak", "Meter - Odometer - Rosak", "Meter - Paras Diesel - Rosak", "Meter - Voltmeter - Rosak / Patah", "Minyak Hidraulik - Kurang", "Mud Flap - Damage", "Mud Flap - Missing", "Mudflap - Koyak", "Mudflap - Hilang", "No Plate - Crack", "Nozzle Minyak Diesel - Pemegang Rosak", "Pintu Belakang - Getah Tercabut", "Pintu Belakang - Ketat Dan Susah Untuk Buka/Tutup", "Pintu Belakang - Ketat", "Pintu Sisi - Getah Tercabut", "Pintu Sisi - Engsel Rosak", "Pintu Sisi - Longgar", "Pintu Sisi - Pemegang Rosak", "Pintu Sliding - Ketat", "Pintu Sliding - Pemegang Rosak", "Reverse Buzzer - Tak Bunyi", "RFID - Rosak", "RFID - Tapak Longgar & Bergegar", "Side Mirror Kanan - Kotor", "Side Mirror Kanan - Pecah", "Side Mirror Kanan - Bercapuk / Kabur / Bertompok", "Side Mirror Kanan - Rosak", "Side Mirror Kiri - Kotor", "Side Mirror Kiri - Pecah", "Side Mirror Kiri - Bercapuk / Kabur / Bertompok", "Side Mirror Kiri - Rosak", "Stereng - Berat", "Stereng - Berbunyi", "Stereng - Senget", "Suspension - Problem", "Tangki Minyak Diesel - Leaking", "Tangki Minyak Diesel - Penutup Rosak", "Tangki Minyak Diesel - Sensor Tidak Detect", "Tangki Minyak Diesel - Bocor", "Tayar PM - Botak Depan Kiri", "Tayar PM - Botak Depan Kanan", "Tayar PM - Botak Belakang Kiri Luar", "Tayar PM - Botak Belakang Kiri Dalam", "Tayar PM - Botak Belakang Kanan Luar", "Tayar PM - Botak Belakang Kanan Dalam", "Tayar PM - Pancit Depan Kiri", "Tayar PM - Pancit Depan Kanan", "Tayar PM - Pancit Belakang Kiri Luar", "Tayar PM - Pancit Belakang Kiri Dalam", "Tayar PM - Pancit Belakang Kanan Luar", "Tayar PM - Pancit Belakang Kanan Dalam", "Tayar PM - Ada Skru/Besi Depan Kiri", "Tayar PM - Ada Skru/Besi Depan Kanan", "Tayar PM - Skru/Besi Belakang Kiri Luar", "Tayar PM - Skru/Besi Belakang Kiri Dalam", "Tayar PM - Skru/Besi Belakang Kanan Luar", "Tayar PM - Skru/Besi Belakang Kanan Dalam", "Tayar PM - Rosak / Pecah", "Tingkap - Pemegang Tiada / Rosak", "Tire Chock - Rosak", "Tire Chock - Hilang / Kurang", "VMT - Tiada Line / Log in issue / Rosak", "Warning Triangle (Segitiga Amaran) - Missing", "Wiper - Air Tiada", "Wiper - Getah Haus/ Bising", "Wiper - Rosak"],
@@ -625,7 +619,6 @@
 
     let currentUser = null;
 
-    // RENDER GRID BOXES
     function renderGridBoxes(containerId, items, selectedValue, onSelectCallback, isList = false) {
       const container = document.getElementById(containerId);
       container.innerHTML = '';
@@ -639,20 +632,16 @@
           box.classList.add('selected');
         }
 
-        box.onclick = () => {
-          onSelectCallback(item);
-        };
+        box.onclick = () => { onSelectCallback(item); };
         container.appendChild(box);
       });
     }
 
-    // UPDATE UI GRIDS BASED ON SELECTION & TYPING
     function refreshGrids() {
       const eqVal = document.getElementById('selectEquipment').value.trim();
       const numVal = document.getElementById('selectEquipmentNo').value.trim();
       const issueVal = document.getElementById('selectIssue').value.trim();
 
-      // 1. Equipment Grid
       const eqQuery = eqVal.toUpperCase();
       const eqFiltered = Object.keys(EQUIPMENT_DATABASE).filter(eq => eq.includes(eqQuery));
       renderGridBoxes('equipmentGrid', eqFiltered, eqVal, (selected) => {
@@ -662,7 +651,6 @@
         refreshGrids();
       });
 
-      // 2. Equipment Number Grid
       const numQuery = numVal.toUpperCase();
       let numSource = eqVal && EQUIPMENT_DATABASE[eqVal.toUpperCase()] 
         ? EQUIPMENT_DATABASE[eqVal.toUpperCase()] 
@@ -677,7 +665,6 @@
         refreshGrids();
       });
 
-      // 3. Issue Grid
       const issueQuery = issueVal.toUpperCase();
       let issueSource = eqVal && ISSUE_DATABASE[eqVal.toUpperCase()] 
         ? ISSUE_DATABASE[eqVal.toUpperCase()] 
@@ -690,10 +677,7 @@
       }, true);
     }
 
-    // INPUT CHANGE HANDLERS
-    function onEquipmentInputChange(val) {
-      refreshGrids();
-    }
+    function onEquipmentInputChange(val) { refreshGrids(); }
 
     function onEquipmentNoInputChange(val) {
       const num = val.trim().toUpperCase();
@@ -703,11 +687,8 @@
       refreshGrids();
     }
 
-    function onIssueInputChange(val) {
-      refreshGrids();
-    }
+    function onIssueInputChange(val) { refreshGrids(); }
 
-    // LOGIN & AUTH
     async function handleLogin(e) {
       e.preventDefault();
       const usernameInput = document.getElementById('usernameInput').value.trim();
@@ -750,19 +731,19 @@
       document.getElementById('mainView').classList.remove('hidden');
 
       if (currentUser) {
-        // SharePoint Title column (Name)
+        // Name / Title display
         const nameOrTitle = currentUser.Title || currentUser.title || currentUser.name || currentUser.NAME || 'User';
         document.getElementById('displayName').innerText = nameOrTitle;
         
         // Company
         document.getElementById('displayCompany').innerText = currentUser.Company || currentUser.company || 'SPTS';
         
-        // User ID (COMPANY_ID column from SharePoint, fallback to ID or Username)
+        // COMPANY_ID badge extraction
         const userIdVal = currentUser.COMPANY_ID || currentUser.company_id || currentUser.Company_ID || currentUser.ID || currentUser.id || currentUser.Username || currentUser.username || 'N/A';
         document.getElementById('displayUserId').innerText = `ID: ${userIdVal}`;
         
         // Group
-        document.getElementById('displayGroup').innerText = currentUser.Group || currentUser.group || currentUser.GROUP || 'N/A';
+        document.getElementById('displayGroup').innerText = `Group: ${currentUser.Group || currentUser.group || currentUser.GROUP || 'N/A'}`;
       }
     }
 
@@ -823,7 +804,6 @@
       }
     }
 
-    // Formats date/time to standard "YYYY-MM-DD HH:mm:ss"
     function getFormattedDateTime() {
       const now = new Date();
       const yyyy = now.getFullYear();
@@ -835,7 +815,6 @@
       return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
     }
 
-    // VALIDATE & SUBMIT CHECKLIST DATA TO SHAREPOINT EXCEL TABLES
     async function sendChecklistData() {
       const equipment = document.getElementById('selectEquipment').value.trim();
       const equipmentNo = document.getElementById('selectEquipmentNo').value.trim();
@@ -844,7 +823,6 @@
       const shiftText = document.getElementById('shiftBanner').innerText;
       const sendBtn = document.getElementById('sendBtn');
 
-      // Specific Field Validations
       if (!equipment) {
         alert("Please select the Equipment.");
         return;
@@ -860,7 +838,6 @@
         return;
       }
 
-      // Check if issue is OK / NIL
       const upperIssue = issue.toUpperCase();
       const isNilIssue = (
         upperIssue.includes("ALL OK") || 
@@ -868,7 +845,7 @@
         issue === ""
       );
 
-      // Extract values from SharePoint LOGIN_ID session
+      // Extract Company ID & Title from current session
       const userIdVal = currentUser 
         ? (currentUser.COMPANY_ID || currentUser.company_id || currentUser.Company_ID || currentUser.ID || currentUser.id || currentUser.Username || currentUser.username || 'N/A') 
         : 'N/A';
@@ -885,9 +862,8 @@
         ? (currentUser.Group || currentUser.group || currentUser.GROUP || 'N/A') 
         : 'N/A';
 
-      // Payload matching Power Automate JSON schema exactly
       const payload = {
-        date: getFormattedDateTime(),                          // "2026-08-06 14:15:00"
+        date: getFormattedDateTime(),                          // "2026-08-06 14:27:00"
         shift: shiftText,                                      // "DAY SHIFT"
         COMPANY_ID: String(userIdVal),                         // "T5218"
         Title: String(nameTitleVal),                           // "NOFIJUIDI BIN JUMRI"
@@ -899,8 +875,6 @@
         declaration: String(declaration),
         isNewIssue: !isNilIssue                                // true / false
       };
-
-      console.log("Submitting Payload to Power Automate:", payload);
 
       sendBtn.disabled = true;
       sendBtn.innerText = 'Submitting...';
@@ -915,7 +889,6 @@
         if (response.ok) {
           alert('Inspection logged successfully!');
           
-          // Clear selections after submission
           document.getElementById('selectEquipment').value = '';
           document.getElementById('selectEquipmentNo').value = '';
           document.getElementById('selectIssue').value = '';
