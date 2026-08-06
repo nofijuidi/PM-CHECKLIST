@@ -804,17 +804,20 @@
         refreshGrids();
       });
 
-      // 2. Render Equipment Number Grid ONLY IF Equipment is selected OR User is typing equipment number
+      // 2. Render Equipment Number Grid ONLY IF Equipment is selected OR User is typing an Equipment Number
       const numQuery = numVal.toUpperCase();
       let numFiltered = [];
 
-      if (eqVal || numVal) {
-        let numSource = eqVal && EQUIPMENT_DATABASE[eqVal.toUpperCase()] 
-          ? EQUIPMENT_DATABASE[eqVal.toUpperCase()] 
-          : Object.values(EQUIPMENT_DATABASE).flat();
-
+      if (eqVal) {
+        // Filter numbers belonging specifically to the selected equipment
+        const numSource = EQUIPMENT_DATABASE[eqVal.toUpperCase()] || [];
+        numFiltered = numSource.filter(n => n.toUpperCase().includes(numQuery));
+      } else if (numVal) {
+        // If equipment category is empty but user starts typing a number, search all numbers
+        const numSource = Object.values(EQUIPMENT_DATABASE).flat();
         numFiltered = numSource.filter(n => n.toUpperCase().includes(numQuery));
       }
+      // If BOTH eqVal and numVal are empty, numFiltered remains [] (Empty Box Grid)
 
       renderGridBoxes('equipmentNoGrid', numFiltered, numVal, (selected) => {
         document.getElementById('selectEquipmentNo').value = selected;
