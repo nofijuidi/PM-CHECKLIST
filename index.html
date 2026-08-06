@@ -335,6 +335,24 @@
       text-align: center;
     }
 
+    .alert-success {
+      background-color: #f0fdf4;
+      border: 1.5px solid #86efac;
+      color: #166534;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      text-align: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     /* Profile Card */
     .user-card {
       background: #f1f5f9;
@@ -449,7 +467,7 @@
       cursor: pointer;
     }
 
-    /* Modal Pop-Up Overlay */
+    /* POP-UP MODAL OVERLAY (Matches Mockup Image) */
     .modal-overlay {
       position: absolute;
       top: 0;
@@ -461,17 +479,18 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 24px;
       z-index: 100;
     }
 
     .modal-card {
       background-color: #ffffff;
       width: 100%;
-      border-radius: 20px;
-      padding: 24px 20px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      border-radius: 16px;
+      padding: 26px 22px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
       animation: modalFadeIn 0.2s ease-out;
+      text-align: left;
     }
 
     @keyframes modalFadeIn {
@@ -479,74 +498,79 @@
       to { opacity: 1; transform: scale(1); }
     }
 
-    .modal-greeting {
-      font-size: 18px;
-      font-weight: 800;
+    .modal-greeting-line {
+      font-size: 19px;
+      font-weight: 500;
       color: #0f172a;
-      margin-bottom: 6px;
-    }
-
-    .modal-declaration {
-      font-size: 15px;
-      color: #334155;
-      line-height: 1.4;
-      margin-bottom: 16px;
-    }
-
-    .modal-declaration strong {
-      color: #0078D4;
-    }
-
-    .modal-status-box {
-      background-color: #f1f5f9;
-      border-left: 4px solid #0078D4;
-      padding: 12px 14px;
-      border-radius: 8px;
-      margin-bottom: 22px;
-    }
-
-    .modal-status-label {
-      font-size: 12px;
-      font-weight: 800;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
       margin-bottom: 4px;
     }
 
-    .modal-status-value {
-      font-size: 15px;
-      font-weight: 700;
+    .modal-declaring-line {
+      font-size: 19px;
+      font-weight: 500;
       color: #0f172a;
+      margin-bottom: 24px;
+    }
+
+    .modal-declaring-line strong {
+      font-weight: 800;
+      color: #000000;
+    }
+
+    .modal-status-highlight {
+      font-size: 19px;
+      font-weight: 800;
+      color: #000000;
+      margin-bottom: 28px;
+      line-height: 1.3;
+    }
+
+    .modal-date-line {
+      font-size: 17px;
+      font-weight: 800;
+      color: #000000;
+      margin-bottom: 26px;
     }
 
     .modal-btn-row {
       display: flex;
-      gap: 10px;
+      gap: 12px;
     }
 
-    .btn-confirm {
+    .btn-popup-cancel {
       flex: 1;
-      height: 46px;
-      background-color: #0078D4;
-      color: white;
-      font-size: 15px;
-      font-weight: 700;
-      border: none;
+      height: 48px;
+      background-color: #cc0000;
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 800;
+      border: 1px solid #990000;
       border-radius: 10px;
       cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: background-color 0.15s ease;
     }
 
-    .btn-cancel {
+    .btn-popup-cancel:active {
+      background-color: #a00000;
+    }
+
+    .btn-popup-confirm {
       flex: 1;
-      height: 46px;
-      background-color: #e2e8f0;
-      color: #334155;
-      font-size: 15px;
-      font-weight: 700;
-      border: none;
+      height: 48px;
+      background-color: #4172cd;
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 800;
+      border: 1px solid #2d55a3;
       border-radius: 10px;
       cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: background-color 0.15s ease;
+    }
+
+    .btn-popup-confirm:active {
+      background-color: #2e57a8;
     }
   </style>
 </head>
@@ -616,6 +640,11 @@
         <div class="inspection-header-title">EQUIPMENT INSPECTION</div>
       </div>
 
+      <!-- SUCCESS BANNER -->
+      <div id="successBanner" class="alert-success hidden">
+        ✓ Inspection logged successfully!
+      </div>
+
       <div class="banner-bar">
         <div class="banner-shift" id="shiftBanner">-- SHIFT</div>
         <div class="banner-date" id="liveDateTime">Date: --/--/---- --:-- hrs</div>
@@ -679,22 +708,25 @@
       </div>
     </div>
 
-    <!-- CONFIRMATION MODAL POP-UP -->
+    <!-- POP-UP CONFIRMATION MODAL -->
     <div id="confirmModal" class="modal-overlay hidden">
       <div class="modal-card">
-        <div class="modal-greeting" id="modalGreeting">Dear Operator,</div>
-        <div class="modal-declaration">
-          you are declaring <strong id="modalEquipNum">PM 01</strong>
+        <div class="modal-greeting-line" id="modalGreeting">Dear Nofijuidi,</div>
+        <div class="modal-declaring-line">
+          You are declaring <strong id="modalEquipNum">PM08</strong>,
         </div>
         
-        <div class="modal-status-box">
-          <div class="modal-status-label">Status</div>
-          <div class="modal-status-value" id="modalIssue">Aircond - Tidak Berfungsi</div>
+        <div class="modal-status-highlight" id="modalIssue">
+          Aircond - Tidak Berfungsi
+        </div>
+
+        <div class="modal-date-line" id="modalFormattedDate">
+          On 06 AUG 2026 15:01
         </div>
 
         <div class="modal-btn-row">
-          <button id="confirmSubmitBtn" class="btn-confirm" onclick="executeSubmission()">Confirm</button>
-          <button class="btn-cancel" onclick="hideConfirmModal()">Cancel</button>
+          <button class="btn-popup-cancel" onclick="hideConfirmModal()">CANCEL</button>
+          <button id="confirmSubmitBtn" class="btn-popup-confirm" onclick="executeSubmission()">CONFIRM</button>
         </div>
       </div>
     </div>
@@ -892,7 +924,14 @@
       refreshGrids();
     }
 
+    // HOME BUTTON CLICK: Resets inputs and navigates back to Home Page
     function closeChecklist() {
+      document.getElementById('selectEquipment').value = '';
+      document.getElementById('selectEquipmentNo').value = '';
+      document.getElementById('selectIssue').value = '';
+      document.getElementById('declarationText').value = '';
+      document.getElementById('successBanner').classList.add('hidden');
+      
       document.getElementById('checklistView').classList.add('hidden');
       document.getElementById('mainView').classList.remove('hidden');
     }
@@ -946,44 +985,61 @@
       return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
     }
 
-    // CONFIRMATION POP-UP MODAL LOGIC
+    // Helper: Formats timestamp specifically for Pop-up (e.g. "On 06 AUG 2026 15:01")
+    function getPopupFormattedDate() {
+      const now = new Date();
+      const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+      const dd = String(now.getDate()).padStart(2, '0');
+      const mmm = months[now.getMonth()];
+      const yyyy = now.getFullYear();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const min = String(now.getMinutes()).padStart(2, '0');
+
+      return `On ${dd} ${mmm} ${yyyy} ${hh}:${min}`;
+    }
+
+    // SHOW CONFIRMATION MODAL POP-UP
     function showConfirmModal() {
       const equipment = document.getElementById('selectEquipment').value.trim();
       const equipmentNo = document.getElementById('selectEquipmentNo').value.trim();
       const issue = document.getElementById('selectIssue').value.trim();
 
-      // Form Validations before showing pop-up
       if (!equipment) {
-        alert("Please select the Equipment.");
+        showError("Please select the Equipment.");
         return;
       }
 
       if (!equipmentNo) {
-        alert("Please put the Equipment Number");
+        showError("Please put the Equipment Number");
         return;
       }
 
       if (!issue) {
-        alert("Please update the Equipment Condition");
+        showError("Please update the Equipment Condition");
         return;
       }
 
-      // Get Name for greeting (e.g. "Dear Nofijuidi,")
+      // Extract First Name for Greeting (e.g. "Dear Nofijuidi,")
       const rawName = getPropValue(currentUser, ['Title', 'title', 'name', 'NAME'], 'Operator');
-      const firstName = rawName.split(' ')[0]; // Extract first word/name
+      const firstName = rawName.split(' ')[0];
 
-      document.getElementById('modalGreeting').innerText = `Dear ${firstName},`;
+      // Capitalize first letter properly
+      const formattedFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+
+      document.getElementById('modalGreeting').innerText = `Dear ${formattedFirstName},`;
       document.getElementById('modalEquipNum').innerText = equipmentNo;
       document.getElementById('modalIssue').innerText = issue;
+      document.getElementById('modalFormattedDate').innerText = getPopupFormattedDate();
 
       document.getElementById('confirmModal').classList.remove('hidden');
     }
 
+    // CANCEL BUTTON CLICK: Closes pop-up modal without resetting form
     function hideConfirmModal() {
       document.getElementById('confirmModal').classList.add('hidden');
     }
 
-    // EXECUTE ACTUAL SUBMISSION TO POWER AUTOMATE
+    // CONFIRM BUTTON CLICK: Transmits data to Power Automate / Excel
     async function executeSubmission() {
       const equipment = document.getElementById('selectEquipment').value.trim();
       const equipmentNo = document.getElementById('selectEquipmentNo').value.trim();
@@ -992,7 +1048,6 @@
       const shiftText = document.getElementById('shiftBanner').innerText;
       const confirmBtn = document.getElementById('confirmSubmitBtn');
 
-      // Compare with ISSUE_DATABASE
       const eqKey = equipment.toUpperCase();
       const equipmentExistsInDb = ISSUE_DATABASE.hasOwnProperty(eqKey);
 
@@ -1006,7 +1061,6 @@
 
       const isCustomNewIssue = !isStandardIssue;
 
-      // Extract Company ID & Title
       const userIdVal = getPropValue(currentUser, ['COMPANY_ID', 'company_id', 'Company_ID', 'ID', 'id', 'Username', 'username'], 'N/A');
       const nameTitleVal = getPropValue(currentUser, ['Title', 'title', 'name', 'NAME'], 'Unknown');
       const companyVal = getPropValue(currentUser, ['Company', 'company', 'COMPANY'], 'SPTS');
@@ -1037,24 +1091,32 @@
         });
 
         if (response.ok) {
-          alert('Inspection logged successfully!');
-          
-          // Clear input fields for next entry
+          // Reset form fields for the next inspection
           document.getElementById('selectEquipment').value = '';
           document.getElementById('selectEquipmentNo').value = '';
           document.getElementById('selectIssue').value = '';
           document.getElementById('declarationText').value = '';
           
           hideConfirmModal();
-          refreshGrids(); // Stays on Equipment Inspection page cleanly!
+          refreshGrids();
+
+          // Show non-intrusive success banner (Auto hides after 3.5 seconds)
+          const successBanner = document.getElementById('successBanner');
+          successBanner.classList.remove('hidden');
+          setTimeout(() => {
+            successBanner.classList.add('hidden');
+          }, 3500);
+
         } else {
-          alert('Failed to submit inspection log. Server returned an error.');
+          hideConfirmModal();
+          showError('Failed to submit inspection log. Server returned an error.');
         }
       } catch (err) {
-        alert('Network error. Failed to send data.');
+        hideConfirmModal();
+        showError('Network error. Failed to send data.');
       } finally {
         confirmBtn.disabled = false;
-        confirmBtn.innerText = 'Confirm';
+        confirmBtn.innerText = 'CONFIRM';
       }
     }
 
