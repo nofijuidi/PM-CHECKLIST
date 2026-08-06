@@ -467,7 +467,7 @@
       cursor: pointer;
     }
 
-    /* POP-UP MODAL OVERLAY (Matches Mockup Image) */
+    /* POP-UP CONFIRMATION MODAL */
     .modal-overlay {
       position: absolute;
       top: 0;
@@ -794,6 +794,7 @@
       const numVal = document.getElementById('selectEquipmentNo').value.trim();
       const issueVal = document.getElementById('selectIssue').value.trim();
 
+      // 1. Render Equipment Category Grid
       const eqQuery = eqVal.toUpperCase();
       const eqFiltered = Object.keys(EQUIPMENT_DATABASE).filter(eq => eq.includes(eqQuery));
       renderGridBoxes('equipmentGrid', eqFiltered, eqVal, (selected) => {
@@ -803,12 +804,18 @@
         refreshGrids();
       });
 
+      // 2. Render Equipment Number Grid ONLY IF Equipment is selected OR User is typing equipment number
       const numQuery = numVal.toUpperCase();
-      let numSource = eqVal && EQUIPMENT_DATABASE[eqVal.toUpperCase()] 
-        ? EQUIPMENT_DATABASE[eqVal.toUpperCase()] 
-        : Object.values(EQUIPMENT_DATABASE).flat();
-      
-      const numFiltered = numSource.filter(n => n.toUpperCase().includes(numQuery));
+      let numFiltered = [];
+
+      if (eqVal || numVal) {
+        let numSource = eqVal && EQUIPMENT_DATABASE[eqVal.toUpperCase()] 
+          ? EQUIPMENT_DATABASE[eqVal.toUpperCase()] 
+          : Object.values(EQUIPMENT_DATABASE).flat();
+
+        numFiltered = numSource.filter(n => n.toUpperCase().includes(numQuery));
+      }
+
       renderGridBoxes('equipmentNoGrid', numFiltered, numVal, (selected) => {
         document.getElementById('selectEquipmentNo').value = selected;
         if (REVERSE_LOOKUP[selected.toUpperCase()]) {
@@ -817,6 +824,7 @@
         refreshGrids();
       });
 
+      // 3. Render Issue List Grid
       const issueQuery = issueVal.toUpperCase();
       let issueSource = eqVal && ISSUE_DATABASE[eqVal.toUpperCase()] 
         ? ISSUE_DATABASE[eqVal.toUpperCase()] 
@@ -985,7 +993,6 @@
       return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
     }
 
-    // Helper: Formats timestamp specifically for Pop-up (e.g. "On 06 AUG 2026 15:01")
     function getPopupFormattedDate() {
       const now = new Date();
       const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -1019,11 +1026,8 @@
         return;
       }
 
-      // Extract First Name for Greeting (e.g. "Dear Nofijuidi,")
       const rawName = getPropValue(currentUser, ['Title', 'title', 'name', 'NAME'], 'Operator');
       const firstName = rawName.split(' ')[0];
-
-      // Capitalize first letter properly
       const formattedFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
 
       document.getElementById('modalGreeting').innerText = `Dear ${formattedFirstName},`;
@@ -1034,7 +1038,6 @@
       document.getElementById('confirmModal').classList.remove('hidden');
     }
 
-    // CANCEL BUTTON CLICK: Closes pop-up modal without resetting form
     function hideConfirmModal() {
       document.getElementById('confirmModal').classList.add('hidden');
     }
@@ -1100,7 +1103,7 @@
           hideConfirmModal();
           refreshGrids();
 
-          // Show non-intrusive success banner (Auto hides after 3.5 seconds)
+          // Show non-intrusive success banner
           const successBanner = document.getElementById('successBanner');
           successBanner.classList.remove('hidden');
           setTimeout(() => {
