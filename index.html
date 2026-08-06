@@ -729,7 +729,7 @@
 
         const result = await response.json();
 
-        if (response.ok && result.status === 'success') {
+        if (response.ok && (result.status === 'success' || result.Title || result.COMPANY_ID)) {
           currentUser = result;
           sessionStorage.setItem('userSession', JSON.stringify(result));
           showHomeView();
@@ -750,17 +750,19 @@
       document.getElementById('mainView').classList.remove('hidden');
 
       if (currentUser) {
-        // Title / Name display
-        const nameOrTitle = currentUser.Title || currentUser.title || currentUser.name || 'User';
+        // SharePoint Title column (Name)
+        const nameOrTitle = currentUser.Title || currentUser.title || currentUser.name || currentUser.NAME || 'User';
         document.getElementById('displayName').innerText = nameOrTitle;
         
-        // Sub-details: Company, User ID (COMPANY_ID), Group
-        document.getElementById('displayCompany').innerText = currentUser.company || 'SPTS SERVICES SDN BHD';
+        // Company
+        document.getElementById('displayCompany').innerText = currentUser.Company || currentUser.company || 'SPTS';
         
-        const userIdVal = currentUser.COMPANY_ID || currentUser.company_id || currentUser.id || currentUser.username || 'N/A';
+        // User ID (COMPANY_ID column from SharePoint, fallback to ID or Username)
+        const userIdVal = currentUser.COMPANY_ID || currentUser.company_id || currentUser.Company_ID || currentUser.ID || currentUser.id || currentUser.Username || currentUser.username || 'N/A';
         document.getElementById('displayUserId').innerText = `ID: ${userIdVal}`;
         
-        document.getElementById('displayGroup').innerText = currentUser.group || currentUser.GROUP || 'N/A';
+        // Group
+        document.getElementById('displayGroup').innerText = currentUser.Group || currentUser.group || currentUser.GROUP || 'N/A';
       }
     }
 
@@ -769,8 +771,8 @@
       document.getElementById('checklistView').classList.remove('hidden');
 
       if (currentUser) {
-        const nameOrTitle = currentUser.Title || currentUser.title || currentUser.name || 'OPERATOR NAME';
-        document.getElementById('inspCompany').innerText = currentUser.company || 'SPTS SERVICES SDN BHD';
+        const nameOrTitle = currentUser.Title || currentUser.title || currentUser.name || currentUser.NAME || 'OPERATOR NAME';
+        document.getElementById('inspCompany').innerText = currentUser.Company || currentUser.company || 'SPTS SERVICES SDN BHD';
         document.getElementById('inspOperator').innerText = nameOrTitle;
       }
 
@@ -821,7 +823,7 @@
       }
     }
 
-    // Helper: Formats current date/time to standard "YYYY-MM-DD HH:mm:ss"
+    // Formats date/time to standard "YYYY-MM-DD HH:mm:ss"
     function getFormattedDateTime() {
       const now = new Date();
       const yyyy = now.getFullYear();
@@ -842,7 +844,7 @@
       const shiftText = document.getElementById('shiftBanner').innerText;
       const sendBtn = document.getElementById('sendBtn');
 
-      // Field Validations
+      // Specific Field Validations
       if (!equipment) {
         alert("Please select the Equipment.");
         return;
@@ -866,31 +868,39 @@
         issue === ""
       );
 
-      // Extract User ID from COMPANY_ID field in login response
+      // Extract values from SharePoint LOGIN_ID session
       const userIdVal = currentUser 
-        ? (currentUser.COMPANY_ID || currentUser.company_id || currentUser.id || currentUser.username || 'N/A') 
+        ? (currentUser.COMPANY_ID || currentUser.company_id || currentUser.Company_ID || currentUser.ID || currentUser.id || currentUser.Username || currentUser.username || 'N/A') 
         : 'N/A';
 
-      // Extract Title from Title column in LOGIN_ID list
-      const titleVal = currentUser 
-        ? (currentUser.Title || currentUser.title || currentUser.name || 'Unknown') 
+      const nameTitleVal = currentUser 
+        ? (currentUser.Title || currentUser.title || currentUser.name || currentUser.NAME || 'Unknown') 
         : 'Unknown';
 
-      // Payload strictly matching Power Automate's JSON Schema keys:
-      // "date", "shift", "COMPANY_ID", "Title", "company", "group", "equipment", "equipnum", "area", "declaration", "isNewIssue"
+      const companyVal = currentUser 
+        ? (currentUser.Company || currentUser.company || 'SPTS') 
+        : 'SPTS';
+
+      const groupVal = currentUser 
+        ? (currentUser.Group || currentUser.group || currentUser.GROUP || 'N/A') 
+        : 'N/A';
+
+      // Payload matching Power Automate JSON schema exactly
       const payload = {
-        date: getFormattedDateTime(),                          // "date"
-        shift: shiftText,                                      // "shift"
-        COMPANY_ID: userIdVal,                                 // "COMPANY_ID"
-        Title: titleVal,                                       // "Title"
-        company: currentUser ? currentUser.company : 'N/A',   // "company"
-        group: currentUser ? (currentUser.group || currentUser.GROUP || 'N/A') : 'N/A', // "group"
-        equipment: equipment,                                  // "equipment"
-        equipnum: equipmentNo,                                 // "equipnum"
-        area: issue,                                           // "area"
-        declaration: declaration,                              // "declaration"
-        isNewIssue: !isNilIssue                                // "isNewIssue"
+        date: getFormattedDateTime(),                          // "2026-08-06 14:15:00"
+        shift: shiftText,                                      // "DAY SHIFT"
+        COMPANY_ID: String(userIdVal),                         // "T5218"
+        Title: String(nameTitleVal),                           // "NOFIJUIDI BIN JUMRI"
+        company: String(companyVal),                           // "SPTS"
+        group: String(groupVal),                               // "B"
+        equipment: String(equipment),                          // "PM"
+        equipnum: String(equipmentNo),                         // "PM01"
+        area: String(issue),                                   // "Aircond - Tidak Sejuk"
+        declaration: String(declaration),
+        isNewIssue: !isNilIssue                                // true / false
       };
+
+      console.log("Submitting Payload to Power Automate:", payload);
 
       sendBtn.disabled = true;
       sendBtn.innerText = 'Submitting...';
