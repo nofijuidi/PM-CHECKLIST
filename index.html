@@ -853,21 +853,26 @@
         return;
       }
 
-      const upperIssue = issue.toUpperCase();
-      const isNilIssue = (
-        upperIssue.includes("ALL OK") || 
-        upperIssue.includes("NIL") || 
-        issue === ""
+      // Check if the issue is a CUSTOM TYPED issue or from the predefined list
+      const eqKey = equipment.toUpperCase();
+      const standardList = ISSUE_DATABASE[eqKey] || ["I've checked and declared all OK"];
+      
+      // Case-insensitive check against standard issues list
+      const isStandardIssue = standardList.some(
+        stdIssue => stdIssue.trim().toUpperCase() === issue.toUpperCase()
       );
 
-      // Extract Company ID & Title from current session using helper
+      // isNewIssue is true ONLY IF the issue was custom typed (not found in standard list)
+      const isCustomNewIssue = !isStandardIssue;
+
+      // Extract Company ID & Title from current session
       const userIdVal = getPropValue(currentUser, ['COMPANY_ID', 'company_id', 'Company_ID', 'ID', 'id', 'Username', 'username'], 'N/A');
       const nameTitleVal = getPropValue(currentUser, ['Title', 'title', 'name', 'NAME'], 'Unknown');
       const companyVal = getPropValue(currentUser, ['Company', 'company', 'COMPANY'], 'SPTS');
       const groupVal = getPropValue(currentUser, ['Group', 'group', 'GROUP'], 'N/A');
 
       const payload = {
-        date: getFormattedDateTime(),                          // "2026-08-06 14:30:00"
+        date: getFormattedDateTime(),                          // "2026-08-06 14:50:00"
         shift: shiftText,                                      // "DAY SHIFT"
         COMPANY_ID: String(userIdVal),                         // "T5218"
         Title: String(nameTitleVal),                           // "NOFIJUIDI BIN JUMRI"
@@ -877,10 +882,10 @@
         equipnum: String(equipmentNo),                         // "PM01"
         area: String(issue),                                   // "Aircond - Tidak Sejuk"
         declaration: String(declaration),
-        isNewIssue: !isNilIssue                                // true / false
+        isNewIssue: isCustomNewIssue                           // true ONLY for custom typed issues
       };
 
-      console.log("Submitting Payload to Power Automate:", payload);
+      console.log("Submitting Payload (isNewIssue = " + isCustomNewIssue + "):", payload);
 
       sendBtn.disabled = true;
       sendBtn.innerText = 'Submitting...';
