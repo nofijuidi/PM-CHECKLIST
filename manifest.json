@@ -1,18 +1,19 @@
 {
-  "name": "My HTML App",
-  "short_name": "MyApp",
-  "start_url": "index.html",
+  "name": "Equipment Portal",
+  "short_name": "Equipment",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/2921/2921222.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icon-512.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/2921/2921222.png",
       "sizes": "512x512",
       "type": "image/png"
     }
