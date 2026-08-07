@@ -711,17 +711,17 @@
     <!-- POP-UP CONFIRMATION MODAL -->
     <div id="confirmModal" class="modal-overlay hidden">
       <div class="modal-card">
-        <div class="modal-greeting-line" id="modalGreeting">Dear Nofijuidi,</div>
+        <div class="modal-greeting-line" id="modalGreeting">Dear Operator,</div>
         <div class="modal-declaring-line">
-          You are declaring <strong id="modalEquipNum">PM08</strong>,
+          You are declaring <strong id="modalEquipNum">-</strong>,
         </div>
         
         <div class="modal-status-highlight" id="modalIssue">
-          Aircond - Tidak Berfungsi
+          -
         </div>
 
         <div class="modal-date-line" id="modalFormattedDate">
-          On 06 AUG 2026 15:01
+          -
         </div>
 
         <div class="modal-btn-row">
@@ -734,42 +734,46 @@
   </div>
 
   <script>
-    const EQUIPMENT_DATABASE = {
-      "PM": ["PM01","PM02","PM03","PM04","PM05","PM06","PM07","PM08","PM09","PM10","PM11","PM12","PM13","PM14","PM15","PM16","PM17","PM18","PM19","PM20","PM21","PM22","PM23","PM24","PM25","PM26","PM27","PM28","PM29","PM30","PM31","PM32","PM33","PM34","PM35","PM36","PM37","PM38","PM39","PM40","PM41"],
-      "TRAILER": ["T01","T02","T03","T04","T05","T06","T07","T08","T09","T10","T11","T12","T13","T14","T15","T16","T17","T18","T19","T20","T21","T22","T23","T24","T25","T26","T27","T28","T29","T30","T31","T32","T33","T34","T35","T36","T37","T38","T39","T40","T41","T42","T43","T44","T45","T46","T47","T48"],
-      "FORKLIFT": ["FL01","FL02","FL03","FL04"],
-      "TIPPER": ["TT01","TT02","TT03","TT04","TT05","TT06","TT07","TT08"],
-      "RTG": ["TC01","TC02","TC03","TC04"],
-      "ECH": ["ECH01","ECH02","ECH03","ECH04"],
-      "CRS": ["CRS01"],
-      "SHOVEL": ["S01"],
-      "SHIPLOADER": ["SL01"],
-      "RECLAIMER": ["RC01"],
-      "STACKER": ["SC01"],
-      "CONVEYOR": ["BC01","BC02","BC03","BC04","PC01","PC02"],
-      "QC": ["QC01","QC02"]
-    };
-
-    const ISSUE_DATABASE = {
-      "FORKLIFT": ["I've checked and declared all OK", "Engine - Overheating"],
-      "PM": ["I've checked and declared all OK", "Aircond - Tidak Sejuk", "Aircond - Tidak Berfungsi", "Aircond - Leaking", "Aircond - Blower Slow", "Aircond - Blower Bising", "Aircond - Parts Patah/Pecah", "Aircond - Belting Berbunyi / Longgar", "Aircond - Hose Tertanggal", "Aircond - Panel Patah", "Aircond - Suis Lampu Tidak Berfungsi", "Alternator - Rosak", "Bateri - Low", "Bateri - Cover Tiada / Rosak / Jarum Patah", "Belting - Berbunyi", "Belting - Problem", "Body - Calar", "Body - Tangga Tepi Cabin tiada", "Brake - Tiada Grip", "Brake - Problem", "Brake - Hose Bocor", "Brake - Malfunction", "Brake - Bising", "Brake - Button Patah", "Cermin Depan - Retak", "Cermin Klip / Cover - Tiada / Rosak", "Cermin Side Mirror - Perlu Ditukar", "Ekzos - Bocor", "Ekzos - Patah / Rosak", "Engine - Breakdown", "Engine - Mati Sendiri", "Engine - Tiada Cut Off", "Engine - Tidak Hidup", "Fire Extinguisher - Parts Patah/Pecah", "Fire Extinguisher - Expired", "Fire Extinguisher - Tiada Hos", "Gear - Rosak / Kasar / Berbunyi", "Horn - Tak Kuat", "Horn - Tidak berbunyi", "Kerusi - Cover Koyak", "Kerusi - Tidak Boleh Laras", "Lampu Amaran (Gear) - Menyala", "Lampu PM Beacon - Rosak", "Lampu PM Belakang - Tidak Berfungsi", "Lampu PM Dalam Cabin - Tidak Menyala", "Lampu PM Depan - Tidak Menyala", "Lampu PM Depan - Tidak Terang", "Lampu PM Depan - Tidak Boleh Ditutup", "Lampu PM High Beam - Malfunction", "Lampu PM Signal - Malfunction", "Lampu PM Suis - Rosak", "Lampu Spotlight - Tidak Hidup", "Meter - Kelajuan - Rosak", "Meter - Hourmeter - Rosak", "Meter - Odometer - Rosak", "Meter - Paras Diesel - Rosak", "Meter - Voltmeter - Rosak / Patah", "Minyak Hidraulik - Kurang", "Mud Flap - Damage", "Mud Flap - Missing", "Mudflap - Koyak", "Mudflap - Hilang", "No Plate - Crack", "Nozzle Minyak Diesel - Pemegang Rosak", "Pintu Belakang - Getah Tercabut", "Pintu Belakang - Ketat Dan Susah Untuk Buka/Tutup", "Pintu Belakang - Ketat", "Pintu Sisi - Getah Tercabut", "Pintu Sisi - Engsel Rosak", "Pintu Sisi - Longgar", "Pintu Sisi - Pemegang Rosak", "Pintu Sliding - Ketat", "Pintu Sliding - Pemegang Rosak", "Reverse Buzzer - Tak Bunyi", "RFID - Rosak", "RFID - Tapak Longgar & Bergegar", "Side Mirror Kanan - Kotor", "Side Mirror Kanan - Pecah", "Side Mirror Kanan - Bercapuk / Kabur / Bertompok", "Side Mirror Kanan - Rosak", "Side Mirror Kiri - Kotor", "Side Mirror Kiri - Pecah", "Side Mirror Kiri - Bercapuk / Kabur / Bertompok", "Side Mirror Kiri - Rosak", "Stereng - Berat", "Stereng - Berbunyi", "Stereng - Senget", "Suspension - Problem", "Tangki Minyak Diesel - Leaking", "Tangki Minyak Diesel - Penutup Rosak", "Tangki Minyak Diesel - Sensor Tidak Detect", "Tangki Minyak Diesel - Bocor", "Tayar PM - Botak Depan Kiri", "Tayar PM - Botak Depan Kanan", "Tayar PM - Botak Belakang Kiri Luar", "Tayar PM - Botak Belakang Kiri Dalam", "Tayar PM - Botak Belakang Kanan Luar", "Tayar PM - Botak Belakang Kanan Dalam", "Tayar PM - Pancit Depan Kiri", "Tayar PM - Pancit Depan Kanan", "Tayar PM - Pancit Belakang Kiri Luar", "Tayar PM - Pancit Belakang Kiri Dalam", "Tayar PM - Pancit Belakang Kanan Luar", "Tayar PM - Pancit Belakang Kanan Dalam", "Tayar PM - Ada Skru/Besi Depan Kiri", "Tayar PM - Ada Skru/Besi Depan Kanan", "Tayar PM - Skru/Besi Belakang Kiri Luar", "Tayar PM - Skru/Besi Belakang Kiri Dalam", "Tayar PM - Skru/Besi Belakang Kanan Luar", "Tayar PM - Skru/Besi Belakang Kanan Dalam", "Tayar PM - Rosak / Pecah", "Tingkap - Pemegang Tiada / Rosak", "Tire Chock - Rosak", "Tire Chock - Hilang / Kurang", "VMT - Tiada Line / Log in issue / Rosak", "Warning Triangle (Segitiga Amaran) - Missing", "Wiper - Air Tiada", "Wiper - Getah Haus/ Bising", "Wiper - Rosak"],
-      "TRAILER": ["I've checked and declared all OK", "Hos Trailer Biru (Supply Line) - Bocor / Rosak", "Hos Trailer Hitam (Electric) - Bocor / Rosak", "Hos Trailer Merah (Brek Angin) - Bocor / Rosak", "Lampu Trailer Belakang - Tidak Berfungsi", "Lampu Trailer Belakang - Rosak / Pecah", "Lampu Trailer Signal - Malfunction", "Pully Button Trailer - Broken", "Tayar Trailer - Ada Skru/Besi Depan Kiri Dalam", "Tayar Trailer - Ada Skru/Besi Depan Kiri Luar", "Tayar Trailer - Ada Skru/Besi Depan Kanan Dalam", "Tayar Trailer - Ada Skru/Besi Depan KananLuar", "Tayar Trailer - Ada Skru/Besi Belakang Kiri Dalam", "Tayar Trailer - Ada Skru/Besi Belakang Kiri Luar", "Tayar Trailer - Ada Skru/Besi Belakang Kanan Dalam", "Tayar Trailer - Ada Skru/Besi Belakang KananLuar", "Tayar Trailer - Botak Depan Kiri Dalam", "Tayar Trailer - Botak Depan Kiri Luar", "Tayar Trailer - Botak Depan Kanan Dalam", "Tayar Trailer - Botak Depan KananLuar", "Tayar Trailer - Botak Belakang Kiri Dalam", "Tayar Trailer - Botak Belakang Kiri Luar", "Tayar Trailer - Botak Belakang Kanan Dalam", "Tayar Trailer - Botak Belakang KananLuar", "Tayar Trailer - Rosak / Pecah", "Tayar Trailer - Misalign (Ketam)", "Trailer Landing Leg - Tidak Boleh Diturun / Rosak", "Trailer Twistlock - Hilang", "Trailer Twistlock - Rosak / Patah"],
-      "RTG": ["I've checked and declared all OK", "Aircond - Swing Tidak Berfungsi", "Aircond - Tidak Sejuk", "Anti Sway - Berbunyi Bising", "Anti Sway - Malfunction", "Battery - Weak", "Beacon Light - Tidak Menyala", "Brake - Perlu Diperiksa", "Cabin - Kotor", "Cermin - Kotor / Tidak Jelas", "Engine - Timing Tinggi", "First Aid Kits - Tiada / Expired", "Hailer - Malfunction", "Hoisting Movement - Berbunyi", "Hoisting Movement - Drum Kurang Grease", "Hoisting Movement - Lowering Berbunyi", "Intercom - Tidak Berfungsi", "Joy Stick - Getah Koyak", "Joy Stick - Rosak", "Lampu - Flood Flight Tidak Menyala", "Lampu - Lampu Cabin Tidak Menyala", "Meter - Rosak", "Pintu - Rosak", "Seat - Koyak", "Siren - Malfunction", "Spreader - Tidak Statik", "Spreader - Tls Problem", "Spreader - Misalignment", "Spreader - Twist Lock Problem", "Tombol Pintu - Rosak", "Trolley Movement - Berbunyi", "Trolley Movemment - Grease Kurang", "Tyre Guard - Lekuk / Kemek", "Wire Rope - Putus", "Wire Rope - Kendur", "Wire Rope - Grease Kurang", "Tayar - Kurang Angin", "Tayar - Punctured"],
-      "ECH": ["I've checked and declared all OK", "Aircond  - Tidak Sejuk", "Brake  - Problem", "Cermin  - Sisi Patah", "Cermin  - Kotor", "Ekzos  - Patah", "Grease - Kurang", "Pintu  - Pemegang Rosak", "Hoist Movement - Bergerak Lambat", "Hoist Movement - Rosak", "Horn - Tidak Berfungsi", "Hydraulic - Hose Bocor", "Lampu - Hadapan Tidak Menyala", "Lampu - Belakang Tidak Menyala", "Lampu - Lampu Signal Tidak Menyala", "Pemadam Api - Tiada / Expired", "Tingkap - Pembuka Kanan Tiada", "Tingkap - Pembuka Kiri Tiada", "Spreader - Tidak Statik", "Spreader - Tls Problem", "Spreader - Misalignment", "Tayar - Hadapan Kanan Rosak", "Tayar - Hadapan Kiri Rosak", "Tayar - Belakang Kanan Rosak", "Tayar - Belakang Kiri Rosak", "Wiper  - Rosak"],
-      "TIPPER": ["I've checked and declared all OK", "Aircond - Tidak Sejuk", "Brake - Kurang Cengkaman", "Canvas - Pergerakan Lambat / Rosak", "Canvas - Pergerakan Bising", "Cermin  - Sisi Patah / Pecah", "Horn  - Tidak Berfungsi", "Lampu - Beacon Tidak Berfungsi", "Lampu - Belakang Tidak Berfungsi", "Lampu - Brek Tidak Berfungsi", "Lampu - Hadapan Tidak Berfungsi", "Pemadam Api - Expired", "Reverse Alarm - Tidak Berfungsi", "Reverse Camera - Tidak Berfungsi", "Seat  - Koyak", "Sensor Minyak  - Problem (Tidak Detect)", "Tayar  - Belakang Kanan Botak", "Tayar  - Belakang Kanan Pancit", "Tayar  - Belakang Kiri Botak", "Tayar  - Belakang Kiri Pancit", "Tayar  - Hadapan Kanan Botak", "Tayar  - Hadapan Kanan Pancit", "Tayar  - Hadapan Kiri Botak", "Tayar  - Hadapan Kiri Pancit", "Wiper  - Patah", "Wiper  - Tiada Air", "Rim - Bengkok", "Pintu - Bengkok / Rosak", "Pintu - Bucket Tidak Tutup Rapat"],
-      "SHOVEL": ["I've checked and declared all OK", "Aircond  - Rosak", "Battery - Weak", "Brake - Tiada Cengkaman", "Bucket  - Berlubang", "Cermin - Kotor", "Cermin - Sisi Rosak", "Coolant - Low Level", "Horn - Tidak Berfungsi", "Joystick Lock - Damage", "Lampu - Beacon Tidak Berfungsi", "Lampu - Brake Tidak Berfungsi", "Lampu - Headlights Tidak Berfungsi", "Lampu - Signal Tidak Berfungsi", "Lampu - Spotlights Tidak Berfungsi", "Oil (Engine) - Low Level", "Oil (Hydraulic) - Leaking", "Oil (Transmission) - Low", "Pemadam Api - Expired", "Reverse Alarm - Tidak Berfungsi", "Step Leadder - Loose"],
-      "QC": ["I've checked and declared all OK", "Aircond - Malfunction", "Blower  - Malfunction", "Boom Movement - Tidak Berfungsi", "Cermin  - Kotor / Berminyak", "Gantry Movement - Rosak", "Hoist Movement - Grease Kurang", "Hoist Movement - Rosak", "Hoist Movement - Slow", "Intercom - Malfunction", "Lampu - Flood Light Tidak Berfungsi", "Lampu - Girder Light Tidak Berfungsi", "Lampu - Lampu Lift Tidak Berfungsi", "Pemadam Api - Expired", "Pintu - Rosak", "Seat  - Rosak", "Siren - Foot Siren Tidak Berfungsi", "Siren - Gantry Siren Tidak Berfungsi", "Spreader  - Problem", "Spreader Limit - Tidak Detect", "Twistlock  - Tidak Berfungsi"]
-    };
-
-    const REVERSE_LOOKUP = {};
-    for (const [eqType, numList] of Object.entries(EQUIPMENT_DATABASE)) {
-      numList.forEach(num => { REVERSE_LOOKUP[num.toUpperCase()] = eqType; });
-    }
+    // Global databases populated asynchronously from data.json
+    let EQUIPMENT_DATABASE = {};
+    let ISSUE_DATABASE = {};
+    let REVERSE_LOOKUP = {};
 
     const LOGIN_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/23/workflows/29ef85880a4c4deaa667684c428d530d/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=MBH_x3BWausPompPfN0xNODkcPhbDVA7Bv3vGgFW2SY";
     const CHECKLIST_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/08/workflows/d7ac73d3d7d7423eb077a2895b0738df/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=OLDn8ig2sbXDzxKke7ijuD4cLHTaQS-3v2oVkSIDrMw";
 
     let currentUser = null;
+
+    // Load configuration asynchronously from data.json with localStorage fallback
+    async function loadConfigData() {
+      try {
+        const cached = localStorage.getItem('spts_config_data');
+        if (cached) {
+          applyConfig(JSON.parse(cached));
+        }
+
+        const res = await fetch('data.json');
+        if (res.ok) {
+          const freshData = await res.json();
+          localStorage.setItem('spts_config_data', JSON.stringify(freshData));
+          applyConfig(freshData);
+        }
+      } catch (e) {
+        console.warn("Using offline cached data.json configuration.");
+      }
+    }
+
+    function applyConfig(data) {
+      EQUIPMENT_DATABASE = data.EQUIPMENT_DATABASE || {};
+      ISSUE_DATABASE = data.ISSUE_DATABASE || {};
+
+      REVERSE_LOOKUP = {};
+      for (const [eqType, numList] of Object.entries(EQUIPMENT_DATABASE)) {
+        numList.forEach(num => { REVERSE_LOOKUP[num.toUpperCase()] = eqType; });
+      }
+
+      refreshGrids();
+    }
 
     function renderGridBoxes(containerId, items, selectedValue, onSelectCallback, isList = false) {
       const container = document.getElementById(containerId);
@@ -794,9 +798,10 @@
       const numVal = document.getElementById('selectEquipmentNo').value.trim();
       const issueVal = document.getElementById('selectIssue').value.trim();
 
-      // 1. Render Equipment Category Grid
+      // 1. Equipment Grid
       const eqQuery = eqVal.toUpperCase();
       const eqFiltered = Object.keys(EQUIPMENT_DATABASE).filter(eq => eq.includes(eqQuery));
+      
       renderGridBoxes('equipmentGrid', eqFiltered, eqVal, (selected) => {
         document.getElementById('selectEquipment').value = selected;
         document.getElementById('selectEquipmentNo').value = '';
@@ -804,11 +809,10 @@
         refreshGrids();
       });
 
-      // 2. Render Equipment Number Grid STRICT CHECK
+      // 2. Equipment Number Grid (Strictly hidden when eqVal & numVal are empty)
       const numQuery = numVal.toUpperCase();
       let numFiltered = [];
 
-      // Only show pills if user selected Equipment Category OR typed an Equipment Number
       if (eqVal !== "") {
         const numSource = EQUIPMENT_DATABASE[eqVal.toUpperCase()] || [];
         numFiltered = numSource.filter(n => n.toUpperCase().includes(numQuery));
@@ -816,7 +820,6 @@
         const numSource = Object.values(EQUIPMENT_DATABASE).flat();
         numFiltered = numSource.filter(n => n.toUpperCase().includes(numQuery));
       }
-      // If eqVal is "" and numVal is "", numFiltered is [], grid stays empty!
 
       renderGridBoxes('equipmentNoGrid', numFiltered, numVal, (selected) => {
         document.getElementById('selectEquipmentNo').value = selected;
@@ -826,7 +829,7 @@
         refreshGrids();
       });
 
-      // 3. Render Issue List Grid
+      // 3. Issue Grid
       const issueQuery = issueVal.toUpperCase();
       let issueSource = eqVal && ISSUE_DATABASE[eqVal.toUpperCase()] 
         ? ISSUE_DATABASE[eqVal.toUpperCase()] 
@@ -872,7 +875,6 @@
         });
 
         const result = await response.json();
-        console.log("Login Flow Response Object:", result);
 
         if (response.ok && (result.status === 'success' || result.Title || result.COMPANY_ID || result.name)) {
           currentUser = result;
@@ -934,7 +936,6 @@
       refreshGrids();
     }
 
-    // HOME BUTTON CLICK: Resets inputs and navigates back to Home Page
     function closeChecklist() {
       document.getElementById('selectEquipment').value = '';
       document.getElementById('selectEquipmentNo').value = '';
@@ -1126,6 +1127,8 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      loadConfigData();
+
       const activeSession = sessionStorage.getItem('userSession');
       if (activeSession) {
         currentUser = JSON.parse(activeSession);
