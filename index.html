@@ -800,7 +800,7 @@
     const LOGIN_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/23/workflows/29ef85880a4c4deaa667684c428d530d/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=MBH_x3BWausPompPfN0xNODkcPhbDVA7Bv3vGgFW2SY";
     const CHECKLIST_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/08/workflows/d7ac73d3d7d7423eb077a2895b0738df/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=OLDn8ig2sbXDzxKke7ijuD4cLHTaQS-3v2oVkSIDrMw";
     
-    // INTEGRATED YOUR NEW GET LOGS POWER AUTOMATE URL HERE:
+    // INTEGRATED POWER AUTOMATE GET LOGS FLOW URL:
     const GET_LOGS_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/23/workflows/41d16fdee72843db94d61e4ec314841a/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_qpB6B3yesT9KNhGtnsB6oRu4TFovZPbjrKnykFpXck";
 
     let currentUser = null;
@@ -867,7 +867,7 @@
       const tbody = document.getElementById('declarationLogsBody');
       tbody.innerHTML = '';
 
-      if (!logs || logs.length === 0) {
+      if (!logs || !Array.isArray(logs) || logs.length === 0) {
         tbody.innerHTML = `<tr><td colspan="3" class="declaration-empty">No declarations in last 12 hours.</td></tr>`;
         return;
       }
@@ -1006,7 +1006,7 @@
 
         const result = await response.json();
 
-        if (response.ok && (result.status === 'success' || result.Title || result.COMPANY_ID || result.name)) {
+        if (response.ok && (result.status === 'success' || result.Title || result.COMPANY_ID || result.ID || result.name)) {
           currentUser = result;
           sessionStorage.setItem('userSession', JSON.stringify(result));
           showHomeView();
@@ -1229,7 +1229,7 @@
           
           hideConfirmModal();
           refreshGrids();
-          loadUser12HourLogs(); // Instantly refresh the 12-hour table
+          loadUser12HourLogs();
 
           const successBanner = document.getElementById('successBanner');
           successBanner.classList.remove('hidden');
