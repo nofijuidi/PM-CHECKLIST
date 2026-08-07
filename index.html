@@ -365,7 +365,7 @@
     .declaration-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 12px;
+      font-size: 11px;
     }
 
     .declaration-table th {
@@ -373,14 +373,19 @@
       color: #ffffff;
       font-weight: 800;
       text-align: left;
-      padding: 6px 8px;
+      padding: 6px 5px;
       position: sticky;
       top: 0;
       z-index: 2;
+      border-right: 1px solid #1a365d;
+    }
+
+    .declaration-table th:last-child {
+      border-right: none;
     }
 
     .declaration-table td {
-      padding: 6px 8px;
+      padding: 6px 5px;
       border-bottom: 1px solid #e2e8f0;
       color: #1e293b;
       font-weight: 600;
@@ -806,7 +811,7 @@
         />
       </div>
 
-      <!-- Dynamic Pillbox Container (Appears directly below active input) -->
+      <!-- Dynamic Pillbox Container -->
       <div id="activePillboxArea" class="active-pillbox-area hidden">
         <div id="pillboxGrid"></div>
       </div>
@@ -822,14 +827,15 @@
           <table class="declaration-table">
             <thead>
               <tr>
-                <th style="width: 38%;">DATE</th>
-                <th style="width: 22%;">EQUIPNUM</th>
-                <th style="width: 40%;">AREA</th>
+                <th style="width: 33%;">DATE</th>
+                <th style="width: 20%;">EQUIPNUM</th>
+                <th style="width: 32%;">AREA</th>
+                <th style="width: 15%;">ID</th>
               </tr>
             </thead>
             <tbody id="declarationLogsBody">
               <tr>
-                <td colspan="3" class="declaration-empty">Loading logs...</td>
+                <td colspan="4" class="declaration-empty">Loading logs...</td>
               </tr>
             </tbody>
           </table>
@@ -1012,12 +1018,13 @@
     // FETCH & RENDER PAST 12-HOUR SUBMISSIONS FROM EXCEL LOGTABLE
     async function loadUser12HourLogs() {
       const tbody = document.getElementById('declarationLogsBody');
-      tbody.innerHTML = `<tr><td colspan="3" class="declaration-empty">Loading logs...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">Loading logs...</td></tr>`;
 
+      // Use the exact ID obtained upon login
       const userIdVal = getPropValue(currentUser, ['COMPANY_ID', 'company_id', 'Company_ID', 'ID', 'id', 'Username', 'username'], '');
 
       if (!userIdVal) {
-        tbody.innerHTML = `<tr><td colspan="3" class="declaration-empty">No active user session.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">No active user session.</td></tr>`;
         return;
       }
 
@@ -1032,52 +1039,41 @@
           const logs = await response.json();
           renderLogsTable(logs);
         } else {
-          tbody.innerHTML = `<tr><td colspan="3" class="declaration-empty">Unable to fetch recent declarations.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">Unable to fetch recent declarations.</td></tr>`;
         }
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="3" class="declaration-empty">No recent declarations found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">No recent declarations found.</td></tr>`;
       }
     }
 
-    // FORMAT DATE TO dd/mm/yyyy hh:mm (Strict Direct String Parser - Prevents +1 Day Bumps)
+    // FORMAT DATE TO dd/mm/yyyy hh:mm WITH 8-HOUR DEDUCTION
     function formatLogDate(rawDateStr) {
       if (!rawDateStr || rawDateStr === '-') return '-';
 
-      const str = String(rawDateStr).trim();
+      let cleanStr = String(rawDateStr).trim().replace(' ', 'T');
+      let d = new Date(cleanStr);
 
-      // Handles "2026-08-07 17:58:00" or ISO "2026-08-07T17:58:00..."
-      if (str.includes(' ') || str.includes('T')) {
-        const cleanStr = str.replace('T', ' ');
-        const parts = cleanStr.split(' ');
-        
-        if (parts.length >= 2) {
-          const dateParts = parts[0].split('-'); // [YYYY, MM, DD]
-          const timeParts = parts[1].split(':'); // [HH, mm, ss]
-
-          if (dateParts.length === 3 && timeParts.length >= 2) {
-            const yyyy = dateParts[0];
-            const mm = dateParts[1];
-            const dd = dateParts[2];
-            const hh = timeParts[0];
-            const min = timeParts[1];
-
-            return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
-          }
-        }
+      if (isNaN(d.getTime())) {
+        return rawDateStr;
       }
 
-      // Fallback for standard Date objects (Uses UTC getter to prevent local timezone shift)
-      let d = new Date(rawDateStr);
-      if (!isNaN(d.getTime())) {
-        const dd = String(d.getUTCDate()).padStart(2, '0');
-        const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
-        const yyyy = d.getUTCFullYear();
-        const hh = String(d.getUTCHours()).padStart(2, '0');
-        const min = String(d.getUTCMinutes()).padStart(2, '0');
-        return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
-      }
+      // Explicitly deduct 8 hours (8 * 60 * 60 * 1000 milliseconds)
+      d = new Date(d.getTime() - (8 * 60 * 60 * 1000));
 
-      return rawDateStr;
+      const dd = String(d.getUTCDate()).padStart(2, '0');
+      const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const yyyy = d.getUTCFullYear();
+      const hh = String(d.getUTCHours()).padStart(2, '0');
+      const min = String(d.getUTCMinutes()).padStart(2, '0');
+
+      return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+    }
+
+    function parseLogTimestamp(rawDateStr) {
+      if (!rawDateStr) return 0;
+      let cleanStr = String(rawDateStr).trim().replace(' ', 'T');
+      let d = new Date(cleanStr);
+      return isNaN(d.getTime()) ? 0 : d.getTime();
     }
 
     function renderLogsTable(logs) {
@@ -1085,29 +1081,33 @@
       tbody.innerHTML = '';
 
       if (!logs || !Array.isArray(logs) || logs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" class="declaration-empty">No declarations in last 12 hours.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">No declarations in last 12 hours.</td></tr>`;
         return;
       }
 
       const twelveHoursAgo = new Date(Date.now() - (12 * 60 * 60 * 1000));
 
-      const filteredLogs = logs.filter(row => {
+      // 1. Filter logs within the last 12 hours
+      let filteredLogs = logs.filter(row => {
         let rawDate = row.DATE || row.date || row.Date || '';
         if (!rawDate) return true;
-        
-        let parsedDate = new Date(rawDate);
-        if (isNaN(parsedDate.getTime())) {
-          parsedDate = new Date(String(rawDate).replace(' ', 'T'));
-        }
-        
-        return isNaN(parsedDate.getTime()) || parsedDate >= twelveHoursAgo;
+        let ts = parseLogTimestamp(rawDate);
+        return ts === 0 || new Date(ts) >= twelveHoursAgo;
       });
 
       if (filteredLogs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" class="declaration-empty">No declarations in last 12 hours.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">No declarations in last 12 hours.</td></tr>`;
         return;
       }
 
+      // 2. SORT DESCENDING: Latest submissions appear at the top
+      filteredLogs.sort((a, b) => {
+        let tsA = parseLogTimestamp(a.DATE || a.date || a.Date);
+        let tsB = parseLogTimestamp(b.DATE || b.date || b.Date);
+        return tsB - tsA;
+      });
+
+      // 3. Render 4-Column Table Rows
       filteredLogs.forEach(row => {
         const tr = document.createElement('tr');
         
@@ -1116,11 +1116,13 @@
 
         const equipNum = row.EQUIPNUM || row.equipnum || row.EquipNum || '-';
         const area = row.AREA || row.area || row.Area || '-';
+        const userLogId = row.ID || row.id || row.COMPANY_ID || row.Company_ID || '-';
 
         tr.innerHTML = `
           <td>${formattedDate}</td>
           <td><strong>${equipNum}</strong></td>
           <td>${area}</td>
+          <td><strong>${userLogId}</strong></td>
         `;
         tbody.appendChild(tr);
       });
