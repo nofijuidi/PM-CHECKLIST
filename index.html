@@ -781,7 +781,7 @@
         />
       </div>
 
-      <!-- Dynamic Pillbox Container (Appears directly below the clicked input field) -->
+      <!-- Dynamic Pillbox Container (Appears directly below active input) -->
       <div id="activePillboxArea" class="active-pillbox-area hidden">
         <div id="pillboxGrid"></div>
       </div>
@@ -1014,27 +1014,45 @@
       }
     }
 
-    // FORMAT DATE TO dd/mm/yyyy hh:mm
+    // FORMAT DATE TO dd/mm/yyyy hh:mm (Preserves local Excel recorded time)
     function formatLogDate(rawDateStr) {
       if (!rawDateStr || rawDateStr === '-') return '-';
 
+      const str = String(rawDateStr).trim();
+
+      // If date comes as "2026-08-07 17:58:00" or ISO "2026-08-07T17:58:00..."
+      if (str.includes(' ') || str.includes('T')) {
+        const cleanStr = str.replace('T', ' ');
+        const parts = cleanStr.split(' ');
+        
+        if (parts.length >= 2) {
+          const dateParts = parts[0].split('-'); // [YYYY, MM, DD]
+          const timeParts = parts[1].split(':'); // [HH, mm, ss]
+
+          if (dateParts.length === 3 && timeParts.length >= 2) {
+            const yyyy = dateParts[0];
+            const mm = dateParts[1];
+            const dd = dateParts[2];
+            const hh = timeParts[0];
+            const min = timeParts[1];
+
+            return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+          }
+        }
+      }
+
+      // Fallback for standard Date objects
       let d = new Date(rawDateStr);
-      if (isNaN(d.getTime())) {
-        // Attempt parse for YYYY-MM-DD HH:mm:ss format
-        d = new Date(String(rawDateStr).replace(' ', 'T'));
+      if (!isNaN(d.getTime())) {
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const yyyy = d.getFullYear();
+        const hh = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
       }
 
-      if (isNaN(d.getTime())) {
-        return rawDateStr; // Fallback if unparseable
-      }
-
-      const dd = String(d.getDate()).padStart(2, '0');
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const yyyy = d.getFullYear();
-      const hh = String(d.getHours()).padStart(2, '0');
-      const min = String(d.getMinutes()).padStart(2, '0');
-
-      return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+      return rawDateStr;
     }
 
     function renderLogsTable(logs) {
@@ -1162,7 +1180,7 @@
       }
 
       updateLiveShiftAndDate();
-      setActiveMode('equipment'); // Default active pillbox on open
+      setActiveMode('equipment');
       loadUser12HourLogs();
     }
 
