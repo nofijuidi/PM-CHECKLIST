@@ -799,8 +799,6 @@
 
     const LOGIN_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/23/workflows/29ef85880a4c4deaa667684c428d530d/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=MBH_x3BWausPompPfN0xNODkcPhbDVA7Bv3vGgFW2SY";
     const CHECKLIST_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/08/workflows/d7ac73d3d7d7423eb077a2895b0738df/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=OLDn8ig2sbXDzxKke7ijuD4cLHTaQS-3v2oVkSIDrMw";
-    
-    // INTEGRATED POWER AUTOMATE GET LOGS FLOW URL:
     const GET_LOGS_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/23/workflows/41d16fdee72843db94d61e4ec314841a/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_qpB6B3yesT9KNhGtnsB6oRu4TFovZPbjrKnykFpXck";
 
     let currentUser = null;
@@ -838,7 +836,7 @@
     // FETCH & RENDER PAST 12-HOUR SUBMISSIONS FROM EXCEL LOGTABLE
     async function loadUser12HourLogs() {
       const tbody = document.getElementById('declarationLogsBody');
-      const userIdVal = getPropValue(currentUser, ['COMPANY_ID', 'company_id', 'Company_ID', 'ID', 'id', 'Username', 'username'], '');
+      const userIdVal = getPropValue(currentUser, ['ID', 'COMPANY_ID', 'company_id', 'Company_ID', 'id', 'Username', 'username'], '');
 
       if (!userIdVal) {
         tbody.innerHTML = `<tr><td colspan="3" class="declaration-empty">No active user session.</td></tr>`;
@@ -875,14 +873,21 @@
       logs.forEach(row => {
         const tr = document.createElement('tr');
         
-        let formattedDate = row.date || row.Date || row.DATE || '-';
-        if (formattedDate.includes(' ')) {
-          const parts = formattedDate.split(' ');
+        // Parse DATE header matching Excel schema
+        let rawDate = row.DATE || row.date || row.Date || '-';
+        let formattedDate = rawDate;
+        
+        if (String(rawDate).includes(' ')) {
+          const parts = String(rawDate).split(' ');
           formattedDate = parts[1] ? parts[1].substring(0, 5) : parts[0];
+        } else if (String(rawDate).includes('T')) {
+          const timePart = String(rawDate).split('T')[1];
+          formattedDate = timePart ? timePart.substring(0, 5) : rawDate;
         }
 
-        const equipNum = row.equipnum || row.EquipNum || row.EQUIPNUM || '-';
-        const area = row.area || row.Area || row.AREA || '-';
+        // Exact headers from Excel: EQUIPNUM and AREA
+        const equipNum = row.EQUIPNUM || row.equipnum || row.EquipNum || '-';
+        const area = row.AREA || row.area || row.Area || '-';
 
         tr.innerHTML = `
           <td>${formattedDate}</td>
@@ -1006,7 +1011,7 @@
 
         const result = await response.json();
 
-        if (response.ok && (result.status === 'success' || result.Title || result.COMPANY_ID || result.ID || result.name)) {
+        if (response.ok && (result.status === 'success' || result.Title || result.NAME || result.ID || result.COMPANY_ID || result.name)) {
           currentUser = result;
           sessionStorage.setItem('userSession', JSON.stringify(result));
           showHomeView();
@@ -1037,16 +1042,16 @@
       document.getElementById('mainView').classList.remove('hidden');
 
       if (currentUser) {
-        const nameOrTitle = getPropValue(currentUser, ['Title', 'title', 'name', 'NAME'], 'User');
+        const nameOrTitle = getPropValue(currentUser, ['NAME', 'Title', 'title', 'name'], 'User');
         document.getElementById('displayName').innerText = nameOrTitle;
         
-        const companyVal = getPropValue(currentUser, ['Company', 'company', 'COMPANY'], 'SPTS');
+        const companyVal = getPropValue(currentUser, ['COMPANY', 'Company', 'company'], 'SPTS');
         document.getElementById('displayCompany').innerText = companyVal;
         
-        const userIdVal = getPropValue(currentUser, ['COMPANY_ID', 'company_id', 'Company_ID', 'ID', 'id', 'Username', 'username'], 'N/A');
+        const userIdVal = getPropValue(currentUser, ['ID', 'COMPANY_ID', 'company_id', 'Company_ID', 'id', 'Username', 'username'], 'N/A');
         document.getElementById('displayUserId').innerText = `ID: ${userIdVal}`;
         
-        const groupVal = getPropValue(currentUser, ['Group', 'group', 'GROUP'], 'N/A');
+        const groupVal = getPropValue(currentUser, ['GROUP', 'Group', 'group'], 'N/A');
         document.getElementById('displayGroup').innerText = `Group: ${groupVal}`;
       }
     }
@@ -1056,8 +1061,8 @@
       document.getElementById('checklistView').classList.remove('hidden');
 
       if (currentUser) {
-        const nameOrTitle = getPropValue(currentUser, ['Title', 'title', 'name', 'NAME'], 'OPERATOR NAME');
-        const companyVal = getPropValue(currentUser, ['Company', 'company', 'COMPANY'], 'SPTS SERVICES SDN BHD');
+        const nameOrTitle = getPropValue(currentUser, ['NAME', 'Title', 'title', 'name'], 'OPERATOR NAME');
+        const companyVal = getPropValue(currentUser, ['COMPANY', 'Company', 'company'], 'SPTS SERVICES SDN BHD');
         document.getElementById('inspCompany').innerText = companyVal;
         document.getElementById('inspOperator').innerText = nameOrTitle;
       }
@@ -1158,7 +1163,7 @@
         return;
       }
 
-      const rawName = getPropValue(currentUser, ['Title', 'title', 'name', 'NAME'], 'Operator');
+      const rawName = getPropValue(currentUser, ['NAME', 'Title', 'title', 'name'], 'Operator');
       const firstName = rawName.split(' ')[0];
       const formattedFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
 
@@ -1194,10 +1199,10 @@
 
       const isCustomNewIssue = !isStandardIssue;
 
-      const userIdVal = getPropValue(currentUser, ['COMPANY_ID', 'company_id', 'Company_ID', 'ID', 'id', 'Username', 'username'], 'N/A');
-      const nameTitleVal = getPropValue(currentUser, ['Title', 'title', 'name', 'NAME'], 'Unknown');
-      const companyVal = getPropValue(currentUser, ['Company', 'company', 'COMPANY'], 'SPTS');
-      const groupVal = getPropValue(currentUser, ['Group', 'group', 'GROUP'], 'N/A');
+      const userIdVal = getPropValue(currentUser, ['ID', 'COMPANY_ID', 'company_id', 'Company_ID', 'id', 'Username', 'username'], 'N/A');
+      const nameTitleVal = getPropValue(currentUser, ['NAME', 'Title', 'title', 'name'], 'Unknown');
+      const companyVal = getPropValue(currentUser, ['COMPANY', 'Company', 'company'], 'SPTS');
+      const groupVal = getPropValue(currentUser, ['GROUP', 'Group', 'group'], 'N/A');
 
       const payload = {
         date: getFormattedDateTime(),
