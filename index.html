@@ -829,13 +829,27 @@
         refreshGrids();
       });
 
-      // 3. Issue Grid
-      const issueQuery = issueVal.toUpperCase();
+      // 3. Issue Grid (Multi-Word Fuzzy Filtering)
+      const rawIssueQuery = issueVal.trim().toUpperCase();
       let issueSource = eqVal && ISSUE_DATABASE[eqVal.toUpperCase()] 
         ? ISSUE_DATABASE[eqVal.toUpperCase()] 
         : ["I've checked and declared all OK"];
 
-      const issueFiltered = issueSource.filter(i => i.toUpperCase().includes(issueQuery));
+      let issueFiltered = [];
+
+      if (rawIssueQuery === "") {
+        issueFiltered = issueSource;
+      } else {
+        // Split input into individual words (e.g. "TAYAR BOTAK" -> ["TAYAR", "BOTAK"])
+        const searchTerms = rawIssueQuery.split(/\s+/);
+
+        issueFiltered = issueSource.filter(issueItem => {
+          const upperIssue = issueItem.toUpperCase();
+          // Verify that EVERY search word appears in the issue text
+          return searchTerms.every(term => upperIssue.includes(term));
+        });
+      }
+
       renderGridBoxes('issueGrid', issueFiltered, issueVal, (selected) => {
         document.getElementById('selectIssue').value = selected;
         refreshGrids();
