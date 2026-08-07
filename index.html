@@ -71,6 +71,24 @@
       display: none !important;
     }
 
+    /* Top Right Header Icon */
+    .top-right-app-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      object-fit: cover;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+      border: 1px solid #cbd5e1;
+    }
+
+    /* Main Home Header Row */
+    .main-top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
     /* Branding */
     .brand-section {
       text-align: center;
@@ -139,10 +157,10 @@
       flex: 1;
       text-align: center;
       color: #002060;
-      font-size: 19px;
+      font-size: 18px;
       font-weight: 800;
       letter-spacing: 0.5px;
-      margin-right: 40px;
+      padding: 0 8px;
     }
 
     /* Banner Bar */
@@ -690,6 +708,12 @@
 
     <!-- MAIN HOME PAGE -->
     <div id="mainView" class="view-screen hidden">
+      <!-- Top Nav Row with Icon -->
+      <div class="main-top-nav">
+        <div style="font-size: 18px; font-weight: 800; color: #0f172a;">SPTS PORTAL</div>
+        <img src="icon-192.png" alt="App Icon" class="top-right-app-icon" onerror="this.style.display='none'" />
+      </div>
+
       <div class="user-card">
         <div class="user-name" id="displayName">-</div>
         <div class="badge-group">
@@ -721,6 +745,7 @@
       <div class="inspection-top-nav">
         <div class="btn-home-icon" onclick="closeChecklist()" title="Go to Home Page">🏠</div>
         <div class="inspection-header-title">EQUIPMENT INSPECTION</div>
+        <img src="icon-192.png" alt="App Icon" class="top-right-app-icon" onerror="this.style.display='none'" />
       </div>
 
       <!-- SUCCESS BANNER -->
@@ -1014,13 +1039,13 @@
       }
     }
 
-    // FORMAT DATE TO dd/mm/yyyy hh:mm (Preserves local Excel recorded time)
+    // FORMAT DATE TO dd/mm/yyyy hh:mm (Strict Direct String Parser - Prevents +1 Day Bumps)
     function formatLogDate(rawDateStr) {
       if (!rawDateStr || rawDateStr === '-') return '-';
 
       const str = String(rawDateStr).trim();
 
-      // If date comes as "2026-08-07 17:58:00" or ISO "2026-08-07T17:58:00..."
+      // Handles "2026-08-07 17:58:00" or ISO "2026-08-07T17:58:00..."
       if (str.includes(' ') || str.includes('T')) {
         const cleanStr = str.replace('T', ' ');
         const parts = cleanStr.split(' ');
@@ -1041,14 +1066,14 @@
         }
       }
 
-      // Fallback for standard Date objects
+      // Fallback for standard Date objects (Uses UTC getter to prevent local timezone shift)
       let d = new Date(rawDateStr);
       if (!isNaN(d.getTime())) {
-        const dd = String(d.getDate()).padStart(2, '0');
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const yyyy = d.getFullYear();
-        const hh = String(d.getHours()).padStart(2, '0');
-        const min = String(d.getMinutes()).padStart(2, '0');
+        const dd = String(d.getUTCDate()).padStart(2, '0');
+        const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const yyyy = d.getUTCFullYear();
+        const hh = String(d.getUTCHours()).padStart(2, '0');
+        const min = String(d.getUTCMinutes()).padStart(2, '0');
         return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
       }
 
@@ -1343,7 +1368,6 @@
         });
 
         if (response.ok) {
-          // Reset form inputs
           document.getElementById('selectEquipment').value = '';
           document.getElementById('selectEquipmentNo').value = '';
           document.getElementById('selectIssue').value = '';
@@ -1351,7 +1375,6 @@
           hideConfirmModal();
           setActiveMode('equipment');
 
-          // Instantly refresh the declaration table
           loadUser12HourLogs();
 
           const successBanner = document.getElementById('successBanner');
