@@ -206,7 +206,7 @@
       margin-bottom: 6px;
     }
 
-    .form-input, .form-textarea {
+    .form-input {
       width: 100%;
       padding: 12px 14px;
       font-size: 15px;
@@ -217,14 +217,57 @@
       color: #333;
     }
 
-    .form-input:focus, .form-textarea:focus {
+    .form-input:focus {
       border-color: #005A9E;
       box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.2);
     }
 
-    .form-textarea {
-      height: 85px;
-      resize: none;
+    /* Declaration Logs Table Container */
+    .declaration-table-box {
+      width: 100%;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1.5px solid #0078D4;
+      border-radius: 8px;
+      background-color: #f8fafc;
+      padding: 2px;
+    }
+
+    .declaration-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .declaration-table th {
+      background-color: #002060;
+      color: #ffffff;
+      font-weight: 800;
+      text-align: left;
+      padding: 6px 8px;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .declaration-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #1e293b;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .declaration-table tr:nth-child(even) {
+      background-color: #ffffff;
+    }
+
+    .declaration-empty {
+      text-align: center;
+      padding: 12px;
+      color: #64748b;
+      font-size: 13px;
+      font-style: italic;
     }
 
     /* Grid Pill Box Layout */
@@ -697,9 +740,25 @@
         <div id="issueGrid" class="grid-container-list"></div>
       </div>
 
+      <!-- 4. Declaration (last 12 hours) Table -->
       <div class="form-group">
         <label class="form-label">Declaration (last 12 hours)</label>
-        <textarea id="declarationText" class="form-textarea" placeholder="- hrs -"></textarea>
+        <div class="declaration-table-box">
+          <table class="declaration-table">
+            <thead>
+              <tr>
+                <th style="width: 30%;">DATE</th>
+                <th style="width: 25%;">EQUIPNUM</th>
+                <th style="width: 45%;">AREA</th>
+              </tr>
+            </thead>
+            <tbody id="declarationLogsBody">
+              <tr>
+                <td colspan="3" class="declaration-empty">Loading logs...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="action-row">
@@ -734,17 +793,18 @@
   </div>
 
   <script>
-    // Global databases populated asynchronously from data.json
     let EQUIPMENT_DATABASE = {};
     let ISSUE_DATABASE = {};
     let REVERSE_LOOKUP = {};
 
     const LOGIN_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/23/workflows/29ef85880a4c4deaa667684c428d530d/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=MBH_x3BWausPompPfN0xNODkcPhbDVA7Bv3vGgFW2SY";
     const CHECKLIST_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/08/workflows/d7ac73d3d7d7423eb077a2895b0738df/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=OLDn8ig2sbXDzxKke7ijuD4cLHTaQS-3v2oVkSIDrMw";
+    
+    // INTEGRATED YOUR NEW GET LOGS POWER AUTOMATE URL HERE:
+    const GET_LOGS_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/23/workflows/41d16fdee72843db94d61e4ec314841a/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_qpB6B3yesT9KNhGtnsB6oRu4TFovZPbjrKnykFpXck";
 
     let currentUser = null;
 
-    // Load configuration asynchronously from data.json with localStorage fallback
     async function loadConfigData() {
       try {
         const cached = localStorage.getItem('spts_config_data');
@@ -773,6 +833,64 @@
       }
 
       refreshGrids();
+    }
+
+    // FETCH & RENDER PAST 12-HOUR SUBMISSIONS FROM EXCEL LOGTABLE
+    async function loadUser12HourLogs() {
+      const tbody = document.getElementById('declarationLogsBody');
+      const userIdVal = getPropValue(currentUser, ['COMPANY_ID', 'company_id', 'Company_ID', 'ID', 'id', 'Username', 'username'], '');
+
+      if (!userIdVal) {
+        tbody.innerHTML = `<tr><td colspan="3" class="declaration-empty">No active user session.</td></tr>`;
+        return;
+      }
+
+      try {
+        const response = await fetch(GET_LOGS_FLOW_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ COMPANY_ID: String(userIdVal) })
+        });
+
+        if (response.ok) {
+          const logs = await response.json();
+          renderLogsTable(logs);
+        } else {
+          tbody.innerHTML = `<tr><td colspan="3" class="declaration-empty">Unable to fetch recent declarations.</td></tr>`;
+        }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="3" class="declaration-empty">No recent declarations found.</td></tr>`;
+      }
+    }
+
+    function renderLogsTable(logs) {
+      const tbody = document.getElementById('declarationLogsBody');
+      tbody.innerHTML = '';
+
+      if (!logs || logs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="declaration-empty">No declarations in last 12 hours.</td></tr>`;
+        return;
+      }
+
+      logs.forEach(row => {
+        const tr = document.createElement('tr');
+        
+        let formattedDate = row.date || row.Date || row.DATE || '-';
+        if (formattedDate.includes(' ')) {
+          const parts = formattedDate.split(' ');
+          formattedDate = parts[1] ? parts[1].substring(0, 5) : parts[0];
+        }
+
+        const equipNum = row.equipnum || row.EquipNum || row.EQUIPNUM || '-';
+        const area = row.area || row.Area || row.AREA || '-';
+
+        tr.innerHTML = `
+          <td>${formattedDate}</td>
+          <td><strong>${equipNum}</strong></td>
+          <td>${area}</td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
 
     function renderGridBoxes(containerId, items, selectedValue, onSelectCallback, isList = false) {
@@ -809,7 +927,7 @@
         refreshGrids();
       });
 
-      // 2. Equipment Number Grid (Strictly hidden when eqVal & numVal are empty)
+      // 2. Equipment Number Grid
       const numQuery = numVal.toUpperCase();
       let numFiltered = [];
 
@@ -840,12 +958,10 @@
       if (rawIssueQuery === "") {
         issueFiltered = issueSource;
       } else {
-        // Split input into individual words (e.g. "TAYAR BOTAK" -> ["TAYAR", "BOTAK"])
         const searchTerms = rawIssueQuery.split(/\s+/);
 
         issueFiltered = issueSource.filter(issueItem => {
           const upperIssue = issueItem.toUpperCase();
-          // Verify that EVERY search word appears in the issue text
           return searchTerms.every(term => upperIssue.includes(term));
         });
       }
@@ -948,13 +1064,13 @@
 
       updateLiveShiftAndDate();
       refreshGrids();
+      loadUser12HourLogs();
     }
 
     function closeChecklist() {
       document.getElementById('selectEquipment').value = '';
       document.getElementById('selectEquipmentNo').value = '';
       document.getElementById('selectIssue').value = '';
-      document.getElementById('declarationText').value = '';
       document.getElementById('successBanner').classList.add('hidden');
       
       document.getElementById('checklistView').classList.add('hidden');
@@ -1022,7 +1138,6 @@
       return `On ${dd} ${mmm} ${yyyy} ${hh}:${min}`;
     }
 
-    // SHOW CONFIRMATION MODAL POP-UP
     function showConfirmModal() {
       const equipment = document.getElementById('selectEquipment').value.trim();
       const equipmentNo = document.getElementById('selectEquipmentNo').value.trim();
@@ -1059,12 +1174,10 @@
       document.getElementById('confirmModal').classList.add('hidden');
     }
 
-    // CONFIRM BUTTON CLICK: Transmits data to Power Automate / Excel
     async function executeSubmission() {
       const equipment = document.getElementById('selectEquipment').value.trim();
       const equipmentNo = document.getElementById('selectEquipmentNo').value.trim();
       const issue = document.getElementById('selectIssue').value.trim();
-      const declaration = document.getElementById('declarationText').value.trim();
       const shiftText = document.getElementById('shiftBanner').innerText;
       const confirmBtn = document.getElementById('confirmSubmitBtn');
 
@@ -1096,7 +1209,6 @@
         equipment: String(equipment),
         equipnum: String(equipmentNo),
         area: String(issue),
-        declaration: String(declaration),
         isNewIssue: isCustomNewIssue
       };
 
@@ -1111,16 +1223,14 @@
         });
 
         if (response.ok) {
-          // Reset form fields for the next inspection
           document.getElementById('selectEquipment').value = '';
           document.getElementById('selectEquipmentNo').value = '';
           document.getElementById('selectIssue').value = '';
-          document.getElementById('declarationText').value = '';
           
           hideConfirmModal();
           refreshGrids();
+          loadUser12HourLogs(); // Instantly refresh the 12-hour table
 
-          // Show non-intrusive success banner
           const successBanner = document.getElementById('successBanner');
           successBanner.classList.remove('hidden');
           setTimeout(() => {
