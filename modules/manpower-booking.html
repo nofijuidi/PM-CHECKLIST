@@ -144,6 +144,7 @@
       display: flex;
       flex-direction: column;
       position: relative;
+      touch-action: none;
     }
 
     /* Zoom Control Floating Toolbar */
@@ -161,13 +162,13 @@
     }
 
     .zoom-btn {
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       background: #ffffff;
       border: none;
       border-radius: 6px;
       font-weight: bold;
-      font-size: 16px;
+      font-size: 18px;
       color: #0f172a;
       cursor: pointer;
       display: flex;
@@ -269,9 +270,9 @@
         
         <!-- On-Screen Manual Zoom Controls -->
         <div id="zoomControls" class="zoom-toolbar hidden">
-          <button class="zoom-btn" onclick="zoomIn()">＋</button>
-          <button class="zoom-btn" onclick="zoomOut()">－</button>
-          <button class="zoom-btn" onclick="resetZoom()">↺</button>
+          <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">＋</button>
+          <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">－</button>
+          <button class="zoom-btn" onclick="resetZoom()" title="Reset Zoom">↺</button>
         </div>
 
         <div id="pdfPlaceholder" class="pdf-placeholder">
@@ -379,9 +380,8 @@
       target.classList.remove('hidden');
       controls.classList.remove('hidden');
 
-      target.innerHTML = '<div style="color: white; padding: 20px;">Loading document...</div>';
+      target.innerHTML = '<div style="color: white; padding: 20px;">Loading HD document...</div>';
 
-      // Destroy previous Panzoom instance before rendering new document
       if (panzoomInstance) {
         panzoomInstance.destroy();
         panzoomInstance = null;
@@ -394,12 +394,12 @@
         const loadingTask = pdfjsLib.getDocument({ data: rawBinary });
         const pdf = await loadingTask.promise;
 
-        target.innerHTML = ''; // Clear loading text
+        target.innerHTML = '';
 
-        // High resolution scale for crisp rendering when zoomed in
+        // Render at Ultra-HD (scale 3.0) so text remains ultra sharp when zoomed deeply
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum);
-          const viewport = page.getViewport({ scale: 2.0 });
+          const viewport = page.getViewport({ scale: 3.0 });
 
           const canvas = document.createElement('canvas');
           canvas.className = 'pdf-page-canvas';
@@ -416,16 +416,20 @@
           }).promise;
         }
 
-        // Initialize Panzoom on the wrapper target
+        // Initialize Panzoom with maxScale: 12 (Deep Zoom Level)
         panzoomInstance = Panzoom(target, {
-          maxScale: 4,
-          minScale: 0.8,
-          contain: 'outside',
+          maxScale: 12,
+          minScale: 0.5,
+          step: 0.3,
+          contain: false,
           startScale: 1
         });
 
         // Enable mouse wheel zoom on PC
-        target.parentElement.addEventListener('wheel', panzoomInstance.zoomWithWheel);
+        target.parentElement.addEventListener('wheel', (e) => {
+          e.preventDefault();
+          panzoomInstance.zoomWithWheel(e);
+        }, { passive: false });
 
       } catch (err) {
         console.error('PDF Render Error:', err);
@@ -433,7 +437,6 @@
       }
     }
 
-    // Manual Zoom Button Actions
     function zoomIn() {
       if (panzoomInstance) panzoomInstance.zoomIn();
     }
