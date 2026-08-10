@@ -73,12 +73,6 @@
       font-size: 20px;
       cursor: pointer;
       color: #002060;
-      transition: background-color 0.2s ease;
-    }
-
-    .btn-home-icon:active {
-      background-color: #e2e8f0;
-      transform: scale(0.95);
     }
 
     .booking-header-title {
@@ -87,19 +81,9 @@
       color: #002060;
       font-size: 18px;
       font-weight: 800;
-      letter-spacing: 0.5px;
-      padding: 0 8px;
     }
 
-    .top-right-app-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      object-fit: cover;
-      border: 1px solid #cbd5e1;
-    }
-
-    /* Date Filter Status Bar */
+    /* Date Status Bar */
     .filter-info-bar {
       background-color: #eff6ff;
       border: 1px solid #bfdbfe;
@@ -114,13 +98,13 @@
       justify-content: space-between;
     }
 
-    /* File Selection Cards List */
+    /* File Selection Cards */
     .file-list-container {
       display: flex;
       flex-direction: column;
       gap: 8px;
       margin-bottom: 12px;
-      max-height: 140px;
+      max-height: 120px;
       overflow-y: auto;
     }
 
@@ -136,17 +120,15 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      transition: all 0.15s ease;
-      word-break: break-all;
     }
 
-    .file-card:hover, .file-card.active {
+    .file-card.active {
       border-color: #0078D4;
       background-color: #f0f7ff;
       color: #0078D4;
     }
 
-    /* PDF Viewer Container */
+    /* PDF Embedded Box */
     .pdf-card-container {
       flex: 1;
       width: 100%;
@@ -159,38 +141,14 @@
       position: relative;
     }
 
-    .pdf-toolbar-fallback {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px 12px;
-      background-color: #f1f5f9;
-      border-bottom: 1px solid #cbd5e1;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .btn-open-external {
-      background-color: #0078D4;
-      color: white;
-      border: none;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .pdf-frame {
+    .pdf-embed-object {
       width: 100%;
-      flex: 1;
+      height: 100%;
       border: none;
     }
 
     .pdf-placeholder {
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100%;
@@ -232,37 +190,32 @@
   <div class="app-viewport">
     <div class="view-screen">
       
-      <!-- Top Navigation Row -->
+      <!-- Top Navigation -->
       <div class="booking-top-nav">
-        <div class="btn-home-icon" onclick="goHome()" title="Go to Home Page">🏠</div>
+        <div class="btn-home-icon" onclick="goHome()">🏠</div>
         <div class="booking-header-title">MANPOWER BOOKING</div>
-        <img src="../icon-192.png" alt="App Icon" class="top-right-app-icon" onerror="this.style.display='none'" />
       </div>
 
-      <!-- Active Filter Banner -->
+      <!-- Date Banner -->
       <div class="filter-info-bar">
         <span>📅 Today's Bookings</span>
         <span id="currentDateDisplay">--/--/----</span>
       </div>
 
-      <!-- Available Files List -->
+      <!-- Document List -->
       <div id="fileListContainer" class="file-list-container">
         <div class="file-card">Connecting to booking server...</div>
       </div>
 
-      <!-- PDF Viewer Area -->
+      <!-- Native PDF Display Box -->
       <div class="pdf-card-container">
-        <div id="pdfToolbar" class="pdf-toolbar-fallback hidden">
-          <span>📄 Booking Document</span>
-          <a id="extLinkBtn" href="#" target="_blank" class="btn-open-external">Open PDF ↗</a>
-        </div>
         <div id="pdfPlaceholder" class="pdf-placeholder">
           📄 Select a booking document above to view content.
         </div>
-        <iframe id="spPdfViewer" class="pdf-frame hidden" allow="fullscreen"></iframe>
+        <object id="pdfViewerObj" class="pdf-embed-object hidden" type="application/pdf"></object>
       </div>
 
-      <!-- Action Footer -->
+      <!-- Footer Button -->
       <div class="action-row">
         <div class="btn-back-round" onclick="goHome()">➔</div>
       </div>
@@ -271,18 +224,13 @@
   </div>
 
   <script>
-    // Power Automate Signed Endpoint URL
     const GET_BOOKING_FILES_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/0ec41aab7114455687c2ce778f4c9459/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yzAu6ONVD7_Rm01FBxTuj4QLPcJZ4-9QD-aCXAPhnh0";
-
-    let currentUser = null;
 
     function checkSession() {
       const activeSession = sessionStorage.getItem('userSession');
       if (!activeSession) {
         window.location.href = '../index.html';
-        return;
       }
-      currentUser = JSON.parse(activeSession);
     }
 
     function goHome() {
@@ -294,12 +242,7 @@
       const dd = String(now.getDate()).padStart(2, '0');
       const mm = String(now.getMonth() + 1).padStart(2, '0');
       const yyyy = now.getFullYear();
-
-      return {
-        dayNum: dd,
-        monthNum: mm,
-        formattedDisplay: `${dd}/${mm}/${yyyy}`
-      };
+      return { dayNum: dd, monthNum: mm, formattedDisplay: `${dd}/${mm}/${yyyy}` };
     }
 
     async function fetchTodayBookings() {
@@ -310,55 +253,35 @@
       try {
         const response = await fetch(GET_BOOKING_FILES_FLOW_URL, {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({
-            monthNum: dateInfo.monthNum,
-            dayNum: dateInfo.dayNum
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ monthNum: dateInfo.monthNum, dayNum: dateInfo.dayNum })
         });
 
         if (response.ok) {
-          const files = await response.json();
-          renderFileList(files, dateInfo);
+          const result = await response.json();
+          renderFileList(result, dateInfo);
         } else {
-          const errorText = await response.text();
-          console.error('Flow Execution Error:', response.status, errorText);
-          container.innerHTML = `<div class="file-card" style="color: #dc2626;">Flow Error (${response.status}). Check flow run history.</div>`;
+          container.innerHTML = `<div class="file-card" style="color: #dc2626;">Flow Error (${response.status}).</div>`;
         }
       } catch (err) {
-        console.error('Fetch Exception:', err);
-        container.innerHTML = `<div class="file-card" style="color: #dc2626;">Network error connecting to flow.</div>`;
+        container.innerHTML = `<div class="file-card" style="color: #dc2626;">Network connection failed.</div>`;
       }
     }
 
-    function renderFileList(files, dateInfo) {
+    function renderFileList(result, dateInfo) {
       const container = document.getElementById('fileListContainer');
       container.innerHTML = '';
 
-      if (!files || !Array.isArray(files) || files.length === 0) {
+      // Support array or single response object
+      const files = Array.isArray(result) ? result : [result];
+
+      if (!files || files.length === 0 || !files[0]) {
         container.innerHTML = `<div class="file-card" style="color: #64748b;">No booking files found for ${dateInfo.formattedDisplay}.</div>`;
         return;
       }
 
       files.forEach((file, index) => {
-        const fileName = file.Name || file.DisplayName || file.name || 'Booking Document';
-        
-        // Extract absolute web link
-        let rawUrl = file.WebUrl || file['{Link}'] || file.link || file.EmbedUrl || file.AbsoluteUri || file.PdfData || '';
-
-        let embedUrl = rawUrl;
-
-        if (typeof rawUrl === 'string' && rawUrl.length > 0) {
-          if (rawUrl.includes('sharepoint.com') || rawUrl.includes('onedrive.com')) {
-            // Transform URL into Office Online Embed viewer to bypass X-Frame-Options headers
-            const cleanUrl = rawUrl.split('?')[0];
-            embedUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(cleanUrl)}`;
-          }
-        }
-
+        const fileName = file.fileName || file.Name || file.DisplayName || 'Booking Document';
         const card = document.createElement('div');
         card.className = 'file-card';
         card.innerHTML = `<span>📄 ${fileName}</span> <span>➔</span>`;
@@ -366,31 +289,27 @@
         card.onclick = () => {
           document.querySelectorAll('.file-card').forEach(c => c.classList.remove('active'));
           card.classList.add('active');
-          openPdfInViewer(embedUrl, rawUrl);
+          
+          if (file.pdfBase64) {
+            renderBase64Pdf(file.pdfBase64);
+          }
         };
 
         container.appendChild(card);
-
-        // Auto-click the first file to render
         if (index === 0) card.click();
       });
     }
 
-    function openPdfInViewer(embedUrl, rawUrl) {
-      const iframe = document.getElementById('spPdfViewer');
+    function renderBase64Pdf(base64Data) {
+      const viewerObj = document.getElementById('pdfViewerObj');
       const placeholder = document.getElementById('pdfPlaceholder');
-      const toolbar = document.getElementById('pdfToolbar');
-      const extBtn = document.getElementById('extLinkBtn');
 
       placeholder.classList.add('hidden');
-      toolbar.classList.remove('hidden');
-      iframe.classList.remove('hidden');
+      viewerObj.classList.remove('hidden');
 
-      // Set direct link button for opening in a new tab if iframe interaction is blocked
-      extBtn.href = rawUrl || embedUrl;
-
-      // Load document into iframe using Office Web Apps viewer engine
-      iframe.src = embedUrl;
+      // Create blob object to prevent session signouts or iframe blocks
+      const dataUrl = `data:application/pdf;base64,${base64Data}`;
+      viewerObj.data = dataUrl;
     }
 
     window.addEventListener('DOMContentLoaded', () => {
