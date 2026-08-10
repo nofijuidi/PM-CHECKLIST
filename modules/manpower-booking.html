@@ -183,35 +183,14 @@
 
     .action-row {
       display: flex;
-      gap: 12px;
+      justify-content: flex-end;
       align-items: center;
       margin-top: 12px;
     }
 
-    .btn-open-external {
-      flex: 1;
-      background-color: #0078D4;
-      color: white;
-      font-size: 14px;
-      font-weight: 700;
-      border: none;
-      border-radius: 8px;
-      height: 44px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      text-decoration: none;
-    }
-
-    .btn-open-external:active {
-      background-color: #005A9E;
-    }
-
     .btn-back-round {
-      width: 44px;
-      height: 44px;
+      width: 46px;
+      height: 46px;
       border: 2px solid #0078D4;
       border-radius: 50%;
       background: white;
@@ -245,10 +224,10 @@
 
       <!-- Available Files List -->
       <div id="fileListContainer" class="file-list-container">
-        <div class="file-card">Searching today's booking files...</div>
+        <div class="file-card">Loading booking document...</div>
       </div>
 
-      <!-- PDF Viewer Area -->
+      <!-- PDF Viewer Area (Clean Inline View) -->
       <div class="pdf-card-container">
         <div id="pdfPlaceholder" class="pdf-placeholder">
           📄 Select a booking document above to view content.
@@ -256,11 +235,8 @@
         <iframe id="spPdfViewer" class="pdf-frame hidden" allow="fullscreen"></iframe>
       </div>
 
-      <!-- Action Footer -->
+      <!-- Action Footer (Location links completely hidden) -->
       <div class="action-row">
-        <a id="externalLinkBtn" href="#" target="_blank" class="btn-open-external hidden">
-          🔗 Open Folder in OneDrive
-        </a>
         <div class="btn-back-round" onclick="goHome()">➔</div>
       </div>
 
@@ -268,9 +244,7 @@
   </div>
 
   <script>
-    // Configured Power Automate HTTP trigger URL
     const GET_BOOKING_FILES_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/0ec41aab7114455687c2ce778f4c9459/triggers/manual/paths/invoke?api-version=1";
-    const DIRECT_FOLDER_URL = "https://johorportberhad-my.sharepoint.com/:f:/g/personal/planning_supervisor_spts_com_my/IgAk34QdZ-xgTKICwM44k871ATAIwziQ18LFiJ7mAD0LPAw?e=96k62t";
 
     let currentUser = null;
 
@@ -287,20 +261,15 @@
       window.location.href = '../index.html';
     }
 
-    // Helper to extract padded date components (e.g., day: "10", month: "08")
     function getDateParams() {
       const now = new Date();
       const dd = String(now.getDate()).padStart(2, '0');
       const mm = String(now.getMonth() + 1).padStart(2, '0');
       const yyyy = now.getFullYear();
 
-      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-      const monthName = monthNames[now.getMonth()];
-
       return {
         dayNum: dd,
         monthNum: mm,
-        folderName: `${mm} ${monthName}`, // e.g., "08 August"
         formattedDisplay: `${dd}/${mm}/${yyyy}`
       };
     }
@@ -308,11 +277,7 @@
     async function fetchTodayBookings() {
       const dateInfo = getDateParams();
       document.getElementById('currentDateDisplay').innerText = dateInfo.formattedDisplay;
-
       const container = document.getElementById('fileListContainer');
-      const extBtn = document.getElementById('externalLinkBtn');
-      extBtn.href = DIRECT_FOLDER_URL;
-      extBtn.classList.remove('hidden');
 
       try {
         const response = await fetch(GET_BOOKING_FILES_FLOW_URL, {
@@ -328,10 +293,10 @@
           const files = await response.json();
           renderFileList(files, dateInfo);
         } else {
-          showFallbackLink(container, dateInfo);
+          container.innerHTML = `<div class="file-card" style="color: #dc2626;">Unable to load booking documents.</div>`;
         }
       } catch (err) {
-        showFallbackLink(container, dateInfo);
+        container.innerHTML = `<div class="file-card" style="color: #dc2626;">Network error loading files.</div>`;
       }
     }
 
@@ -346,7 +311,13 @@
 
       files.forEach((file, index) => {
         const fileName = file.Name || file.DisplayName || file.name || 'Booking File';
-        const fileUrl = file.AbsoluteUri || file.Path || file.link || file.WebUrl || '#';
+        
+        // Transform standard web view link into Clean Embed View Link
+        let targetUrl = file.PdfData || file.EmbedUrl || file.AbsoluteUri || file.Path || file.WebUrl || '';
+        
+        if (targetUrl.includes('sharepoint.com') && !targetUrl.includes('action=embedview')) {
+          targetUrl = targetUrl.replace(/([?&])action=[^&]+/, '') + '&action=embedview';
+        }
 
         const card = document.createElement('div');
         card.className = 'file-card';
@@ -355,12 +326,11 @@
         card.onclick = () => {
           document.querySelectorAll('.file-card').forEach(c => c.classList.remove('active'));
           card.classList.add('active');
-          openPdfInViewer(fileUrl);
+          openPdfInViewer(targetUrl);
         };
 
         container.appendChild(card);
 
-        // Auto-select and display the first matched file
         if (index === 0) card.click();
       });
     }
@@ -372,13 +342,6 @@
       placeholder.classList.add('hidden');
       iframe.classList.remove('hidden');
       iframe.src = url;
-    }
-
-    function showFallbackLink(container, dateInfo) {
-      container.innerHTML = `
-        <div class="file-card" onclick="window.open('${DIRECT_FOLDER_URL}', '_blank')">
-          <span>📁 Open ${dateInfo.folderName} folder on OneDrive</span> <span>➔</span>
-        </div>`;
     }
 
     window.addEventListener('DOMContentLoaded', () => {
