@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>SPTS - Manpower Booking</title>
   <meta name="theme-color" content="#0f172a">
 
@@ -144,41 +144,43 @@
       display: flex;
       flex-direction: column;
       position: relative;
-      touch-action: none;
+      touch-action: none; /* Disables default browser scrolling to allow deep pinch-to-zoom */
     }
 
     /* Zoom Control Floating Toolbar */
     .zoom-toolbar {
       position: absolute;
-      bottom: 10px;
-      right: 10px;
-      z-index: 10;
+      bottom: 12px;
+      right: 12px;
+      z-index: 20;
       display: flex;
       gap: 6px;
-      background: rgba(15, 23, 42, 0.85);
-      padding: 4px;
-      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.9);
+      padding: 5px;
+      border-radius: 10px;
       backdrop-filter: blur(4px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
     .zoom-btn {
-      width: 34px;
-      height: 34px;
+      width: 36px;
+      height: 36px;
       background: #ffffff;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       font-weight: bold;
-      font-size: 18px;
+      font-size: 20px;
       color: #0f172a;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      touch-action: manipulation;
     }
 
     .zoom-btn:active {
       background: #e2e8f0;
-      transform: scale(0.95);
+      transform: scale(0.92);
     }
 
     /* Draggable Target Layer */
@@ -190,6 +192,7 @@
       flex-direction: column;
       align-items: center;
       transform-origin: 0 0;
+      touch-action: none;
     }
 
     .panzoom-wrapper:active {
@@ -197,12 +200,13 @@
     }
 
     canvas.pdf-page-canvas {
-      width: 95% !important;
+      width: 96% !important;
       height: auto !important;
       margin: 8px 0;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
       border-radius: 4px;
       background-color: #ffffff;
+      touch-action: none;
     }
 
     .pdf-placeholder {
@@ -265,10 +269,10 @@
         <div class="file-card">Connecting to booking server...</div>
       </div>
 
-      <!-- PDF Canvas Viewport with Pan & Zoom -->
-      <div class="pdf-card-container">
+      <!-- PDF Canvas Viewport with Deep Android Zoom -->
+      <div class="pdf-card-container" id="pdfCardBox">
         
-        <!-- On-Screen Manual Zoom Controls -->
+        <!-- Floating Zoom Controls -->
         <div id="zoomControls" class="zoom-toolbar hidden">
           <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">＋</button>
           <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">－</button>
@@ -375,12 +379,13 @@
       const target = document.getElementById('panzoomTarget');
       const placeholder = document.getElementById('pdfPlaceholder');
       const controls = document.getElementById('zoomControls');
+      const parentBox = document.getElementById('pdfCardBox');
 
       placeholder.classList.add('hidden');
       target.classList.remove('hidden');
       controls.classList.remove('hidden');
 
-      target.innerHTML = '<div style="color: white; padding: 20px;">Loading HD document...</div>';
+      target.innerHTML = '<div style="color: white; padding: 20px;">Loading Ultra-HD document...</div>';
 
       if (panzoomInstance) {
         panzoomInstance.destroy();
@@ -396,10 +401,10 @@
 
         target.innerHTML = '';
 
-        // Render at Ultra-HD (scale 3.0) so text remains ultra sharp when zoomed deeply
+        // Render at Ultra-HD resolution (scale 3.5) for crisp rendering during deep zoom
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum);
-          const viewport = page.getViewport({ scale: 3.0 });
+          const viewport = page.getViewport({ scale: 3.5 });
 
           const canvas = document.createElement('canvas');
           canvas.className = 'pdf-page-canvas';
@@ -416,17 +421,23 @@
           }).promise;
         }
 
-        // Initialize Panzoom with maxScale: 12 (Deep Zoom Level)
+        // Initialize Panzoom with maxScale: 15 for Android & PC
         panzoomInstance = Panzoom(target, {
-          maxScale: 12,
+          maxScale: 15,
           minScale: 0.5,
-          step: 0.3,
+          step: 0.4,
           contain: false,
-          startScale: 1
+          startScale: 1,
+          canvas: true
         });
 
-        // Enable mouse wheel zoom on PC
-        target.parentElement.addEventListener('wheel', (e) => {
+        // Explicitly bind Android multi-touch pinch and drag events to parent container
+        parentBox.addEventListener('pointerdown', panzoomInstance.handleDown);
+        parentBox.addEventListener('pointermove', panzoomInstance.handleMove);
+        parentBox.addEventListener('pointerup', panzoomInstance.handleUp);
+
+        // Bind wheel zoom for PC
+        parentBox.addEventListener('wheel', (e) => {
           e.preventDefault();
           panzoomInstance.zoomWithWheel(e);
         }, { passive: false });
@@ -437,16 +448,17 @@
       }
     }
 
+    // Zoom Button Handlers (Increased step size for faster deep zooming on touch)
     function zoomIn() {
-      if (panzoomInstance) panzoomInstance.zoomIn();
+      if (panzoomInstance) panzoomInstance.zoomIn({ animate: true });
     }
 
     function zoomOut() {
-      if (panzoomInstance) panzoomInstance.zoomOut();
+      if (panzoomInstance) panzoomInstance.zoomOut({ animate: true });
     }
 
     function resetZoom() {
-      if (panzoomInstance) panzoomInstance.reset();
+      if (panzoomInstance) panzoomInstance.reset({ animate: true });
     }
 
     window.addEventListener('DOMContentLoaded', () => {
