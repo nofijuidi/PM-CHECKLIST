@@ -169,7 +169,7 @@
       border: none;
       border-radius: 8px;
       font-weight: bold;
-      font-size: 20px;
+      font-size: 18px;
       color: #0f172a;
       cursor: pointer;
       display: flex;
@@ -191,6 +191,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       transform-origin: 0 0;
       touch-action: none;
     }
@@ -207,6 +208,13 @@
       border-radius: 4px;
       background-color: #ffffff;
       touch-action: none;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* CSS Class applied when phone/screen is in Landscape */
+    .landscape-pdf-page {
+      transform: rotate(90deg) scale(0.95);
+      margin: 40px 0 !important;
     }
 
     .pdf-placeholder {
@@ -401,13 +409,18 @@
 
         target.innerHTML = '';
 
-        // Render at Ultra-HD resolution (scale 4.0) so deep zooming up to 8+ steps remains sharp
+        const isLandscape = window.innerWidth > window.innerHeight;
+
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum);
           const viewport = page.getViewport({ scale: 4.0 });
 
           const canvas = document.createElement('canvas');
           canvas.className = 'pdf-page-canvas';
+          if (isLandscape) {
+            canvas.classList.add('landscape-pdf-page');
+          }
+
           const context = canvas.getContext('2d');
           
           canvas.height = viewport.height;
@@ -421,7 +434,6 @@
           }).promise;
         }
 
-        // Adjusted step size (0.35) and maxScale (20) to allow clicking 8+ times deep
         panzoomInstance = Panzoom(target, {
           maxScale: 20,
           minScale: 0.5,
@@ -431,12 +443,10 @@
           canvas: true
         });
 
-        // Pointer event listeners for Android/touch devices
         parentBox.addEventListener('pointerdown', panzoomInstance.handleDown);
         parentBox.addEventListener('pointermove', panzoomInstance.handleMove);
         parentBox.addEventListener('pointerup', panzoomInstance.handleUp);
 
-        // Wheel zoom for desktop
         parentBox.addEventListener('wheel', (e) => {
           e.preventDefault();
           panzoomInstance.zoomWithWheel(e);
@@ -448,7 +458,24 @@
       }
     }
 
-    // Zoom Handlers tuned for 8+ click steps
+    // Auto-detect Orientation Change and update only PDF canvas orientation
+    function handleOrientationUpdate() {
+      const isLandscape = window.innerWidth > window.innerHeight;
+      const pdfCanvases = document.querySelectorAll('.pdf-page-canvas');
+
+      pdfCanvases.forEach(canvas => {
+        if (isLandscape) {
+          canvas.classList.add('landscape-pdf-page');
+        } else {
+          canvas.classList.remove('landscape-pdf-page');
+        }
+      });
+
+      if (panzoomInstance) {
+        panzoomInstance.reset({ animate: true });
+      }
+    }
+
     function zoomIn() {
       if (panzoomInstance) panzoomInstance.zoomIn({ animate: true });
     }
@@ -460,6 +487,9 @@
     function resetZoom() {
       if (panzoomInstance) panzoomInstance.reset({ animate: true });
     }
+
+    window.addEventListener('orientationchange', handleOrientationUpdate);
+    window.addEventListener('resize', handleOrientationUpdate);
 
     window.addEventListener('DOMContentLoaded', () => {
       checkSession();
