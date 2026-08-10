@@ -1045,27 +1045,44 @@
       }
     }
 
-    // FORMAT DATE TO dd/mm/yyyy hh:mm WITH 8-HOUR DEDUCTION
+    // FORMAT DATE TO dd/mm/yyyy hh:mm (Direct display as saved in LogTable)
     function formatLogDate(rawDateStr) {
       if (!rawDateStr || rawDateStr === '-') return '-';
 
-      let cleanStr = String(rawDateStr).trim().replace(' ', 'T');
-      let d = new Date(cleanStr);
+      const str = String(rawDateStr).trim();
 
-      if (isNaN(d.getTime())) {
-        return rawDateStr;
+      // Handles "2026-08-10 08:50:00" or ISO "2026-08-10T08:50:00..."
+      if (str.includes(' ') || str.includes('T')) {
+        const cleanStr = str.replace('T', ' ');
+        const parts = cleanStr.split(' ');
+        
+        if (parts.length >= 2) {
+          const dateParts = parts[0].split('-'); // [YYYY, MM, DD]
+          const timeParts = parts[1].split(':'); // [HH, mm, ss]
+
+          if (dateParts.length === 3 && timeParts.length >= 2) {
+            const yyyy = dateParts[0];
+            const mm = dateParts[1];
+            const dd = dateParts[2];
+            const hh = timeParts[0];
+            const min = timeParts[1];
+
+            return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+          }
+        }
       }
 
-      // Explicitly deduct 8 hours (8 * 60 * 60 * 1000 milliseconds)
-      d = new Date(d.getTime() - (8 * 60 * 60 * 1000));
+      let d = new Date(rawDateStr);
+      if (!isNaN(d.getTime())) {
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const yyyy = d.getFullYear();
+        const hh = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+      }
 
-      const dd = String(d.getUTCDate()).padStart(2, '0');
-      const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
-      const yyyy = d.getUTCFullYear();
-      const hh = String(d.getUTCHours()).padStart(2, '0');
-      const min = String(d.getUTCMinutes()).padStart(2, '0');
-
-      return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+      return rawDateStr;
     }
 
     function parseLogTimestamp(rawDateStr) {
