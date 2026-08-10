@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SPTS - Manpower Booking</title>
+  <meta name="theme-color" content="#0f172a">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0f172a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #334155;
+    }
+
+    .app-viewport {
+      width: 100vw;
+      height: 100vh;
+      max-width: 412px;
+      max-height: 892px;
+      background-color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    @media (min-width: 480px) {
+      .app-viewport {
+        border-radius: 28px;
+        height: 844px;
+      }
+    }
+
+    .view-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    /* Top Navigation Header */
+    .booking-top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .btn-home-icon {
+      width: 40px;
+      height: 40px;
+      background-color: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      color: #002060;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn-home-icon:active {
+      background-color: #e2e8f0;
+      transform: scale(0.95);
+    }
+
+    .booking-header-title {
+      flex: 1;
+      text-align: center;
+      color: #002060;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      padding: 0 8px;
+    }
+
+    .top-right-app-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1px solid #cbd5e1;
+    }
+
+    /* Date Filter Status Bar */
+    .filter-info-bar {
+      background-color: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e40af;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* File Selection Cards */
+    .file-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+      max-height: 140px;
+      overflow-y: auto;
+    }
+
+    .file-card {
+      background-color: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.15s ease;
+      word-break: break-all;
+    }
+
+    .file-card:hover, .file-card.active {
+      border-color: #0078D4;
+      background-color: #f0f7ff;
+      color: #0078D4;
+    }
+
+    /* PDF Frame Container */
+    .pdf-card-container {
+      flex: 1;
+      width: 100%;
+      border: 1.5px solid #0078D4;
+      border-radius: 12px;
+      overflow: hidden;
+      background-color: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .pdf-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .pdf-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #64748b;
+      font-size: 14px;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .btn-open-external {
+      flex: 1;
+      background-color: #0078D4;
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      height: 44px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+
+    .btn-open-external:active {
+      background-color: #005A9E;
+    }
+
+    .btn-back-round {
+      width: 44px;
+      height: 44px;
+      border: 2px solid #0078D4;
+      border-radius: 50%;
+      background: white;
+      color: #0078D4;
+      font-size: 20px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-viewport">
+    <div class="view-screen">
+      
+      <!-- Top Navigation Row -->
+      <div class="booking-top-nav">
+        <div class="btn-home-icon" onclick="goHome()" title="Go to Home Page">🏠</div>
+        <div class="booking-header-title">MANPOWER BOOKING</div>
+        <img src="../icon-192.png" alt="App Icon" class="top-right-app-icon" onerror="this.style.display='none'" />
+      </div>
+
+      <!-- Active Filter Banner -->
+      <div class="filter-info-bar">
+        <span>📅 Today's Bookings</span>
+        <span id="currentDateDisplay">--/--/----</span>
+      </div>
+
+      <!-- Available Files List -->
+      <div id="fileListContainer" class="file-list-container">
+        <div class="file-card">Searching today's booking files...</div>
+      </div>
+
+      <!-- PDF Viewer Area -->
+      <div class="pdf-card-container">
+        <div id="pdfPlaceholder" class="pdf-placeholder">
+          📄 Select a booking document above to view content.
+        </div>
+        <iframe id="spPdfViewer" class="pdf-frame hidden" allow="fullscreen"></iframe>
+      </div>
+
+      <!-- Action Footer -->
+      <div class="action-row">
+        <a id="externalLinkBtn" href="#" target="_blank" class="btn-open-external hidden">
+          🔗 Open Folder in OneDrive
+        </a>
+        <div class="btn-back-round" onclick="goHome()">➔</div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Configured Power Automate HTTP trigger URL
+    const GET_BOOKING_FILES_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/0ec41aab7114455687c2ce778f4c9459/triggers/manual/paths/invoke?api-version=1";
+    const DIRECT_FOLDER_URL = "https://johorportberhad-my.sharepoint.com/:f:/g/personal/planning_supervisor_spts_com_my/IgAk34QdZ-xgTKICwM44k871ATAIwziQ18LFiJ7mAD0LPAw?e=96k62t";
+
+    let currentUser = null;
+
+    function checkSession() {
+      const activeSession = sessionStorage.getItem('userSession');
+      if (!activeSession) {
+        window.location.href = '../index.html';
+        return;
+      }
+      currentUser = JSON.parse(activeSession);
+    }
+
+    function goHome() {
+      window.location.href = '../index.html';
+    }
+
+    // Helper to extract padded date components (e.g., day: "10", month: "08")
+    function getDateParams() {
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, '0');
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const yyyy = now.getFullYear();
+
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const monthName = monthNames[now.getMonth()];
+
+      return {
+        dayNum: dd,
+        monthNum: mm,
+        folderName: `${mm} ${monthName}`, // e.g., "08 August"
+        formattedDisplay: `${dd}/${mm}/${yyyy}`
+      };
+    }
+
+    async function fetchTodayBookings() {
+      const dateInfo = getDateParams();
+      document.getElementById('currentDateDisplay').innerText = dateInfo.formattedDisplay;
+
+      const container = document.getElementById('fileListContainer');
+      const extBtn = document.getElementById('externalLinkBtn');
+      extBtn.href = DIRECT_FOLDER_URL;
+      extBtn.classList.remove('hidden');
+
+      try {
+        const response = await fetch(GET_BOOKING_FILES_FLOW_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            monthNum: dateInfo.monthNum,
+            dayNum: dateInfo.dayNum
+          })
+        });
+
+        if (response.ok) {
+          const files = await response.json();
+          renderFileList(files, dateInfo);
+        } else {
+          showFallbackLink(container, dateInfo);
+        }
+      } catch (err) {
+        showFallbackLink(container, dateInfo);
+      }
+    }
+
+    function renderFileList(files, dateInfo) {
+      const container = document.getElementById('fileListContainer');
+      container.innerHTML = '';
+
+      if (!files || !Array.isArray(files) || files.length === 0) {
+        container.innerHTML = `<div class="file-card" style="color: #64748b;">No booking files found for ${dateInfo.formattedDisplay}.</div>`;
+        return;
+      }
+
+      files.forEach((file, index) => {
+        const fileName = file.Name || file.DisplayName || file.name || 'Booking File';
+        const fileUrl = file.AbsoluteUri || file.Path || file.link || file.WebUrl || '#';
+
+        const card = document.createElement('div');
+        card.className = 'file-card';
+        card.innerHTML = `<span>📄 ${fileName}</span> <span>➔</span>`;
+
+        card.onclick = () => {
+          document.querySelectorAll('.file-card').forEach(c => c.classList.remove('active'));
+          card.classList.add('active');
+          openPdfInViewer(fileUrl);
+        };
+
+        container.appendChild(card);
+
+        // Auto-select and display the first matched file
+        if (index === 0) card.click();
+      });
+    }
+
+    function openPdfInViewer(url) {
+      const iframe = document.getElementById('spPdfViewer');
+      const placeholder = document.getElementById('pdfPlaceholder');
+
+      placeholder.classList.add('hidden');
+      iframe.classList.remove('hidden');
+      iframe.src = url;
+    }
+
+    function showFallbackLink(container, dateInfo) {
+      container.innerHTML = `
+        <div class="file-card" onclick="window.open('${DIRECT_FOLDER_URL}', '_blank')">
+          <span>📁 Open ${dateInfo.folderName} folder on OneDrive</span> <span>➔</span>
+        </div>`;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      checkSession();
+      fetchTodayBookings();
+    });
+  </script>
+</body>
+</html>
