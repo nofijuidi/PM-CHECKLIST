@@ -146,7 +146,7 @@
       color: #0078D4;
     }
 
-    /* PDF Frame Container */
+    /* PDF Viewer Container */
     .pdf-card-container {
       flex: 1;
       width: 100%;
@@ -159,9 +159,32 @@
       position: relative;
     }
 
+    .pdf-toolbar-fallback {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 12px;
+      background-color: #f1f5f9;
+      border-bottom: 1px solid #cbd5e1;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .btn-open-external {
+      background-color: #0078D4;
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
     .pdf-frame {
       width: 100%;
-      height: 100%;
+      flex: 1;
       border: none;
     }
 
@@ -229,6 +252,10 @@
 
       <!-- PDF Viewer Area -->
       <div class="pdf-card-container">
+        <div id="pdfToolbar" class="pdf-toolbar-fallback hidden">
+          <span>📄 Document Viewer</span>
+          <a id="extLinkBtn" href="#" target="_blank" class="btn-open-external">Open Fullscreen ↗</a>
+        </div>
         <div id="pdfPlaceholder" class="pdf-placeholder">
           📄 Select a booking document above to view content.
         </div>
@@ -244,7 +271,7 @@
   </div>
 
   <script>
-    // Signed Power Automate Endpoint URL
+    // Power Automate Endpoint
     const GET_BOOKING_FILES_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/0ec41aab7114455687c2ce778f4c9459/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yzAu6ONVD7_Rm01FBxTuj4QLPcJZ4-9QD-aCXAPhnh0";
 
     let currentUser = null;
@@ -319,13 +346,19 @@
       files.forEach((file, index) => {
         const fileName = file.Name || file.DisplayName || file.name || 'Booking Document';
         
-        // Prioritize full WebUrl / Link property over relative local path to prevent GitHub Pages 404
-        let targetUrl = file.WebUrl || file['{Link}'] || file.link || file.EmbedUrl || file.AbsoluteUri || file.PdfData || file.Path || '';
+        // Extract raw link from SharePoint / OneDrive response
+        let rawUrl = file.WebUrl || file['{Link}'] || file.link || file.EmbedUrl || file.AbsoluteUri || file.PdfData || '';
 
-        // Append embedview parameter if it is a SharePoint / OneDrive web link
-        if (typeof targetUrl === 'string' && targetUrl.includes('sharepoint.com')) {
-          if (!targetUrl.includes('action=embedview')) {
-            targetUrl = targetUrl.replace(/([?&])action=[^&]+/, '') + '&action=embedview';
+        let embedUrl = rawUrl;
+
+        if (typeof rawUrl === 'string' && rawUrl.length > 0) {
+          if (rawUrl.includes('sharepoint.com') || rawUrl.includes('onedrive.com')) {
+            // Append embedview parameter to strip site wrappers
+            if (rawUrl.includes('?')) {
+              embedUrl = rawUrl.split('?')[0] + '?action=embedview';
+            } else {
+              embedUrl = rawUrl + '?action=embedview';
+            }
           }
         }
 
@@ -336,23 +369,31 @@
         card.onclick = () => {
           document.querySelectorAll('.file-card').forEach(c => c.classList.remove('active'));
           card.classList.add('active');
-          openPdfInViewer(targetUrl);
+          openPdfInViewer(embedUrl, rawUrl);
         };
 
         container.appendChild(card);
 
-        // Auto-click the first file to open immediately
+        // Auto-select the first matching file
         if (index === 0) card.click();
       });
     }
 
-    function openPdfInViewer(url) {
+    function openPdfInViewer(embedUrl, rawUrl) {
       const iframe = document.getElementById('spPdfViewer');
       const placeholder = document.getElementById('pdfPlaceholder');
+      const toolbar = document.getElementById('pdfToolbar');
+      const extBtn = document.getElementById('extLinkBtn');
 
       placeholder.classList.add('hidden');
+      toolbar.classList.remove('hidden');
       iframe.classList.remove('hidden');
-      iframe.src = url;
+
+      // Set fallback external link button target
+      extBtn.href = rawUrl || embedUrl;
+
+      // Load document into the iframe
+      iframe.src = embedUrl;
     }
 
     window.addEventListener('DOMContentLoaded', () => {
