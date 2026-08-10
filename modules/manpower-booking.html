@@ -253,8 +253,8 @@
       <!-- PDF Viewer Area -->
       <div class="pdf-card-container">
         <div id="pdfToolbar" class="pdf-toolbar-fallback hidden">
-          <span>📄 Document Viewer</span>
-          <a id="extLinkBtn" href="#" target="_blank" class="btn-open-external">Open Fullscreen ↗</a>
+          <span>📄 Booking Document</span>
+          <a id="extLinkBtn" href="#" target="_blank" class="btn-open-external">Open PDF ↗</a>
         </div>
         <div id="pdfPlaceholder" class="pdf-placeholder">
           📄 Select a booking document above to view content.
@@ -271,7 +271,7 @@
   </div>
 
   <script>
-    // Power Automate Endpoint
+    // Power Automate Signed Endpoint URL
     const GET_BOOKING_FILES_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/0ec41aab7114455687c2ce778f4c9459/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yzAu6ONVD7_Rm01FBxTuj4QLPcJZ4-9QD-aCXAPhnh0";
 
     let currentUser = null;
@@ -346,19 +346,16 @@
       files.forEach((file, index) => {
         const fileName = file.Name || file.DisplayName || file.name || 'Booking Document';
         
-        // Extract raw link from SharePoint / OneDrive response
+        // Extract absolute web link
         let rawUrl = file.WebUrl || file['{Link}'] || file.link || file.EmbedUrl || file.AbsoluteUri || file.PdfData || '';
 
         let embedUrl = rawUrl;
 
         if (typeof rawUrl === 'string' && rawUrl.length > 0) {
           if (rawUrl.includes('sharepoint.com') || rawUrl.includes('onedrive.com')) {
-            // Append embedview parameter to strip site wrappers
-            if (rawUrl.includes('?')) {
-              embedUrl = rawUrl.split('?')[0] + '?action=embedview';
-            } else {
-              embedUrl = rawUrl + '?action=embedview';
-            }
+            // Transform URL into Office Online Embed viewer to bypass X-Frame-Options headers
+            const cleanUrl = rawUrl.split('?')[0];
+            embedUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(cleanUrl)}`;
           }
         }
 
@@ -374,7 +371,7 @@
 
         container.appendChild(card);
 
-        // Auto-select the first matching file
+        // Auto-click the first file to render
         if (index === 0) card.click();
       });
     }
@@ -389,10 +386,10 @@
       toolbar.classList.remove('hidden');
       iframe.classList.remove('hidden');
 
-      // Set fallback external link button target
+      // Set direct link button for opening in a new tab if iframe interaction is blocked
       extBtn.href = rawUrl || embedUrl;
 
-      // Load document into the iframe
+      // Load document into iframe using Office Web Apps viewer engine
       iframe.src = embedUrl;
     }
 
