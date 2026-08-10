@@ -244,7 +244,7 @@
   </div>
 
   <script>
-    // Updated Power Automate URL with valid SAS Token signature
+    // Updated Power Automate URL with signed SAS key
     const GET_BOOKING_FILES_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/0ec41aab7114455687c2ce778f4c9459/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yzAu6ONVD7_Rm01FBxTuj4QLPcJZ4-9QD-aCXAPhnh0";
 
     let currentUser = null;
@@ -283,9 +283,9 @@
       try {
         const response = await fetch(GET_BOOKING_FILES_FLOW_URL, {
           method: 'POST',
-          mode: 'cors',
           headers: { 
-            'Content-Type': 'application/json' 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
           },
           body: JSON.stringify({
             monthNum: dateInfo.monthNum,
@@ -297,12 +297,13 @@
           const files = await response.json();
           renderFileList(files, dateInfo);
         } else {
-          console.error('HTTP Error:', response.status, response.statusText);
-          container.innerHTML = `<div class="file-card" style="color: #dc2626;">Server Error (${response.status}). Check flow logs.</div>`;
+          const errorText = await response.text();
+          console.error('Flow Execution Error:', response.status, errorText);
+          container.innerHTML = `<div class="file-card" style="color: #dc2626;">Flow Error (${response.status}). Check flow run history.</div>`;
         }
       } catch (err) {
-        console.error('Network Error:', err);
-        container.innerHTML = `<div class="file-card" style="color: #dc2626;">Network error. Check connection.</div>`;
+        console.error('Fetch Exception:', err);
+        container.innerHTML = `<div class="file-card" style="color: #dc2626;">Network error connecting to flow.</div>`;
       }
     }
 
@@ -318,7 +319,7 @@
       files.forEach((file, index) => {
         const fileName = file.Name || file.DisplayName || file.name || 'Booking Document';
         
-        // Extract link and append embedview parameter to strip OneDrive wrappers
+        // Extract link and format for clean in-app iframe embedding
         let targetUrl = file.PdfData || file.EmbedUrl || file.AbsoluteUri || file.Path || file.WebUrl || file.link || '';
 
         if (typeof targetUrl === 'string' && targetUrl.includes('sharepoint.com') && !targetUrl.includes('action=embedview')) {
@@ -337,7 +338,7 @@
 
         container.appendChild(card);
 
-        // Auto-select the first matching document
+        // Auto-select the first document in the list
         if (index === 0) card.click();
       });
     }
