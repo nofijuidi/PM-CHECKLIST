@@ -114,7 +114,7 @@
       justify-content: space-between;
     }
 
-    /* File Selection Cards */
+    /* File Selection Cards List */
     .file-list-container {
       display: flex;
       flex-direction: column;
@@ -224,10 +224,10 @@
 
       <!-- Available Files List -->
       <div id="fileListContainer" class="file-list-container">
-        <div class="file-card">Loading booking document...</div>
+        <div class="file-card">Connecting to booking server...</div>
       </div>
 
-      <!-- PDF Viewer Area (Clean Inline View) -->
+      <!-- PDF Viewer Area -->
       <div class="pdf-card-container">
         <div id="pdfPlaceholder" class="pdf-placeholder">
           📄 Select a booking document above to view content.
@@ -235,7 +235,7 @@
         <iframe id="spPdfViewer" class="pdf-frame hidden" allow="fullscreen"></iframe>
       </div>
 
-      <!-- Action Footer (Location links completely hidden) -->
+      <!-- Action Footer -->
       <div class="action-row">
         <div class="btn-back-round" onclick="goHome()">➔</div>
       </div>
@@ -282,7 +282,10 @@
       try {
         const response = await fetch(GET_BOOKING_FILES_FLOW_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          mode: 'cors',
+          headers: { 
+            'Content-Type': 'application/json' 
+          },
           body: JSON.stringify({
             monthNum: dateInfo.monthNum,
             dayNum: dateInfo.dayNum
@@ -293,10 +296,12 @@
           const files = await response.json();
           renderFileList(files, dateInfo);
         } else {
-          container.innerHTML = `<div class="file-card" style="color: #dc2626;">Unable to load booking documents.</div>`;
+          console.error('HTTP Error:', response.status, response.statusText);
+          container.innerHTML = `<div class="file-card" style="color: #dc2626;">Server error (${response.status}). Check Power Automate trigger settings.</div>`;
         }
       } catch (err) {
-        container.innerHTML = `<div class="file-card" style="color: #dc2626;">Network error loading files.</div>`;
+        console.error('Network Error:', err);
+        container.innerHTML = `<div class="file-card" style="color: #dc2626;">Network error. Verify Power Automate trigger allows "Anyone".</div>`;
       }
     }
 
@@ -310,12 +315,12 @@
       }
 
       files.forEach((file, index) => {
-        const fileName = file.Name || file.DisplayName || file.name || 'Booking File';
+        const fileName = file.Name || file.DisplayName || file.name || 'Booking Document';
         
-        // Transform standard web view link into Clean Embed View Link
-        let targetUrl = file.PdfData || file.EmbedUrl || file.AbsoluteUri || file.Path || file.WebUrl || '';
-        
-        if (targetUrl.includes('sharepoint.com') && !targetUrl.includes('action=embedview')) {
+        // Extract link and format for clean in-app iframe embedding
+        let targetUrl = file.PdfData || file.EmbedUrl || file.AbsoluteUri || file.Path || file.WebUrl || file.link || '';
+
+        if (typeof targetUrl === 'string' && targetUrl.includes('sharepoint.com') && !targetUrl.includes('action=embedview')) {
           targetUrl = targetUrl.replace(/([?&])action=[^&]+/, '') + '&action=embedview';
         }
 
@@ -331,6 +336,7 @@
 
         container.appendChild(card);
 
+        // Automatically open the first matching booking document
         if (index === 0) card.click();
       });
     }
