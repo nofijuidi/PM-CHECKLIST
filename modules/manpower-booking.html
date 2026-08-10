@@ -244,6 +244,7 @@
   </div>
 
   <script>
+    // Updated Power Automate URL with valid SAS Token signature
     const GET_BOOKING_FILES_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/0ec41aab7114455687c2ce778f4c9459/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yzAu6ONVD7_Rm01FBxTuj4QLPcJZ4-9QD-aCXAPhnh0";
 
     let currentUser = null;
@@ -297,11 +298,11 @@
           renderFileList(files, dateInfo);
         } else {
           console.error('HTTP Error:', response.status, response.statusText);
-          container.innerHTML = `<div class="file-card" style="color: #dc2626;">Server error (${response.status}). Check Power Automate trigger settings.</div>`;
+          container.innerHTML = `<div class="file-card" style="color: #dc2626;">Server Error (${response.status}). Check flow logs.</div>`;
         }
       } catch (err) {
         console.error('Network Error:', err);
-        container.innerHTML = `<div class="file-card" style="color: #dc2626;">Network error. Verify Power Automate trigger allows "Anyone".</div>`;
+        container.innerHTML = `<div class="file-card" style="color: #dc2626;">Network error. Check connection.</div>`;
       }
     }
 
@@ -317,7 +318,7 @@
       files.forEach((file, index) => {
         const fileName = file.Name || file.DisplayName || file.name || 'Booking Document';
         
-        // Extract link and format for clean in-app iframe embedding
+        // Extract link and append embedview parameter to strip OneDrive wrappers
         let targetUrl = file.PdfData || file.EmbedUrl || file.AbsoluteUri || file.Path || file.WebUrl || file.link || '';
 
         if (typeof targetUrl === 'string' && targetUrl.includes('sharepoint.com') && !targetUrl.includes('action=embedview')) {
@@ -336,7 +337,7 @@
 
         container.appendChild(card);
 
-        // Automatically open the first matching booking document
+        // Auto-select the first matching document
         if (index === 0) card.click();
       });
     }
