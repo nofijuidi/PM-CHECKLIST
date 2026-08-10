@@ -17,6 +17,13 @@
       margin: 0;
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      /* Disable native text selection and search callouts globally */
+      -webkit-touch-callout: none !important;
+      -webkit-user-select: none !important;
+      -khtml-user-select: none !important;
+      -moz-user-select: none !important;
+      -ms-user-select: none !important;
+      user-select: none !important;
     }
 
     html, body {
@@ -211,7 +218,6 @@
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* CSS Class applied when phone/screen is in Landscape */
     .landscape-pdf-page {
       transform: rotate(90deg) scale(0.95);
       margin: 40px 0 !important;
@@ -458,7 +464,6 @@
       }
     }
 
-    // Auto-detect Orientation Change and update only PDF canvas orientation
     function handleOrientationUpdate() {
       const isLandscape = window.innerWidth > window.innerHeight;
       const pdfCanvases = document.querySelectorAll('.pdf-page-canvas');
@@ -487,6 +492,9 @@
     function resetZoom() {
       if (panzoomInstance) panzoomInstance.reset({ animate: true });
     }
+
+    // Block native context menus (long-press popup triggers)
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
 
     window.addEventListener('orientationchange', handleOrientationUpdate);
     window.addEventListener('resize', handleOrientationUpdate);
