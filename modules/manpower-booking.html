@@ -144,7 +144,7 @@
       display: flex;
       flex-direction: column;
       position: relative;
-      touch-action: none; /* Disables default browser scrolling to allow deep pinch-to-zoom */
+      touch-action: none;
     }
 
     /* Zoom Control Floating Toolbar */
@@ -269,7 +269,7 @@
         <div class="file-card">Connecting to booking server...</div>
       </div>
 
-      <!-- PDF Canvas Viewport with Deep Android Zoom -->
+      <!-- PDF Canvas Viewport -->
       <div class="pdf-card-container" id="pdfCardBox">
         
         <!-- Floating Zoom Controls -->
@@ -385,7 +385,7 @@
       target.classList.remove('hidden');
       controls.classList.remove('hidden');
 
-      target.innerHTML = '<div style="color: white; padding: 20px;">Loading Ultra-HD document...</div>';
+      target.innerHTML = '<div style="color: white; padding: 20px;">Loading HD document...</div>';
 
       if (panzoomInstance) {
         panzoomInstance.destroy();
@@ -401,10 +401,10 @@
 
         target.innerHTML = '';
 
-        // Render at Ultra-HD resolution (scale 3.5) for crisp rendering during deep zoom
+        // Render at Ultra-HD resolution (scale 4.0) so deep zooming up to 8+ steps remains sharp
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum);
-          const viewport = page.getViewport({ scale: 3.5 });
+          const viewport = page.getViewport({ scale: 4.0 });
 
           const canvas = document.createElement('canvas');
           canvas.className = 'pdf-page-canvas';
@@ -421,22 +421,22 @@
           }).promise;
         }
 
-        // Initialize Panzoom with maxScale: 15 for Android & PC
+        // Adjusted step size (0.35) and maxScale (20) to allow clicking 8+ times deep
         panzoomInstance = Panzoom(target, {
-          maxScale: 15,
+          maxScale: 20,
           minScale: 0.5,
-          step: 0.4,
+          step: 0.35,
           contain: false,
           startScale: 1,
           canvas: true
         });
 
-        // Explicitly bind Android multi-touch pinch and drag events to parent container
+        // Pointer event listeners for Android/touch devices
         parentBox.addEventListener('pointerdown', panzoomInstance.handleDown);
         parentBox.addEventListener('pointermove', panzoomInstance.handleMove);
         parentBox.addEventListener('pointerup', panzoomInstance.handleUp);
 
-        // Bind wheel zoom for PC
+        // Wheel zoom for desktop
         parentBox.addEventListener('wheel', (e) => {
           e.preventDefault();
           panzoomInstance.zoomWithWheel(e);
@@ -448,7 +448,7 @@
       }
     }
 
-    // Zoom Button Handlers (Increased step size for faster deep zooming on touch)
+    // Zoom Handlers tuned for 8+ click steps
     function zoomIn() {
       if (panzoomInstance) panzoomInstance.zoomIn({ animate: true });
     }
