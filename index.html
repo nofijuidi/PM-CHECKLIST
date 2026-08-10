@@ -816,10 +816,10 @@
         <div id="pillboxGrid"></div>
       </div>
 
-      <!-- Declaration (last 12 hours) Table Header & REFRESH button -->
+      <!-- Declaration Table Header & REFRESH button -->
       <div class="form-group">
         <div class="declaration-header-row">
-          <label class="form-label" style="margin-bottom: 0;">Declaration (last 12 hours)</label>
+          <label class="form-label" style="margin-bottom: 0;" id="declarationLabel">Declaration (last 12 hours)</label>
           <button class="btn-refresh" onclick="loadUser12HourLogs()">REFRESH</button>
         </div>
 
@@ -1015,12 +1015,11 @@
 
     function onIssueInputChange(val) { refreshActivePillbox(); }
 
-    // FETCH & RENDER PAST 12-HOUR SUBMISSIONS FROM EXCEL LOGTABLE
+    // FETCH & RENDER PAST SUBMISSIONS FROM EXCEL LOGTABLE
     async function loadUser12HourLogs() {
       const tbody = document.getElementById('declarationLogsBody');
       tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">Loading logs...</td></tr>`;
 
-      // Use the exact ID obtained upon login
       const userIdVal = getPropValue(currentUser, ['COMPANY_ID', 'company_id', 'Company_ID', 'ID', 'id', 'Username', 'username'], '');
 
       if (!userIdVal) {
@@ -1039,10 +1038,10 @@
           const logs = await response.json();
           renderLogsTable(logs);
         } else {
-          tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">Unable to fetch recent declarations.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">Unable to fetch declarations.</td></tr>`;
         }
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">No recent declarations found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">No declarations found.</td></tr>`;
       }
     }
 
@@ -1078,36 +1077,53 @@
 
     function renderLogsTable(logs) {
       const tbody = document.getElementById('declarationLogsBody');
+      const labelEl = document.getElementById('declarationLabel');
       tbody.innerHTML = '';
 
       if (!logs || !Array.isArray(logs) || logs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">No declarations in last 12 hours.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">No declarations found.</td></tr>`;
         return;
       }
 
-      const twelveHoursAgo = new Date(Date.now() - (12 * 60 * 60 * 1000));
+      const selectedEq = document.getElementById('selectEquipment').value.trim().toUpperCase();
+      let filteredLogs = [];
 
-      // 1. Filter logs within the last 12 hours
-      let filteredLogs = logs.filter(row => {
-        let rawDate = row.DATE || row.date || row.Date || '';
-        if (!rawDate) return true;
-        let ts = parseLogTimestamp(rawDate);
-        return ts === 0 || new Date(ts) >= twelveHoursAgo;
-      });
+      // 1. FILTERING LOGIC
+      if (selectedEq !== '') {
+        // IF Select Equipment HAS VALUE: Filter by matching EQUIPMENT type
+        labelEl.innerText = `Declaration (${selectedEq})`;
+        filteredLogs = logs.filter(row => {
+          let rowEquip = (row.EQUIPMENT || row.equipment || row.Equipment || '').trim().toUpperCase();
+          return rowEquip === selectedEq;
+        });
+      } else {
+        // IF Select Equipment IS EMPTY: Filter by last 12 hours
+        labelEl.innerText = 'Declaration (last 12 hours)';
+        const twelveHoursAgo = new Date(Date.now() - (12 * 60 * 60 * 1000));
+        filteredLogs = logs.filter(row => {
+          let rawDate = row.DATE || row.date || row.Date || '';
+          if (!rawDate) return true;
+          let ts = parseLogTimestamp(rawDate);
+          return ts === 0 || new Date(ts) >= twelveHoursAgo;
+        });
+      }
 
       if (filteredLogs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">No declarations in last 12 hours.</td></tr>`;
+        const msg = selectedEq !== '' 
+          ? `No declarations found for ${selectedEq}.`
+          : 'No declarations in last 12 hours.';
+        tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">${msg}</td></tr>`;
         return;
       }
 
-      // 2. SORT DESCENDING: Latest submissions appear at the top
+      // 2. SORT DESCENDING: Latest updated submission on top
       filteredLogs.sort((a, b) => {
         let tsA = parseLogTimestamp(a.DATE || a.date || a.Date);
         let tsB = parseLogTimestamp(b.DATE || b.date || b.Date);
         return tsB - tsA;
       });
 
-      // 3. Render 4-Column Table Rows
+      // 3. RENDER 4-COLUMN ROWS (DATE, EQUIPNUM, AREA, ID)
       filteredLogs.forEach(row => {
         const tr = document.createElement('tr');
         
