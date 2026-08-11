@@ -6,6 +6,11 @@
   <title>SPTS - Manpower Booking</title>
   <meta name="theme-color" content="#0f172a">
 
+  <!-- Mobile Full-Screen Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+
   <!-- PDF.js Engine for cross-platform rendering -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <!-- Panzoom Library for touch zoom & dragging -->
@@ -34,6 +39,9 @@
       justify-content: center;
       align-items: center;
       color: #334155;
+      /* Account for iPhone safe areas notch/status bar */
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
     }
 
     .app-viewport {
@@ -153,7 +161,7 @@
       touch-action: none;
     }
 
-    /* Bottom Control Bar Layout (Matching Screenshot UI) */
+    /* Bottom Control Bar Layout */
     .zoom-toolbar {
       position: absolute;
       bottom: 8px;
@@ -195,7 +203,7 @@
       font-size: 13px;
       font-weight: 900;
       letter-spacing: 0.5px;
-      background-color: #fef3c7; /* Light cream accent matching screenshot RESET */
+      background-color: #fef3c7;
       border-color: #d97706;
       color: #0f172a;
       flex: 1.5;
@@ -296,7 +304,6 @@
       <!-- PDF Canvas Viewport -->
       <div class="pdf-card-container" id="pdfCardBox">
         
-        <!-- Updated Toolbar UI matching screenshot -->
         <div id="zoomControls" class="zoom-toolbar hidden">
           <button class="zoom-btn zoom-btn-icon" onclick="toggleLandscape()" title="Rotate 90° Landscape/Portrait">↻</button>
           <button class="zoom-btn zoom-btn-icon" onclick="zoomIn()" title="Zoom In">＋</button>
@@ -308,7 +315,6 @@
           📄 Select a booking document above to view content.
         </div>
 
-        <!-- Panzoom Wrapper Target -->
         <div id="panzoomTarget" class="panzoom-wrapper hidden"></div>
       </div>
 
@@ -326,7 +332,19 @@
     const GET_BOOKING_FILES_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/0ec41aab7114455687c2ce778f4c9459/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yzAu6ONVD7_Rm01FBxTuj4QLPcJZ4-9QD-aCXAPhnh0";
 
     let panzoomInstance = null;
-    let isLandscape = false; // Toggle state: false = 0°, true = 90°
+    let isLandscape = false;
+
+    // Trigger true full-screen mode on mobile
+    function requestFullScreen() {
+      const doc = document.documentElement;
+      if (doc.requestFullscreen) {
+        doc.requestFullscreen();
+      } else if (doc.webkitRequestFullscreen) {
+        doc.webkitRequestFullscreen();
+      } else if (doc.msRequestFullscreen) {
+        doc.msRequestFullscreen();
+      }
+    }
 
     function checkSession() {
       const activeSession = sessionStorage.getItem('userSession');
@@ -449,7 +467,6 @@
           }).promise;
         }
 
-        // Initialize Panzoom with setTransform hook to preserve landscape rotation
         panzoomInstance = Panzoom(target, {
           maxScale: 20,
           minScale: 0.5,
@@ -478,15 +495,10 @@
       }
     }
 
-    // ==========================================
-    // ROTATE & ZOOM CONTROL FUNCTIONS
-    // ==========================================
     function toggleLandscape() {
       if (!panzoomInstance) return;
+      isLandscape = !isLandscape;
       
-      isLandscape = !isLandscape; // Toggles between 0° and 90°
-      
-      // Auto-fit scale on landscape rotation so wide PDF fills viewport
       if (isLandscape) {
         panzoomInstance.zoom(1.15, { animate: true });
       } else {
@@ -507,8 +519,11 @@
       if (panzoomInstance) panzoomInstance.reset({ animate: true });
     }
 
-    // Block native context menus (long-press popup triggers)
     document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // Enter full-screen mode on first touch/tap anywhere
+    document.addEventListener('touchstart', requestFullScreen, { once: true });
+    document.addEventListener('click', requestFullScreen, { once: true });
 
     window.addEventListener('DOMContentLoaded', () => {
       checkSession();
