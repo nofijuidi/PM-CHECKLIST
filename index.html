@@ -13,6 +13,20 @@
       margin: 0; 
       padding: 0; 
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+      
+      /* Block text selection and contextual touch search globally */
+      -webkit-touch-callout: none !important;
+      -webkit-user-select: none !important;
+      -khtml-user-select: none !important;
+      -moz-user-select: none !important;
+      -ms-user-select: none !important;
+      user-select: none !important;
+    }
+
+    /* Re-enable selection on input text boxes so users can still type */
+    input, textarea {
+      -webkit-user-select: text !important;
+      user-select: text !important;
     }
 
     html, body { 
@@ -391,6 +405,9 @@
       errorBox.innerText = msg;
       errorBox.classList.remove('hidden');
     }
+
+    // Suppress native touch context menus / long-press text lookup popups
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
 
     window.addEventListener('DOMContentLoaded', () => {
       const activeSession = sessionStorage.getItem('userSession');
