@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>SPTS - Manpower Booking</title>
   <meta name="theme-color" content="#0f172a">
 
@@ -164,13 +164,14 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      touch-action: none; /* Allows custom pinch-to-zoom handling */
     }
 
-    /* Transform Wrapper for Zoom and 90-Degree Rotation */
+    /* Transform Wrapper for Pinch, Zoom, and 90-Degree Rotation */
     .pdf-transform-wrapper {
       width: 100%;
       height: 100%;
-      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 0.1s ease-out;
       transform-origin: center center;
       display: flex;
       align-items: center;
@@ -182,9 +183,10 @@
       height: 100%;
       border: none;
       background-color: #ffffff;
+      pointer-events: auto;
     }
 
-    /* Floating Control Toolbar (Rotate & Zoom Controls) */
+    /* Floating Control Toolbar */
     .pdf-controls-overlay {
       position: absolute;
       bottom: 12px;
@@ -276,8 +278,8 @@
         <!-- JS Renders cards here -->
       </div>
 
-      <!-- Embedded PDF Viewer with Zoom/Rotate Controls -->
-      <div class="pdf-viewer-container">
+      <!-- Embedded PDF Viewer with Pinch & Zoom Container -->
+      <div class="pdf-viewer-container" id="pdfContainer">
         <div id="pdfWrapper" class="pdf-transform-wrapper">
           <iframe id="pdfViewerFrame" class="pdf-viewer-frame" 
                   src="" title="Manpower Booking Viewer"
@@ -313,9 +315,13 @@
 
     let currentActiveIndex = 0;
     
-    // Zoom and Rotation State Variables
+    // Extended Zoom (Max 5.0 = 500%) & Rotation State
     let currentScale = 1.0;
-    let currentRotation = 0; // Degrees: 0, 90, 180, 270
+    let currentRotation = 0; 
+
+    // Pinch-to-Zoom Touch Variables
+    let initialPinchDistance = 0;
+    let initialScaleOnPinch = 1.0;
 
     function goHome() { 
       window.location.href = '../index.html'; 
@@ -360,19 +366,14 @@
         const selectedFile = BOOKING_FILES[index];
         const frame = document.getElementById('pdfViewerFrame');
         
-        // Reset transform on file switch
         resetTransform();
-
-        // Load PDF inside iframe
         frame.src = selectedFile.embedUrl;
-        
-        // Refresh active card styling
         renderFileCards();
       }
     }
 
     // ==========================================
-    // MANUAL ROTATE & ZOOM LOGIC
+    // ROTATION & EXTENDED ZOOM LOGIC
     // ==========================================
     function updateTransform() {
       const wrapper = document.getElementById('pdfWrapper');
@@ -385,8 +386,8 @@
     }
 
     function zoomIn() {
-      if (currentScale < 2.5) {
-        currentScale += 0.2;
+      if (currentScale < 5.0) { // Max 500% zoom
+        currentScale += 0.4;
         updateTransform();
       }
     }
@@ -404,14 +405,55 @@
       updateTransform();
     }
 
+    // ==========================================
+    // NATIVE PINCH-TO-ZOOM TOUCH HANDLING
+    // ==========================================
+    function getDistanceBetweenTouches(touches) {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function initPinchToZoom() {
+      const container = document.getElementById('pdfContainer');
+
+      container.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+          initialPinchDistance = getDistanceBetweenTouches(e.touches);
+          initialScaleOnPinch = currentScale;
+        }
+      }, { passive: true });
+
+      container.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2) {
+          const currentDistance = getDistanceBetweenTouches(e.touches);
+          if (initialPinchDistance > 0) {
+            const factor = currentDistance / initialPinchDistance;
+            let newScale = initialScaleOnPinch * factor;
+            
+            // Clamp between 0.6x and 5.0x
+            newScale = Math.min(Math.max(newScale, 0.6), 5.0);
+            currentScale = parseFloat(newScale.toFixed(2));
+            updateTransform();
+          }
+        }
+      }, { passive: true });
+
+      container.addEventListener('touchend', (e) => {
+        if (e.touches.length < 2) {
+          initialPinchDistance = 0;
+        }
+      }, { passive: true });
+    }
+
     // Disable default browser context menus
     document.addEventListener('contextmenu', (e) => e.preventDefault());
 
     window.addEventListener('DOMContentLoaded', () => {
       setLiveDate();
       renderFileCards();
+      initPinchToZoom();
       
-      // Auto-load document
       if (BOOKING_FILES.length > 0) {
         switchPdfFile(0);
       }
