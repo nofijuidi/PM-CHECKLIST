@@ -3,11 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-  <title>SPTS - Manpower Booking (GPU Effortless Zoom)</title>
+  <title>SPTS - Manpower Booking</title>
   <meta name="theme-color" content="#0f172a">
-
-  <!-- Include PDF.js Library for One-Time HD Rendering -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
   <style>
     * {
@@ -146,7 +143,7 @@
       font-weight: 800;
     }
 
-    /* Scrollable Container with Pan/Drag Capability */
+    /* Viewer Container & Hardware Accelerated Transforms */
     .pdf-viewer-container {
       flex: 1;
       width: 100%;
@@ -159,23 +156,22 @@
       touch-action: pan-x pan-y pinch-zoom;
     }
 
-    .pdf-canvas-wrapper {
+    .pdf-transform-wrapper {
+      width: 100%;
+      height: 100%;
       display: flex;
-      justify-content: center;
       align-items: center;
-      min-width: 100%;
-      min-height: 100%;
-      padding: 10px;
+      justify-content: center;
+      transform-origin: center center;
+      will-change: transform;
+      transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1);
     }
 
-    /* GPU-Accelerated Hardware Canvas */
-    #pdfCanvas {
-      display: block;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    .pdf-viewer-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
       background-color: #ffffff;
-      transform-origin: top left;
-      will-change: transform;
-      transition: transform 0.15s cubic-bezier(0.2, 0, 0.2, 1);
     }
 
     .pdf-controls-overlay {
@@ -256,10 +252,10 @@
 
       <div id="fileListContainer" class="file-list-container"></div>
 
-      <!-- HD Memory Pre-Rendered Viewport -->
+      <!-- Embedded Viewport -->
       <div class="pdf-viewer-container" id="pdfViewerContainer">
-        <div class="pdf-canvas-wrapper" id="canvasWrapper">
-          <canvas id="pdfCanvas"></canvas>
+        <div id="pdfWrapper" class="pdf-transform-wrapper">
+          <iframe id="pdfViewerFrame" class="pdf-viewer-frame" src="" title="Manpower Booking Viewer"></iframe>
         </div>
 
         <div class="pdf-controls-overlay">
@@ -282,20 +278,15 @@
       {
         id: "FILE_001",
         name: "11 AUG 2026 BOOKING GROUP.pdf",
-        pdfUrl: "https://docs.google.com/uc?export=download&id=1yCu2RUrz6olE1Bi7NVCXXBtTEazxRnP2"
+        // Direct Embed Preview URL
+        embedUrl: "https://drive.google.com/file/d/1yCu2RUrz6olE1Bi7NVCXXBtTEazxRnP2/preview"
       }
     ];
 
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
     let currentActiveIndex = 0;
-    let pdfDoc = null;
-    
-    // Zoom and Rotation State
     let zoomScale = 1.0;
     let rotation = 0;
 
-    // Pinch-to-zoom tracking
     let initialPinchDist = 0;
     let initialZoomOnPinch = 1.0;
 
@@ -329,96 +320,47 @@
       });
     }
 
-    // =========================================================================
-    // ONE-TIME HD MEMORY PRE-RENDER
-    // Renders the document ONCE at high resolution (3.0x scale) into GPU memory
-    // =========================================================================
-    async function renderPDFOnce() {
-      if (!pdfDoc) return;
-
-      const page = await pdfDoc.getPage(1);
-      const canvas = document.getElementById('pdfCanvas');
-      const ctx = canvas.getContext('2d');
-      const container = document.getElementById('pdfViewerContainer');
-
-      // Pre-render at 3.0 scale for ultra-crisp vector sharpness
-      const HD_PRE_RENDER_FACTOR = 3.0;
-      const viewport = page.getViewport({ scale: HD_PRE_RENDER_FACTOR, rotation: rotation });
-
-      canvas.width = Math.floor(viewport.width);
-      canvas.height = Math.floor(viewport.height);
-
-      // Display size matches container initially
-      const containerWidth = container.clientWidth - 20;
-      const displayWidth = containerWidth;
-      const displayHeight = (viewport.height / viewport.width) * displayWidth;
-
-      canvas.style.width = displayWidth + "px";
-      canvas.style.height = displayHeight + "px";
-
-      const renderContext = {
-        canvasContext: ctx,
-        viewport: viewport
-      };
-
-      await page.render(renderContext).promise;
-      applyGpuTransform(); // Apply initial zoom scale
-    }
-
-    // Effortless GPU Hardware-Accelerated Zoom (CSS Transform)
-    function applyGpuTransform() {
-      const canvas = document.getElementById('pdfCanvas');
-      canvas.style.transform = `scale3d(${zoomScale}, ${zoomScale}, 1) rotate(${rotation}deg)`;
-    }
-
-    async function loadPdfDocument(url) {
-      try {
-        pdfDoc = await pdfjsLib.getDocument(url).promise;
-        renderPDFOnce();
-      } catch (err) {
-        console.error("PDF.js Load Error:", err);
-      }
-    }
-
     function switchPdfFile(index) {
       if (index >= 0 && index < BOOKING_FILES.length) {
         currentActiveIndex = index;
-        zoomScale = 1.0;
-        rotation = 0;
+        resetTransform();
+        document.getElementById('pdfViewerFrame').src = BOOKING_FILES[index].embedUrl;
         renderFileCards();
-        loadPdfDocument(BOOKING_FILES[index].pdfUrl);
       }
     }
 
-    // ==========================================
-    // EFFORTLESS 200% ZOOM PER CLICK
-    // ==========================================
+    // Effortless Hardware Accelerated Transforms
+    function applyTransform() {
+      const wrapper = document.getElementById('pdfWrapper');
+      wrapper.style.transform = `scale3d(${zoomScale}, ${zoomScale}, 1) rotate(${rotation}deg)`;
+    }
+
     function zoomIn() {
-      if (zoomScale < 6.0) { // Max 600% zoom
-        zoomScale += 2.0;    // +200% per click!
-        applyGpuTransform();
+      if (zoomScale < 6.0) {
+        zoomScale += 2.0; // 200% step
+        applyTransform();
       }
     }
 
     function zoomOut() {
       if (zoomScale > 1.0) {
         zoomScale = Math.max(1.0, zoomScale - 2.0);
-        applyGpuTransform();
+        applyTransform();
       }
     }
 
     function rotate90() {
       rotation = (rotation + 90) % 360;
-      renderPDFOnce(); // Re-renders rotation once
+      applyTransform();
     }
 
     function resetTransform() {
       zoomScale = 1.0;
       rotation = 0;
-      applyGpuTransform();
+      applyTransform();
     }
 
-    // Effortless Native Touch Pinch-to-Zoom
+    // Pinch-to-zoom handling
     function initPinchToZoom() {
       const container = document.getElementById('pdfViewerContainer');
 
@@ -443,7 +385,7 @@
 
           if (newScale >= 1.0 && newScale <= 6.0) {
             zoomScale = newScale;
-            applyGpuTransform(); // Instant 60fps GPU scaling
+            applyTransform();
           }
         }
       }, { passive: true });
@@ -465,10 +407,6 @@
       if (BOOKING_FILES.length > 0) {
         switchPdfFile(0);
       }
-    });
-
-    window.addEventListener('resize', () => {
-      renderPDFOnce();
     });
   </script>
 </body>
