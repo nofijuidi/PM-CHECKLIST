@@ -31,10 +31,9 @@
       justify-content: center;
       align-items: center;
       color: #334155;
-      transition: all 0.3s ease;
     }
 
-    /* Outer Wrapper - Default Portrait Dimensions */
+    /* Outer Viewport Box */
     .app-viewport {
       width: 100vw;
       height: 100vh;
@@ -46,7 +45,6 @@
       position: relative;
       overflow: hidden;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      transition: all 0.3s ease;
     }
 
     @media (min-width: 480px) {
@@ -62,7 +60,6 @@
       flex-direction: column;
       padding: 16px;
       overflow-y: auto;
-      transition: padding 0.3s ease;
     }
 
     /* Top Navigation Header */
@@ -154,25 +151,87 @@
       font-weight: 800;
     }
 
-    /* Embedded PDF Document Viewer Box */
+    /* Embedded PDF Viewer Container */
     .pdf-viewer-container {
       flex: 1;
       width: 100%;
-      min-height: 480px;
+      min-height: 460px;
       border: 1.5px solid #cbd5e1;
       border-radius: 12px;
       overflow: hidden;
-      background-color: #f1f5f9;
+      background-color: #334155;
       position: relative;
-      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Transform Wrapper for Zoom and 90-Degree Rotation */
+    .pdf-transform-wrapper {
+      width: 100%;
+      height: 100%;
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: center center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .pdf-viewer-frame {
       width: 100%;
       height: 100%;
       border: none;
+      background-color: #ffffff;
     }
 
+    /* Floating Control Toolbar (Rotate & Zoom Controls) */
+    .pdf-controls-overlay {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background-color: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(4px);
+      padding: 6px 10px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 10;
+    }
+
+    .control-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: #ffffff;
+      color: #0f172a;
+      border: none;
+      font-size: 18px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.15s ease, transform 0.1s ease;
+    }
+
+    .control-btn:active {
+      transform: scale(0.92);
+      background-color: #e2e8f0;
+    }
+
+    .control-btn-reset {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 0 8px;
+      width: auto;
+      border-radius: 12px;
+    }
+
+    /* Bottom Action Footer */
     .action-footer {
       display: flex;
       justify-content: flex-end;
@@ -192,38 +251,6 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-    }
-
-    /* =========================================================
-       DYNAMIC LANDSCAPE ORIENTATION (JS FALLBACK CLASSES)
-       ========================================================= */
-    body.is-landscape .booking-top-nav, 
-    body.is-landscape .today-banner, 
-    body.is-landscape .file-list-container, 
-    body.is-landscape .action-footer { 
-      display: none !important; 
-    }
-
-    body.is-landscape .app-viewport { 
-      max-width: 100vw !important; 
-      max-height: 100vh !important; 
-      width: 100vw !important; 
-      height: 100vh !important; 
-      border-radius: 0 !important; 
-      margin: 0 !important; 
-      padding: 0 !important; 
-    }
-
-    body.is-landscape .view-screen { 
-      padding: 0 !important; 
-    }
-
-    body.is-landscape .pdf-viewer-container { 
-      width: 100vw !important; 
-      height: 100vh !important; 
-      min-height: 100vh !important; 
-      border: none !important; 
-      border-radius: 0 !important; 
     }
   </style>
 </head>
@@ -249,11 +276,21 @@
         <!-- JS Renders cards here -->
       </div>
 
-      <!-- Embedded PDF Viewer -->
+      <!-- Embedded PDF Viewer with Zoom/Rotate Controls -->
       <div class="pdf-viewer-container">
-        <iframe id="pdfViewerFrame" class="pdf-viewer-frame" 
-                src="" title="Manpower Booking Viewer"
-                allow="autoplay"></iframe>
+        <div id="pdfWrapper" class="pdf-transform-wrapper">
+          <iframe id="pdfViewerFrame" class="pdf-viewer-frame" 
+                  src="" title="Manpower Booking Viewer"
+                  allow="autoplay"></iframe>
+        </div>
+
+        <!-- Floating Controls Toolbar -->
+        <div class="pdf-controls-overlay">
+          <button class="control-btn" onclick="zoomIn()" title="Zoom In">+</button>
+          <button class="control-btn" onclick="zoomOut()" title="Zoom Out">-</button>
+          <button class="control-btn" onclick="rotate90()" title="Rotate 90 Degrees">↻</button>
+          <button class="control-btn control-btn-reset" onclick="resetTransform()" title="Reset View">RESET</button>
+        </div>
       </div>
 
       <!-- Bottom Navigation Footer -->
@@ -275,6 +312,10 @@
     ];
 
     let currentActiveIndex = 0;
+    
+    // Zoom and Rotation State Variables
+    let currentScale = 1.0;
+    let currentRotation = 0; // Degrees: 0, 90, 180, 270
 
     function goHome() { 
       window.location.href = '../index.html'; 
@@ -319,6 +360,9 @@
         const selectedFile = BOOKING_FILES[index];
         const frame = document.getElementById('pdfViewerFrame');
         
+        // Reset transform on file switch
+        resetTransform();
+
         // Load PDF inside iframe
         frame.src = selectedFile.embedUrl;
         
@@ -328,22 +372,37 @@
     }
 
     // ==========================================
-    // ORIENTATION DETECTION LOGIC
+    // MANUAL ROTATE & ZOOM LOGIC
     // ==========================================
-    function handleOrientationChange() {
-      // Check if landscape via matchMedia or window.orientation
-      const isLandscape = window.matchMedia("(orientation: landscape)").matches || Math.abs(window.orientation) === 90;
-      
-      if (isLandscape) {
-        document.body.classList.add('is-landscape');
-      } else {
-        document.body.classList.remove('is-landscape');
+    function updateTransform() {
+      const wrapper = document.getElementById('pdfWrapper');
+      wrapper.style.transform = `rotate(${currentRotation}deg) scale(${currentScale})`;
+    }
+
+    function rotate90() {
+      currentRotation = (currentRotation + 90) % 360;
+      updateTransform();
+    }
+
+    function zoomIn() {
+      if (currentScale < 2.5) {
+        currentScale += 0.2;
+        updateTransform();
       }
     }
 
-    // Listen for device rotation and resize events
-    window.addEventListener("orientationchange", handleOrientationChange);
-    window.addEventListener("resize", handleOrientationChange);
+    function zoomOut() {
+      if (currentScale > 0.6) {
+        currentScale -= 0.2;
+        updateTransform();
+      }
+    }
+
+    function resetTransform() {
+      currentScale = 1.0;
+      currentRotation = 0;
+      updateTransform();
+    }
 
     // Disable default browser context menus
     document.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -356,9 +415,6 @@
       if (BOOKING_FILES.length > 0) {
         switchPdfFile(0);
       }
-
-      // Run orientation check on initial load
-      handleOrientationChange();
     });
   </script>
 </body>
