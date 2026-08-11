@@ -2,506 +2,402 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-  <title>SPTS - Manpower Booking</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SPTS - Portal</title>
   <meta name="theme-color" content="#0f172a">
-
-  <!-- PDF.js Engine for cross-platform rendering -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <!-- Panzoom Library for touch zoom & dragging -->
-  <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+  <link rel="manifest" href="manifest.json">
 
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      /* Disable native text selection and search callouts globally */
-      -webkit-touch-callout: none !important;
-      -webkit-user-select: none !important;
-      -khtml-user-select: none !important;
-      -moz-user-select: none !important;
-      -ms-user-select: none !important;
-      user-select: none !important;
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
     }
 
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background-color: #0f172a;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: #334155;
+    html, body { 
+      width: 100%; 
+      height: 100%; 
+      overflow: hidden; 
+      background-color: #0f172a; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      color: #334155; 
     }
 
-    .app-viewport {
-      width: 100vw;
-      height: 100vh;
-      max-width: 412px;
-      max-height: 892px;
-      background-color: #ffffff;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    .app-viewport { 
+      width: 100vw; 
+      height: 100vh; 
+      max-width: 412px; 
+      max-height: 892px; 
+      background-color: #ffffff; 
+      display: flex; 
+      flex-direction: column; 
+      overflow: hidden; 
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
     }
 
-    @media (min-width: 480px) {
-      .app-viewport {
-        border-radius: 28px;
-        height: 844px;
-      }
+    @media (min-width: 480px) { 
+      .app-viewport { 
+        border-radius: 28px; 
+        height: 844px; 
+      } 
     }
 
-    .view-screen {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 16px;
-      overflow: hidden;
+    .view-screen { 
+      flex: 1; 
+      display: flex; 
+      flex-direction: column; 
+      padding: 20px; 
+      overflow-y: auto; 
     }
 
-    /* Top Navigation Header */
-    .booking-top-nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
+    .hidden { 
+      display: none !important; 
     }
 
-    .btn-home-icon {
-      width: 40px;
-      height: 40px;
-      background-color: #f1f5f9;
-      border: 1px solid #cbd5e1;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      cursor: pointer;
-      color: #002060;
+    .top-right-app-icon { 
+      width: 40px; 
+      height: 40px; 
+      border-radius: 10px; 
+      object-fit: cover; 
+      border: 1px solid #cbd5e1; 
     }
 
-    .booking-header-title {
-      flex: 1;
-      text-align: center;
-      color: #002060;
-      font-size: 18px;
-      font-weight: 800;
+    .main-top-nav { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      margin-bottom: 16px; 
     }
 
-    /* Date Status Bar */
-    .filter-info-bar {
-      background-color: #eff6ff;
-      border: 1px solid #bfdbfe;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #1e40af;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    .brand-section { 
+      text-align: center; 
+      margin-top: 20px; 
+      margin-bottom: 28px; 
     }
 
-    /* File Selection Cards */
-    .file-list-container {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 12px;
-      max-height: 120px;
-      overflow-y: auto;
+    .brand-logo-icon { 
+      width: 60px; 
+      height: 60px; 
+      background: linear-gradient(135deg, #0078D4, #005A9E); 
+      border-radius: 16px; 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center; 
+      color: white; 
+      font-size: 20px; 
+      font-weight: bold; 
+      margin-bottom: 12px; 
     }
 
-    .file-card {
-      background-color: #f8fafc;
-      border: 1.5px solid #cbd5e1;
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #0f172a;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    .brand-title { 
+      font-size: 24px; 
+      font-weight: 800; 
+      color: #0f172a; 
     }
 
-    .file-card.active {
-      border-color: #0078D4;
-      background-color: #f0f7ff;
-      color: #0078D4;
+    .brand-subtitle { 
+      font-size: 14px; 
+      color: #64748b; 
+      margin-top: 4px; 
     }
 
-    /* PDF Interactive Box Container */
-    .pdf-card-container {
-      flex: 1;
-      width: 100%;
-      border: 1.5px solid #0078D4;
-      border-radius: 12px;
-      overflow: hidden;
-      background-color: #525659;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      touch-action: none;
+    .form-group { 
+      margin-bottom: 14px; 
     }
 
-    /* Zoom Control Floating Toolbar */
-    .zoom-toolbar {
-      position: absolute;
-      bottom: 12px;
-      right: 12px;
-      z-index: 20;
-      display: flex;
-      gap: 6px;
-      background: rgba(15, 23, 42, 0.9);
-      padding: 5px;
-      border-radius: 10px;
-      backdrop-filter: blur(4px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    .form-label { 
+      display: block; 
+      font-size: 14px; 
+      font-weight: 700; 
+      color: #1e293b; 
+      margin-bottom: 6px; 
     }
 
-    .zoom-btn {
-      width: 36px;
-      height: 36px;
-      background: #ffffff;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      font-size: 18px;
-      color: #0f172a;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      touch-action: manipulation;
+    .form-input { 
+      width: 100%; 
+      padding: 12px 14px; 
+      font-size: 15px; 
+      border: 1.5px solid #0078D4; 
+      border-radius: 8px; 
+      outline: none; 
     }
 
-    .zoom-btn:active {
-      background: #e2e8f0;
-      transform: scale(0.92);
+    .btn-primary { 
+      width: 100%; 
+      height: 50px; 
+      background-color: #0078D4; 
+      color: #ffffff; 
+      font-size: 17px; 
+      font-weight: 700; 
+      border: none; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
     }
 
-    /* Draggable Target Layer */
-    .panzoom-wrapper {
-      width: 100%;
-      height: 100%;
-      cursor: grab;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      transform-origin: 0 0;
-      touch-action: none;
+    .alert-error { 
+      background-color: #fef2f2; 
+      border: 1px solid #fecaca; 
+      color: #dc2626; 
+      padding: 12px; 
+      border-radius: 8px; 
+      font-size: 14px; 
+      margin-bottom: 16px; 
+      text-align: center; 
     }
 
-    .panzoom-wrapper:active {
-      cursor: grabbing;
+    .user-card { 
+      background: #f1f5f9; 
+      border-radius: 16px; 
+      padding: 18px 20px; 
+      margin-bottom: 22px; 
     }
 
-    canvas.pdf-page-canvas {
-      width: 96% !important;
-      height: auto !important;
-      margin: 8px 0;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-      border-radius: 4px;
-      background-color: #ffffff;
-      touch-action: none;
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    .user-name { 
+      font-size: 22px; 
+      font-weight: 800; 
+      color: #0f172a; 
     }
 
-    .landscape-pdf-page {
-      transform: rotate(90deg) scale(0.95);
-      margin: 40px 0 !important;
+    .badge-group { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 8px; 
+      margin-top: 10px; 
     }
 
-    .pdf-placeholder {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      color: #ffffff;
-      font-size: 14px;
-      text-align: center;
-      padding: 20px;
+    .badge { 
+      font-size: 13px; 
+      font-weight: 700; 
+      padding: 4px 10px; 
+      border-radius: 14px; 
+      background-color: #e2e8f0; 
+      color: #334155; 
     }
 
-    .hidden {
-      display: none !important;
+    .badge-highlight { 
+      background-color: #0078D4 !important; 
+      color: #ffffff !important; 
     }
 
-    .action-row {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      margin-top: 12px;
+    .nav-card { 
+      background: #ffffff; 
+      border: 1.5px solid #e2e8f0; 
+      border-radius: 14px; 
+      padding: 20px; 
+      display: flex; 
+      align-items: center; 
+      gap: 16px; 
+      cursor: pointer; 
+      transition: all 0.2s ease; 
+      margin-bottom: 14px; 
     }
 
-    .btn-back-round {
-      width: 46px;
-      height: 46px;
-      border: 2px solid #0078D4;
-      border-radius: 50%;
-      background: white;
-      color: #0078D4;
-      font-size: 20px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
+    .nav-card:hover { 
+      border-color: #0078D4; 
+      transform: translateY(-2px); 
+    }
+
+    .nav-card-icon { 
+      width: 48px; 
+      height: 48px; 
+      background: #eff6ff; 
+      color: #0078D4; 
+      border-radius: 12px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 22px; 
+    }
+
+    .nav-card-title { 
+      font-weight: 800; 
+      font-size: 17px; 
+      color: #0f172a; 
+    }
+
+    .nav-card-sub { 
+      font-size: 13px; 
+      color: #64748b; 
+      margin-top: 3px; 
     }
   </style>
 </head>
 <body>
 
   <div class="app-viewport">
-    <div class="view-screen">
-      
-      <!-- Top Navigation -->
-      <div class="booking-top-nav">
-        <div class="btn-home-icon" onclick="goHome()">🏠</div>
-        <div class="booking-header-title">MANPOWER BOOKING</div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginView" class="view-screen">
+      <div class="brand-section">
+        <div class="brand-logo-icon">SPTS</div>
+        <div class="brand-title">SPTS Portal</div>
+        <div class="brand-subtitle">Sign in with your credentials</div>
       </div>
 
-      <!-- Date Banner -->
-      <div class="filter-info-bar">
-        <span>📅 Today's Bookings</span>
-        <span id="currentDateDisplay">--/--/----</span>
-      </div>
+      <div id="errorMessage" class="alert-error hidden"></div>
 
-      <!-- File List -->
-      <div id="fileListContainer" class="file-list-container">
-        <div class="file-card">Connecting to booking server...</div>
-      </div>
-
-      <!-- PDF Canvas Viewport -->
-      <div class="pdf-card-container" id="pdfCardBox">
-        
-        <!-- Floating Zoom Controls -->
-        <div id="zoomControls" class="zoom-toolbar hidden">
-          <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">＋</button>
-          <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">－</button>
-          <button class="zoom-btn" onclick="resetZoom()" title="Reset Zoom">↺</button>
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label class="form-label" for="usernameInput">USERNAME</label>
+          <input type="text" id="usernameInput" class="form-input" placeholder="Enter Username" required autocomplete="off" />
         </div>
 
-        <div id="pdfPlaceholder" class="pdf-placeholder">
-          📄 Select a booking document above to view content.
+        <div class="form-group">
+          <label class="form-label" for="passwordInput">PASSWORD</label>
+          <input type="password" id="passwordInput" class="form-input" placeholder="Enter Password" required />
         </div>
 
-        <!-- Panzoom Wrapper Target -->
-        <div id="panzoomTarget" class="panzoom-wrapper hidden"></div>
-      </div>
-
-      <!-- Footer Action -->
-      <div class="action-row">
-        <div class="btn-back-round" onclick="goHome()">➔</div>
-      </div>
-
+        <button type="submit" id="submitBtn" class="btn-primary" style="margin-top: 20px;">
+          <span id="btnText">Sign In</span>
+        </button>
+      </form>
     </div>
+
+    <!-- MAIN HOME PAGE -->
+    <div id="mainView" class="view-screen hidden">
+      <div class="main-top-nav">
+        <div style="font-size: 18px; font-weight: 800; color: #0f172a;">SPTS PORTAL</div>
+        <img src="icon-192.png" alt="App Icon" class="top-right-app-icon" onerror="this.style.display='none'" />
+      </div>
+
+      <div class="user-card">
+        <div class="user-name" id="displayName">-</div>
+        <div class="badge-group">
+          <span class="badge" id="displayCompany">SPTS</span>
+          <span class="badge badge-highlight" id="displayUserId">ID: -</span>
+          <span class="badge" id="displayGroup">Group: -</span>
+        </div>
+      </div>
+
+      <div style="font-size: 14px; font-weight: 700; color: #64748b; margin-bottom: 12px; text-transform: uppercase;">
+        Available Modules
+      </div>
+
+      <!-- Module 1: Equipment Checklist -->
+      <div class="nav-card" onclick="navigateTo('modules/equipment-checklist.html')">
+        <div class="nav-card-icon">📋</div>
+        <div>
+          <div class="nav-card-title">Equipment Checklist</div>
+          <div class="nav-card-sub">Perform daily equipment & PM inspection</div>
+        </div>
+      </div>
+
+      <!-- Module 2: Manpower Booking (ACTIVATED) -->
+      <div class="nav-card" onclick="navigateTo('modules/manpower-booking.html')">
+        <div class="nav-card-icon">👷</div>
+        <div>
+          <div class="nav-card-title">Manpower Booking</div>
+          <div class="nav-card-sub">View daily booking documents</div>
+        </div>
+      </div>
+
+      <!-- Module 3: Walkie Talkie Declaration (Placeholder) -->
+      <div class="nav-card" style="opacity: 0.6; cursor: not-allowed;">
+        <div class="nav-card-icon">📻</div>
+        <div>
+          <div class="nav-card-title">Walkie Talkie Declaration</div>
+          <div class="nav-card-sub">Coming Soon</div>
+        </div>
+      </div>
+
+      <button onclick="handleLogout()" class="btn-primary" style="background-color: #64748b; margin-top: auto;">
+        Sign Out
+      </button>
+    </div>
+
   </div>
 
   <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const LOGIN_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/23/workflows/29ef85880a4c4deaa667684c428d530d/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=MBH_x3BWausPompPfN0xNODkcPhbDVA7Bv3vGgFW2SY";
+    let currentUser = null;
 
-    const GET_BOOKING_FILES_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/0ec41aab7114455687c2ce778f4c9459/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yzAu6ONVD7_Rm01FBxTuj4QLPcJZ4-9QD-aCXAPhnh0";
+    async function handleLogin(e) {
+      e.preventDefault();
+      const usernameInput = document.getElementById('usernameInput').value.trim();
+      const passwordInput = document.getElementById('passwordInput').value.trim();
+      const errorBox = document.getElementById('errorMessage');
+      const submitBtn = document.getElementById('submitBtn');
+      const btnText = document.getElementById('btnText');
 
-    let panzoomInstance = null;
-
-    function checkSession() {
-      const activeSession = sessionStorage.getItem('userSession');
-      if (!activeSession) {
-        window.location.href = '../index.html';
-      }
-    }
-
-    function goHome() {
-      window.location.href = '../index.html';
-    }
-
-    function getDateParams() {
-      const now = new Date();
-      const dd = String(now.getDate()).padStart(2, '0');
-      const mm = String(now.getMonth() + 1).padStart(2, '0');
-      const yyyy = now.getFullYear();
-      return { dayNum: dd, monthNum: mm, formattedDisplay: `${dd}/${mm}/${yyyy}` };
-    }
-
-    async function fetchTodayBookings() {
-      const dateInfo = getDateParams();
-      document.getElementById('currentDateDisplay').innerText = dateInfo.formattedDisplay;
-      const container = document.getElementById('fileListContainer');
+      errorBox.classList.add('hidden');
+      submitBtn.disabled = true;
+      btnText.innerText = 'Authenticating...';
 
       try {
-        const response = await fetch(GET_BOOKING_FILES_FLOW_URL, {
+        const response = await fetch(LOGIN_FLOW_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ monthNum: dateInfo.monthNum, dayNum: dateInfo.dayNum })
+          body: JSON.stringify({ username: usernameInput, password: passwordInput })
         });
 
-        if (response.ok) {
-          const result = await response.json();
-          renderFileList(result, dateInfo);
+        const result = await response.json();
+
+        if (response.ok && (result.status === 'success' || result.Title || result.NAME || result.ID || result.COMPANY_ID || result.name)) {
+          currentUser = result;
+          sessionStorage.setItem('userSession', JSON.stringify(result));
+          showHomeView();
         } else {
-          container.innerHTML = `<div class="file-card" style="color: #dc2626;">Flow Error (${response.status}).</div>`;
+          showError(result.message || 'Invalid Username or Password.');
         }
       } catch (err) {
-        container.innerHTML = `<div class="file-card" style="color: #dc2626;">Network connection failed.</div>`;
+        showError('Network error. Unable to connect.');
+      } finally {
+        submitBtn.disabled = false;
+        btnText.innerText = 'Sign In';
       }
     }
 
-    function renderFileList(result, dateInfo) {
-      const container = document.getElementById('fileListContainer');
-      container.innerHTML = '';
-
-      const files = Array.isArray(result) ? result : [result];
-
-      if (!files || files.length === 0 || !files[0]) {
-        container.innerHTML = `<div class="file-card" style="color: #64748b;">No booking files found for ${dateInfo.formattedDisplay}.</div>`;
-        return;
-      }
-
-      files.forEach((file, index) => {
-        const fileName = file.fileName || file.Name || file.DisplayName || 'Booking Document';
-        const card = document.createElement('div');
-        card.className = 'file-card';
-        card.innerHTML = `<span>📄 ${fileName}</span> <span>➔</span>`;
-
-        card.onclick = () => {
-          document.querySelectorAll('.file-card').forEach(c => c.classList.remove('active'));
-          card.classList.add('active');
-          
-          if (file.pdfBase64) {
-            renderPdfWithPanzoom(file.pdfBase64);
-          }
-        };
-
-        container.appendChild(card);
-        if (index === 0) card.click();
-      });
+    function navigateTo(path) {
+      window.location.href = path;
     }
 
-    async function renderPdfWithPanzoom(base64Data) {
-      const target = document.getElementById('panzoomTarget');
-      const placeholder = document.getElementById('pdfPlaceholder');
-      const controls = document.getElementById('zoomControls');
-      const parentBox = document.getElementById('pdfCardBox');
-
-      placeholder.classList.add('hidden');
-      target.classList.remove('hidden');
-      controls.classList.remove('hidden');
-
-      target.innerHTML = '<div style="color: white; padding: 20px;">Loading HD document...</div>';
-
-      if (panzoomInstance) {
-        panzoomInstance.destroy();
-        panzoomInstance = null;
+    function getPropValue(obj, keys, defaultValue = 'N/A') {
+      if (!obj) return defaultValue;
+      for (const k of keys) {
+        if (obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== '') return obj[k];
       }
+      return defaultValue;
+    }
 
-      try {
-        const cleanBase64 = base64Data.replace(/^data:application\/pdf;base64,/, "");
-        const rawBinary = atob(cleanBase64);
-        
-        const loadingTask = pdfjsLib.getDocument({ data: rawBinary });
-        const pdf = await loadingTask.promise;
+    function showHomeView() {
+      document.getElementById('loginView').classList.add('hidden');
+      document.getElementById('mainView').classList.remove('hidden');
 
-        target.innerHTML = '';
-
-        const isLandscape = window.innerWidth > window.innerHeight;
-
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-          const page = await pdf.getPage(pageNum);
-          const viewport = page.getViewport({ scale: 4.0 });
-
-          const canvas = document.createElement('canvas');
-          canvas.className = 'pdf-page-canvas';
-          if (isLandscape) {
-            canvas.classList.add('landscape-pdf-page');
-          }
-
-          const context = canvas.getContext('2d');
-          
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
-
-          target.appendChild(canvas);
-
-          await page.render({
-            canvasContext: context,
-            viewport: viewport
-          }).promise;
-        }
-
-        panzoomInstance = Panzoom(target, {
-          maxScale: 20,
-          minScale: 0.5,
-          step: 0.35,
-          contain: false,
-          startScale: 1,
-          canvas: true
-        });
-
-        parentBox.addEventListener('pointerdown', panzoomInstance.handleDown);
-        parentBox.addEventListener('pointermove', panzoomInstance.handleMove);
-        parentBox.addEventListener('pointerup', panzoomInstance.handleUp);
-
-        parentBox.addEventListener('wheel', (e) => {
-          e.preventDefault();
-          panzoomInstance.zoomWithWheel(e);
-        }, { passive: false });
-
-      } catch (err) {
-        console.error('PDF Render Error:', err);
-        target.innerHTML = `<div style="color: #ef4444; padding: 20px;">Failed to render document.</div>`;
+      if (currentUser) {
+        document.getElementById('displayName').innerText = getPropValue(currentUser, ['NAME', 'Title', 'title', 'name'], 'User');
+        document.getElementById('displayCompany').innerText = getPropValue(currentUser, ['COMPANY', 'Company', 'company'], 'SPTS');
+        document.getElementById('displayUserId').innerText = `ID: ${getPropValue(currentUser, ['COMPANY_ID', 'company_id', 'Company_ID', 'ID', 'id', 'Username', 'username'], 'N/A')}`;
+        document.getElementById('displayGroup').innerText = `Group: ${getPropValue(currentUser, ['GROUP', 'Group', 'group'], 'N/A')}`;
       }
     }
 
-    function handleOrientationUpdate() {
-      const isLandscape = window.innerWidth > window.innerHeight;
-      const pdfCanvases = document.querySelectorAll('.pdf-page-canvas');
-
-      pdfCanvases.forEach(canvas => {
-        if (isLandscape) {
-          canvas.classList.add('landscape-pdf-page');
-        } else {
-          canvas.classList.remove('landscape-pdf-page');
-        }
-      });
-
-      if (panzoomInstance) {
-        panzoomInstance.reset({ animate: true });
-      }
+    function handleLogout() {
+      sessionStorage.removeItem('userSession');
+      currentUser = null;
+      document.getElementById('usernameInput').value = '';
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('mainView').classList.add('hidden');
+      document.getElementById('loginView').classList.remove('hidden');
     }
 
-    function zoomIn() {
-      if (panzoomInstance) panzoomInstance.zoomIn({ animate: true });
+    function showError(msg) {
+      const errorBox = document.getElementById('errorMessage');
+      errorBox.innerText = msg;
+      errorBox.classList.remove('hidden');
     }
-
-    function zoomOut() {
-      if (panzoomInstance) panzoomInstance.zoomOut({ animate: true });
-    }
-
-    function resetZoom() {
-      if (panzoomInstance) panzoomInstance.reset({ animate: true });
-    }
-
-    // Block native context menus (long-press popup triggers)
-    document.addEventListener('contextmenu', (e) => e.preventDefault());
-
-    window.addEventListener('orientationchange', handleOrientationUpdate);
-    window.addEventListener('resize', handleOrientationUpdate);
 
     window.addEventListener('DOMContentLoaded', () => {
-      checkSession();
-      fetchTodayBookings();
+      const activeSession = sessionStorage.getItem('userSession');
+      if (activeSession) {
+        currentUser = JSON.parse(activeSession);
+        showHomeView();
+      }
     });
   </script>
 </body>
