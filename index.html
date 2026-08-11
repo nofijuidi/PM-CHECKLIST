@@ -8,21 +8,25 @@
   <link rel="manifest" href="manifest.json">
 
   <style>
+    /* 1. Global Callout & Text Selection Suppression (Same method as Manpower Booking) */
     * { 
       box-sizing: border-box; 
       margin: 0; 
       padding: 0; 
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-    }
-
-    /* Apply contextual search & selection blocking ONLY to the main view, keeping login part untouched */
-    #mainView, #mainView * {
-      -webkit-touch-callout: none !important;
-      -webkit-user-select: none !important;
+      
+      -webkit-touch-callout: none !important; /* Disables iOS/Android callout popup menu */
+      -webkit-user-select: none !important;    /* Prevents text selection on long-press */
       -khtml-user-select: none !important;
       -moz-user-select: none !important;
       -ms-user-select: none !important;
       user-select: none !important;
+    }
+
+    /* 2. Re-enable selection ONLY inside text input fields so users can still type/edit */
+    input, textarea {
+      -webkit-user-select: text !important;
+      user-select: text !important;
     }
 
     html, body { 
@@ -242,7 +246,7 @@
 
   <div class="app-viewport">
 
-    <!-- LOGIN SCREEN (Untouched / Fully Editable) -->
+    <!-- LOGIN SCREEN -->
     <div id="loginView" class="view-screen">
       <div class="brand-section">
         <div class="brand-logo-icon">SPTS</div>
@@ -269,7 +273,7 @@
       </form>
     </div>
 
-    <!-- MAIN HOME PAGE (Contextual Search & Selection Blocked Here Only) -->
+    <!-- MAIN HOME PAGE -->
     <div id="mainView" class="view-screen hidden">
       <div class="main-top-nav">
         <div style="font-size: 18px; font-weight: 800; color: #0f172a;">SPTS PORTAL</div>
@@ -402,8 +406,8 @@
       errorBox.classList.remove('hidden');
     }
 
-    // Context menu / long-press blocker active ONLY inside the main view section
-    document.getElementById('mainView').addEventListener('contextmenu', (e) => e.preventDefault());
+    // Suppress native touch context menus (Copy/Share/Select All/Web Search) across the entire application
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
 
     window.addEventListener('DOMContentLoaded', () => {
       const activeSession = sessionStorage.getItem('userSession');
