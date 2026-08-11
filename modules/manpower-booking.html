@@ -31,6 +31,7 @@
       justify-content: center;
       align-items: center;
       color: #334155;
+      transition: all 0.3s ease;
     }
 
     /* Outer Wrapper - Default Portrait Dimensions */
@@ -45,6 +46,7 @@
       position: relative;
       overflow: hidden;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      transition: all 0.3s ease;
     }
 
     @media (min-width: 480px) {
@@ -60,6 +62,7 @@
       flex-direction: column;
       padding: 16px;
       overflow-y: auto;
+      transition: padding 0.3s ease;
     }
 
     /* Top Navigation Header */
@@ -161,6 +164,7 @@
       overflow: hidden;
       background-color: #f1f5f9;
       position: relative;
+      transition: all 0.3s ease;
     }
 
     .pdf-viewer-frame {
@@ -191,40 +195,35 @@
     }
 
     /* =========================================================
-       DYNAMIC LANDSCAPE ORIENTATION MEDIA QUERY
+       DYNAMIC LANDSCAPE ORIENTATION (JS FALLBACK CLASSES)
        ========================================================= */
-    @media screen and (orientation: landscape) {
-      /* Hide top navigation, header banners, and action footers */
-      .booking-top-nav, 
-      .today-banner, 
-      .file-list-container, 
-      .action-footer { 
-        display: none !important; 
-      }
+    body.is-landscape .booking-top-nav, 
+    body.is-landscape .today-banner, 
+    body.is-landscape .file-list-container, 
+    body.is-landscape .action-footer { 
+      display: none !important; 
+    }
 
-      /* Stretch app container to 100% full screen width/height */
-      .app-viewport { 
-        max-width: 100vw !important; 
-        max-height: 100vh !important; 
-        width: 100vw !important; 
-        height: 100vh !important; 
-        border-radius: 0 !important; 
-        margin: 0 !important; 
-        padding: 0 !important; 
-      }
+    body.is-landscape .app-viewport { 
+      max-width: 100vw !important; 
+      max-height: 100vh !important; 
+      width: 100vw !important; 
+      height: 100vh !important; 
+      border-radius: 0 !important; 
+      margin: 0 !important; 
+      padding: 0 !important; 
+    }
 
-      .view-screen { 
-        padding: 0 !important; 
-      }
+    body.is-landscape .view-screen { 
+      padding: 0 !important; 
+    }
 
-      /* Expand PDF viewer to take 100% of the landscape screen */
-      .pdf-viewer-container { 
-        width: 100vw !important; 
-        height: 100vh !important; 
-        min-height: 100vh !important; 
-        border: none !important; 
-        border-radius: 0 !important; 
-      }
+    body.is-landscape .pdf-viewer-container { 
+      width: 100vw !important; 
+      height: 100vh !important; 
+      min-height: 100vh !important; 
+      border: none !important; 
+      border-radius: 0 !important; 
     }
   </style>
 </head>
@@ -266,7 +265,7 @@
   </div>
 
   <script>
-    // Configured with your verified Google Drive File ID: 1yCu2RUrz6olE1Bi7NVCXXBtTEazxRnP2
+    // Configured with your verified Google Drive File ID
     const BOOKING_FILES = [
       {
         id: "FILE_001",
@@ -328,6 +327,24 @@
       }
     }
 
+    // ==========================================
+    // ORIENTATION DETECTION LOGIC
+    // ==========================================
+    function handleOrientationChange() {
+      // Check if landscape via matchMedia or window.orientation
+      const isLandscape = window.matchMedia("(orientation: landscape)").matches || Math.abs(window.orientation) === 90;
+      
+      if (isLandscape) {
+        document.body.classList.add('is-landscape');
+      } else {
+        document.body.classList.remove('is-landscape');
+      }
+    }
+
+    // Listen for device rotation and resize events
+    window.addEventListener("orientationchange", handleOrientationChange);
+    window.addEventListener("resize", handleOrientationChange);
+
     // Disable default browser context menus
     document.addEventListener('contextmenu', (e) => e.preventDefault());
 
@@ -339,6 +356,9 @@
       if (BOOKING_FILES.length > 0) {
         switchPdfFile(0);
       }
+
+      // Run orientation check on initial load
+      handleOrientationChange();
     });
   </script>
 </body>
