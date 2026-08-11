@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SPTS - Home</title>
+  <title>SPTS Operations Portal</title>
   <meta name="theme-color" content="#0f172a">
 
   <style>
@@ -53,55 +53,251 @@
       }
     }
 
-    .main-container {
+    .screen {
       flex: 1;
-      padding: 24px;
       display: flex;
       flex-direction: column;
+      padding: 24px;
       justify-content: center;
       align-items: center;
-      gap: 16px;
+    }
+
+    .logo-container {
+      margin-bottom: 24px;
+      text-align: center;
     }
 
     .app-title {
       color: #002060;
       font-size: 24px;
       font-weight: 800;
-      text-align: center;
+      letter-spacing: 0.5px;
     }
 
-    .btn-nav {
+    .app-subtitle {
+      color: #64748b;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .form-group {
+      width: 100%;
+      margin-bottom: 14px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #0f172a;
+      background-color: #f8fafc;
+      outline: none;
+
+      /* Allow user typing in inputs */
+      -webkit-user-select: text !important;
+      user-select: text !important;
+    }
+
+    .form-control:focus {
+      border-color: #0078D4;
+      background-color: #ffffff;
+    }
+
+    .btn-primary {
       width: 100%;
       padding: 14px;
       background-color: #0078D4;
       color: white;
       border: none;
-      border-radius: 12px;
-      font-size: 16px;
+      border-radius: 10px;
+      font-size: 15px;
       font-weight: 700;
       cursor: pointer;
       text-align: center;
-      transition: background-color 0.2s;
+      transition: background-color 0.2s, transform 0.1s;
+      margin-top: 8px;
     }
 
-    .btn-nav:active {
+    .btn-primary:active {
       background-color: #005a9e;
       transform: scale(0.98);
     }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 14px;
+      background-color: #f1f5f9;
+      color: #002060;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .btn-secondary:active {
+      background-color: #e2e8f0;
+      transform: scale(0.98);
+    }
+
+    .error-banner {
+      width: 100%;
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .user-welcome-card {
+      width: 100%;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .user-welcome-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #1e40af;
+    }
+
+    .user-welcome-sub {
+      font-size: 12px;
+      color: #3b82f6;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
   <div class="app-viewport">
-    <div class="main-container">
-      <div class="app-title">SPTS OPERATIONS</div>
-      <button class="btn-nav" onclick="window.location.href='modules/manpower-booking.html'">Open Module</button>
+    
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="screen">
+      <div class="logo-container">
+        <div class="app-title">SPTS OPERATIONS</div>
+        <div class="app-subtitle">Please sign in to access portal</div>
+      </div>
+
+      <div id="loginError" class="error-banner hidden">Invalid Staff ID or Password</div>
+
+      <div class="form-group">
+        <label class="form-label">Staff ID</label>
+        <input type="text" id="loginStaffId" class="form-control" placeholder="e.g. EMP-1042" value="EMP-1042" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" value="123456" />
+      </div>
+
+      <button class="btn-primary" onclick="handleLogin()">SIGN IN</button>
     </div>
+
+    <!-- MAIN DASHBOARD SCREEN -->
+    <div id="mainDashboard" class="screen hidden">
+      <div class="logo-container">
+        <div class="app-title">MAIN DASHBOARD</div>
+        <div class="app-subtitle">Select an operational module</div>
+      </div>
+
+      <div class="user-welcome-card">
+        <div id="displayStaffName" class="user-welcome-title">Welcome, Staff</div>
+        <div id="displayStaffId" class="user-welcome-sub">Staff ID: ---</div>
+      </div>
+
+      <button class="btn-primary" onclick="navigateTo('modules/equipment-checklist.html')">📋 Equipment Checklist</button>
+      <button class="btn-primary" style="background-color: #0284c7;" onclick="navigateTo('modules/manpower-booking.html')">📅 Manpower Booking</button>
+      
+      <button class="btn-secondary" onclick="handleLogout()">Logout</button>
+    </div>
+
   </div>
 
   <script>
-    // Prevent context menu (long-press popups)
+    function checkExistingSession() {
+      const session = sessionStorage.getItem('userSession');
+      if (session) {
+        const user = JSON.parse(session);
+        showDashboard(user);
+      } else {
+        showLogin();
+      }
+    }
+
+    function handleLogin() {
+      const staffId = document.getElementById('loginStaffId').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+      const errorBanner = document.getElementById('loginError');
+
+      if (!staffId) {
+        errorBanner.innerText = "Please enter your Staff ID";
+        errorBanner.classList.remove('hidden');
+        return;
+      }
+
+      // Store user session in sessionStorage so all modules inherit it
+      const userSession = {
+        staffId: staffId,
+        name: "NOFIJUIDI"
+      };
+
+      sessionStorage.setItem('userSession', JSON.stringify(userSession));
+      errorBanner.classList.add('hidden');
+      showDashboard(userSession);
+    }
+
+    function showDashboard(user) {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('mainDashboard').classList.remove('hidden');
+
+      document.getElementById('displayStaffName').innerText = `Welcome, ${user.name}`;
+      document.getElementById('displayStaffId').innerText = `Staff ID: ${user.staffId}`;
+    }
+
+    function showLogin() {
+      document.getElementById('loginScreen').classList.remove('hidden');
+      document.getElementById('mainDashboard').classList.add('hidden');
+    }
+
+    function handleLogout() {
+      sessionStorage.removeItem('userSession');
+      showLogin();
+    }
+
+    function navigateTo(path) {
+      window.location.href = path;
+    }
+
+    // Disable context menu / long-press text lookups
     document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    window.addEventListener('DOMContentLoaded', checkExistingSession);
   </script>
 </body>
 </html>
