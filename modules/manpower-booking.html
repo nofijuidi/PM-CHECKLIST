@@ -2,14 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>SPTS - Manpower Booking</title>
   <meta name="theme-color" content="#0f172a">
-
-  <!-- PDF.js Engine for cross-platform rendering -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <!-- Panzoom Library for touch zoom & dragging -->
-  <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
 
   <style>
     * {
@@ -17,7 +12,8 @@
       margin: 0;
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      /* Disable native text selection and search callouts globally */
+      
+      /* Disable touch callouts and context menu text popups */
       -webkit-touch-callout: none !important;
       -webkit-user-select: none !important;
       -khtml-user-select: none !important;
@@ -62,7 +58,7 @@
       display: flex;
       flex-direction: column;
       padding: 16px;
-      overflow: hidden;
+      overflow-y: auto;
     }
 
     /* Top Navigation Header */
@@ -93,161 +89,103 @@
       color: #002060;
       font-size: 18px;
       font-weight: 800;
+      padding: 0 8px;
     }
 
-    /* Date Status Bar */
-    .filter-info-bar {
+    .top-right-app-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1px solid #cbd5e1;
+    }
+
+    /* Today's Bookings Header Banner */
+    .today-banner {
+      width: 100%;
       background-color: #eff6ff;
-      border: 1px solid #bfdbfe;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #1e40af;
-      margin-bottom: 12px;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 10px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      margin-bottom: 10px;
+      color: #002060;
+      font-weight: 800;
+      font-size: 14px;
     }
 
-    /* File Selection Cards */
+    /* Stacked Document Cards Container */
     .file-list-container {
       display: flex;
       flex-direction: column;
       gap: 8px;
       margin-bottom: 12px;
-      max-height: 120px;
-      overflow-y: auto;
     }
 
+    /* Card Box matching your screenshot style */
     .file-card {
+      width: 100%;
       background-color: #f8fafc;
-      border: 1.5px solid #cbd5e1;
-      border-radius: 8px;
+      border: 1.5px solid #0078D4;
+      border-radius: 10px;
       padding: 10px 12px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #0f172a;
-      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: #0078D4;
+      font-weight: 700;
+      font-size: 13px;
     }
 
     .file-card.active {
-      border-color: #0078D4;
-      background-color: #f0f7ff;
-      color: #0078D4;
+      background-color: #0078D4;
+      color: #ffffff;
+      border-color: #005a9e;
     }
 
-    /* PDF Interactive Box Container */
-    .pdf-card-container {
+    .file-card-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      word-break: break-all;
+    }
+
+    .file-card-arrow {
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    /* PDF Viewer Frame Box */
+    .pdf-viewer-container {
       flex: 1;
       width: 100%;
-      border: 1.5px solid #0078D4;
+      min-height: 460px;
+      border: 1.5px solid #cbd5e1;
       border-radius: 12px;
       overflow: hidden;
-      background-color: #525659;
-      display: flex;
-      flex-direction: column;
+      background-color: #f1f5f9;
       position: relative;
-      touch-action: none;
     }
 
-    /* Zoom Control Floating Toolbar */
-    .zoom-toolbar {
-      position: absolute;
-      bottom: 12px;
-      right: 12px;
-      z-index: 20;
-      display: flex;
-      gap: 6px;
-      background: rgba(15, 23, 42, 0.9);
-      padding: 5px;
-      border-radius: 10px;
-      backdrop-filter: blur(4px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-
-    .zoom-btn {
-      width: 36px;
-      height: 36px;
-      background: #ffffff;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      font-size: 18px;
-      color: #0f172a;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      touch-action: manipulation;
-    }
-
-    .zoom-btn:active {
-      background: #e2e8f0;
-      transform: scale(0.92);
-    }
-
-    /* Draggable Target Layer */
-    .panzoom-wrapper {
+    .pdf-viewer-frame {
       width: 100%;
       height: 100%;
-      cursor: grab;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      transform-origin: 0 0;
-      touch-action: none;
+      border: none;
     }
 
-    .panzoom-wrapper:active {
-      cursor: grabbing;
-    }
-
-    canvas.pdf-page-canvas {
-      width: 96% !important;
-      height: auto !important;
-      margin: 8px 0;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-      border-radius: 4px;
-      background-color: #ffffff;
-      touch-action: none;
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .landscape-pdf-page {
-      transform: rotate(90deg) scale(0.95);
-      margin: 40px 0 !important;
-    }
-
-    .pdf-placeholder {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      color: #ffffff;
-      font-size: 14px;
-      text-align: center;
-      padding: 20px;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    .action-row {
+    .action-footer {
       display: flex;
       justify-content: flex-end;
-      align-items: center;
       margin-top: 12px;
     }
 
-    .btn-back-round {
-      width: 46px;
-      height: 46px;
+    .btn-next-round {
+      width: 48px;
+      height: 48px;
       border: 2px solid #0078D4;
       border-radius: 50%;
       background: white;
@@ -268,240 +206,111 @@
       
       <!-- Top Navigation -->
       <div class="booking-top-nav">
-        <div class="btn-home-icon" onclick="goHome()">🏠</div>
+        <div class="btn-home-icon" onclick="goHome()" title="Go to Home Page">🏠</div>
         <div class="booking-header-title">MANPOWER BOOKING</div>
+        <img src="../icon-192.png" alt="App Icon" class="top-right-app-icon" onerror="this.style.display='none'" />
       </div>
 
-      <!-- Date Banner -->
-      <div class="filter-info-bar">
+      <!-- Today's Bookings Header Banner -->
+      <div class="today-banner">
         <span>📅 Today's Bookings</span>
-        <span id="currentDateDisplay">--/--/----</span>
+        <span id="displayDateStr">11/08/2026</span>
       </div>
 
-      <!-- File List -->
+      <!-- List of Files stacked beneath Today's Bookings -->
       <div id="fileListContainer" class="file-list-container">
-        <div class="file-card">Connecting to booking server...</div>
+        <!-- Rendered dynamically by JavaScript -->
       </div>
 
-      <!-- PDF Canvas Viewport -->
-      <div class="pdf-card-container" id="pdfCardBox">
-        
-        <!-- Floating Zoom Controls -->
-        <div id="zoomControls" class="zoom-toolbar hidden">
-          <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">＋</button>
-          <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">－</button>
-          <button class="zoom-btn" onclick="resetZoom()" title="Reset Zoom">↺</button>
-        </div>
-
-        <div id="pdfPlaceholder" class="pdf-placeholder">
-          📄 Select a booking document above to view content.
-        </div>
-
-        <!-- Panzoom Wrapper Target -->
-        <div id="panzoomTarget" class="panzoom-wrapper hidden"></div>
+      <!-- PDF Viewer Box -->
+      <div class="pdf-viewer-container">
+        <iframe id="pdfViewerFrame" class="pdf-viewer-frame" src="" title="Manpower Booking Viewer"></iframe>
       </div>
 
-      <!-- Footer Action -->
-      <div class="action-row">
-        <div class="btn-back-round" onclick="goHome()">➔</div>
+      <!-- Action Footer -->
+      <div class="action-footer">
+        <div class="btn-next-round" onclick="goHome()">➔</div>
       </div>
 
     </div>
   </div>
 
   <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-    const GET_BOOKING_FILES_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/0ec41aab7114455687c2ce778f4c9459/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yzAu6ONVD7_Rm01FBxTuj4QLPcJZ4-9QD-aCXAPhnh0";
-
-    let panzoomInstance = null;
-
-    function checkSession() {
-      const activeSession = sessionStorage.getItem('userSession');
-      if (!activeSession) {
-        window.location.href = '../index.html';
+    // List of available files for today. 
+    // The LAST item in the array is treated as the LATEST document and opened by default.
+    const BOOKING_FILES = [
+      {
+        id: "FILE_001",
+        name: "11 AUG 2026 BOOKING GROUP.pdf",
+        embedUrl: "https://drive.google.com/file/d/13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b/preview"
+      },
+      {
+        id: "FILE_002",
+        name: "11 AUG 2026 EXTRA BOOKING.pdf",
+        embedUrl: "https://drive.google.com/file/d/13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b/preview"
       }
-    }
+    ];
+
+    // Set default active index to the latest file (last array item)
+    let currentActiveIndex = BOOKING_FILES.length > 0 ? BOOKING_FILES.length - 1 : 0;
 
     function goHome() {
       window.location.href = '../index.html';
     }
 
-    function getDateParams() {
+    function setLiveDate() {
       const now = new Date();
       const dd = String(now.getDate()).padStart(2, '0');
       const mm = String(now.getMonth() + 1).padStart(2, '0');
       const yyyy = now.getFullYear();
-      return { dayNum: dd, monthNum: mm, formattedDisplay: `${dd}/${mm}/${yyyy}` };
+      document.getElementById('displayDateStr').innerText = `${dd}/${mm}/${yyyy}`;
     }
 
-    async function fetchTodayBookings() {
-      const dateInfo = getDateParams();
-      document.getElementById('currentDateDisplay').innerText = dateInfo.formattedDisplay;
-      const container = document.getElementById('fileListContainer');
-
-      try {
-        const response = await fetch(GET_BOOKING_FILES_FLOW_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ monthNum: dateInfo.monthNum, dayNum: dateInfo.dayNum })
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          renderFileList(result, dateInfo);
-        } else {
-          container.innerHTML = `<div class="file-card" style="color: #dc2626;">Flow Error (${response.status}).</div>`;
-        }
-      } catch (err) {
-        container.innerHTML = `<div class="file-card" style="color: #dc2626;">Network connection failed.</div>`;
-      }
-    }
-
-    function renderFileList(result, dateInfo) {
+    function renderFileCards() {
       const container = document.getElementById('fileListContainer');
       container.innerHTML = '';
 
-      const files = Array.isArray(result) ? result : [result];
-
-      if (!files || files.length === 0 || !files[0]) {
-        container.innerHTML = `<div class="file-card" style="color: #64748b;">No booking files found for ${dateInfo.formattedDisplay}.</div>`;
-        return;
-      }
-
-      files.forEach((file, index) => {
-        const fileName = file.fileName || file.Name || file.DisplayName || 'Booking Document';
+      BOOKING_FILES.forEach((file, index) => {
         const card = document.createElement('div');
-        card.className = 'file-card';
-        card.innerHTML = `<span>📄 ${fileName}</span> <span>➔</span>`;
+        card.className = `file-card ${index === currentActiveIndex ? 'active' : ''}`;
+        card.onclick = () => switchPdfFile(index);
 
-        card.onclick = () => {
-          document.querySelectorAll('.file-card').forEach(c => c.classList.remove('active'));
-          card.classList.add('active');
-          
-          if (file.pdfBase64) {
-            renderPdfWithPanzoom(file.pdfBase64);
-          }
-        };
+        card.innerHTML = `
+          <div class="file-card-info">
+            <span>📄</span>
+            <span>${file.name}</span>
+          </div>
+          <span class="file-card-arrow">➔</span>
+        `;
 
         container.appendChild(card);
-        if (index === 0) card.click();
       });
     }
 
-    async function renderPdfWithPanzoom(base64Data) {
-      const target = document.getElementById('panzoomTarget');
-      const placeholder = document.getElementById('pdfPlaceholder');
-      const controls = document.getElementById('zoomControls');
-      const parentBox = document.getElementById('pdfCardBox');
-
-      placeholder.classList.add('hidden');
-      target.classList.remove('hidden');
-      controls.classList.remove('hidden');
-
-      target.innerHTML = '<div style="color: white; padding: 20px;">Loading HD document...</div>';
-
-      if (panzoomInstance) {
-        panzoomInstance.destroy();
-        panzoomInstance = null;
-      }
-
-      try {
-        const cleanBase64 = base64Data.replace(/^data:application\/pdf;base64,/, "");
-        const rawBinary = atob(cleanBase64);
+    function switchPdfFile(index) {
+      if (index >= 0 && index < BOOKING_FILES.length) {
+        currentActiveIndex = index;
+        const selectedFile = BOOKING_FILES[index];
         
-        const loadingTask = pdfjsLib.getDocument({ data: rawBinary });
-        const pdf = await loadingTask.promise;
-
-        target.innerHTML = '';
-
-        const isLandscape = window.innerWidth > window.innerHeight;
-
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-          const page = await pdf.getPage(pageNum);
-          const viewport = page.getViewport({ scale: 4.0 });
-
-          const canvas = document.createElement('canvas');
-          canvas.className = 'pdf-page-canvas';
-          if (isLandscape) {
-            canvas.classList.add('landscape-pdf-page');
-          }
-
-          const context = canvas.getContext('2d');
-          
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
-
-          target.appendChild(canvas);
-
-          await page.render({
-            canvasContext: context,
-            viewport: viewport
-          }).promise;
-        }
-
-        panzoomInstance = Panzoom(target, {
-          maxScale: 20,
-          minScale: 0.5,
-          step: 0.35,
-          contain: false,
-          startScale: 1,
-          canvas: true
-        });
-
-        parentBox.addEventListener('pointerdown', panzoomInstance.handleDown);
-        parentBox.addEventListener('pointermove', panzoomInstance.handleMove);
-        parentBox.addEventListener('pointerup', panzoomInstance.handleUp);
-
-        parentBox.addEventListener('wheel', (e) => {
-          e.preventDefault();
-          panzoomInstance.zoomWithWheel(e);
-        }, { passive: false });
-
-      } catch (err) {
-        console.error('PDF Render Error:', err);
-        target.innerHTML = `<div style="color: #ef4444; padding: 20px;">Failed to render document.</div>`;
+        // Update PDF iframe source
+        document.getElementById('pdfViewerFrame').src = selectedFile.embedUrl;
+        
+        // Re-render card highlights
+        renderFileCards();
       }
     }
 
-    function handleOrientationUpdate() {
-      const isLandscape = window.innerWidth > window.innerHeight;
-      const pdfCanvases = document.querySelectorAll('.pdf-page-canvas');
-
-      pdfCanvases.forEach(canvas => {
-        if (isLandscape) {
-          canvas.classList.add('landscape-pdf-page');
-        } else {
-          canvas.classList.remove('landscape-pdf-page');
-        }
-      });
-
-      if (panzoomInstance) {
-        panzoomInstance.reset({ animate: true });
-      }
-    }
-
-    function zoomIn() {
-      if (panzoomInstance) panzoomInstance.zoomIn({ animate: true });
-    }
-
-    function zoomOut() {
-      if (panzoomInstance) panzoomInstance.zoomOut({ animate: true });
-    }
-
-    function resetZoom() {
-      if (panzoomInstance) panzoomInstance.reset({ animate: true });
-    }
-
-    // Block native context menus (long-press popup triggers)
+    // Suppress native touch context menus
     document.addEventListener('contextmenu', (e) => e.preventDefault());
 
-    window.addEventListener('orientationchange', handleOrientationUpdate);
-    window.addEventListener('resize', handleOrientationUpdate);
-
     window.addEventListener('DOMContentLoaded', () => {
-      checkSession();
-      fetchTodayBookings();
+      setLiveDate();
+      renderFileCards();
+      
+      // Auto-load the latest file on startup
+      if (BOOKING_FILES.length > 0) {
+        switchPdfFile(currentActiveIndex);
+      }
     });
   </script>
 </body>
