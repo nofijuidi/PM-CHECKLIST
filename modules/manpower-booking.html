@@ -154,7 +154,7 @@
       touch-action: none;
     }
 
-    /* Zoom Control Floating Toolbar */
+    /* Zoom & Rotate Control Floating Toolbar */
     .zoom-toolbar {
       position: absolute;
       bottom: 12px;
@@ -199,7 +199,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      transform-origin: 0 0;
+      transform-origin: center center;
+      transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1);
       touch-action: none;
     }
 
@@ -215,12 +216,6 @@
       border-radius: 4px;
       background-color: #ffffff;
       touch-action: none;
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .landscape-pdf-page {
-      transform: rotate(90deg) scale(0.95);
-      margin: 40px 0 !important;
     }
 
     .pdf-placeholder {
@@ -286,11 +281,12 @@
       <!-- PDF Canvas Viewport -->
       <div class="pdf-card-container" id="pdfCardBox">
         
-        <!-- Floating Zoom Controls -->
+        <!-- Floating Zoom & Rotate Controls -->
         <div id="zoomControls" class="zoom-toolbar hidden">
           <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">＋</button>
           <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">－</button>
-          <button class="zoom-btn" onclick="resetZoom()" title="Reset Zoom">↺</button>
+          <button class="zoom-btn" onclick="rotateClockwise()" title="Rotate 90° Clockwise">↻</button>
+          <button class="zoom-btn" onclick="resetZoom()" title="Reset View">↺</button>
         </div>
 
         <div id="pdfPlaceholder" class="pdf-placeholder">
@@ -315,6 +311,7 @@
     const GET_BOOKING_FILES_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/0ec41aab7114455687c2ce778f4c9459/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yzAu6ONVD7_Rm01FBxTuj4QLPcJZ4-9QD-aCXAPhnh0";
 
     let panzoomInstance = null;
+    let currentRotation = 0; // Degrees: 0, 90, 180, 270
 
     function checkSession() {
       const activeSession = sessionStorage.getItem('userSession');
@@ -401,6 +398,8 @@
 
       target.innerHTML = '<div style="color: white; padding: 20px;">Loading HD document...</div>';
 
+      currentRotation = 0; // Reset rotation on file change
+
       if (panzoomInstance) {
         panzoomInstance.destroy();
         panzoomInstance = null;
@@ -415,17 +414,12 @@
 
         target.innerHTML = '';
 
-        const isLandscape = window.innerWidth > window.innerHeight;
-
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum);
           const viewport = page.getViewport({ scale: 4.0 });
 
           const canvas = document.createElement('canvas');
           canvas.className = 'pdf-page-canvas';
-          if (isLandscape) {
-            canvas.classList.add('landscape-pdf-page');
-          }
 
           const context = canvas.getContext('2d');
           
@@ -464,18 +458,14 @@
       }
     }
 
-    function handleOrientationUpdate() {
-      const isLandscape = window.innerWidth > window.innerHeight;
-      const pdfCanvases = document.querySelectorAll('.pdf-page-canvas');
-
-      pdfCanvases.forEach(canvas => {
-        if (isLandscape) {
-          canvas.classList.add('landscape-pdf-page');
-        } else {
-          canvas.classList.remove('landscape-pdf-page');
-        }
-      });
-
+    // ==========================================
+    // ROTATE & ZOOM CONTROL FUNCTIONS
+    // ==========================================
+    function rotateClockwise() {
+      currentRotation = (currentRotation + 90) % 360;
+      const target = document.getElementById('panzoomTarget');
+      target.style.transform = `rotate(${currentRotation}deg)`;
+      
       if (panzoomInstance) {
         panzoomInstance.reset({ animate: true });
       }
@@ -490,14 +480,14 @@
     }
 
     function resetZoom() {
+      currentRotation = 0;
+      const target = document.getElementById('panzoomTarget');
+      target.style.transform = `rotate(0deg)`;
       if (panzoomInstance) panzoomInstance.reset({ animate: true });
     }
 
     // Block native context menus (long-press popup triggers)
     document.addEventListener('contextmenu', (e) => e.preventDefault());
-
-    window.addEventListener('orientationchange', handleOrientationUpdate);
-    window.addEventListener('resize', handleOrientationUpdate);
 
     window.addEventListener('DOMContentLoaded', () => {
       checkSession();
