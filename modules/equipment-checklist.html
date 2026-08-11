@@ -6,6 +6,11 @@
   <title>SPTS - Equipment Inspection</title>
   <meta name="theme-color" content="#0f172a">
 
+  <!-- Mobile Full-Screen Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+
   <style>
     * {
       box-sizing: border-box;
@@ -35,6 +40,10 @@
       justify-content: center;
       align-items: center;
       color: #334155;
+
+      /* Account for iPhone safe areas notch/status bar */
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
     }
 
     .app-viewport {
@@ -840,7 +849,7 @@
         equipnum: String(equipmentNo),
         area: String(issue),
         declaration: String(selectedActions),
-        action: String(selectedActions), // Synchronized with your updated JSON schema and ACTION column
+        action: String(selectedActions),
         isNewIssue: true
       };
 
@@ -886,5 +895,8 @@
       loadUser12HourLogs();
     });
   </script>
+
+  <!-- Global Full-Screen Trigger -->
+  <script src="../js/fullscreen-global.js"></script>
 </body>
 </html>
