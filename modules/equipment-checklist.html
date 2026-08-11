@@ -330,18 +330,95 @@
       padding: 24px; z-index: 100;
     }
 
+    /* Modal styling updated for Image 2 layout */
     .modal-card {
       background-color: #ffffff;
       width: 100%;
       border-radius: 16px;
-      padding: 22px;
+      padding: 24px 20px;
+      border: 1.5px solid #0078D4;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
     }
 
-    .modal-greeting-line, .modal-declaring-line { font-size: 18px; font-weight: 500; color: #0f172a; margin-bottom: 4px; }
-    .modal-status-highlight, .modal-date-line { font-size: 18px; font-weight: 800; color: #000; margin-bottom: 16px; }
+    .modal-greeting-line, .modal-declaring-line { 
+      font-size: 18px; 
+      font-weight: 500; 
+      color: #0f172a; 
+      margin-bottom: 2px; 
+    }
+
+    .modal-status-highlight { 
+      font-size: 19px; 
+      font-weight: 800; 
+      color: #000; 
+      margin-bottom: 16px; 
+    }
+
+    .modal-date-line { 
+      font-size: 18px; 
+      font-weight: 500; 
+      color: #0f172a; 
+      margin-bottom: 20px; 
+    }
+
+    .modal-action-title {
+      font-size: 18px;
+      font-weight: 500;
+      color: #0f172a;
+      margin-bottom: 12px;
+    }
+
+    .modal-checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .modal-checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
+      font-weight: 500;
+      color: #0f172a;
+      cursor: pointer;
+    }
+
+    .modal-checkbox-item input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      border: 2px solid #0f172a;
+      border-radius: 4px;
+      accent-color: #0078D4;
+      cursor: pointer;
+    }
+
     .modal-btn-row { display: flex; gap: 12px; }
-    .btn-popup-cancel { flex: 1; height: 44px; background-color: #cc0000; color: white; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; }
-    .btn-popup-confirm { flex: 1; height: 44px; background-color: #1565c0; color: white; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; }
+    
+    .btn-popup-cancel { 
+      flex: 1; 
+      height: 48px; 
+      background-color: #cc0000; 
+      color: white; 
+      font-size: 18px;
+      font-weight: 800; 
+      border: none; 
+      border-radius: 10px; 
+      cursor: pointer; 
+    }
+
+    .btn-popup-confirm { 
+      flex: 1; 
+      height: 48px; 
+      background-color: #1d68d8; 
+      color: white; 
+      font-size: 18px;
+      font-weight: 800; 
+      border: none; 
+      border-radius: 10px; 
+      cursor: pointer; 
+    }
   </style>
 </head>
 <body>
@@ -431,13 +508,31 @@
 
     </div>
 
-    <!-- Confirmation Modal -->
+    <!-- Confirmation Modal updated to match Image 2 -->
     <div id="confirmModal" class="modal-overlay hidden">
       <div class="modal-card">
         <div class="modal-greeting-line" id="modalGreeting">Dear Operator,</div>
-        <div class="modal-declaring-line">You are declaring <strong id="modalEquipNum">-</strong>,</div>
+        <div class="modal-declaring-line">You are declaring <strong id="modalEquipNum">-</strong></div>
         <div class="modal-status-highlight" id="modalIssue">-</div>
-        <div class="modal-date-line" id="modalFormattedDate">-</div>
+
+        <div class="modal-date-line" id="modalFormattedDate">On --/--/----</div>
+
+        <div class="modal-action-title">Your action will be</div>
+
+        <div class="modal-checkbox-group">
+          <label class="modal-checkbox-item">
+            <input type="checkbox" class="action-chk" value="Sent to Workshop">
+            <span>Sent to Workshop</span>
+          </label>
+          <label class="modal-checkbox-item">
+            <input type="checkbox" class="action-chk" value="Continue with Issue">
+            <span>Continue with Issue</span>
+          </label>
+          <label class="modal-checkbox-item">
+            <input type="checkbox" class="action-chk" value="Change Equipment">
+            <span>Change Equipment</span>
+          </label>
+        </div>
 
         <div class="modal-btn-row">
           <button class="btn-popup-cancel" onclick="hideConfirmModal()">CANCEL</button>
@@ -646,7 +741,6 @@
       }
     }
 
-    // Helper to format ISO dates to local dd/mm/yyyy hh:mm
     function formatLogDate(rawDateStr) {
       if (!rawDateStr || rawDateStr === '-') return '-';
       const str = String(rawDateStr).trim();
@@ -707,10 +801,13 @@
       const rawName = getPropValue(currentUser, ['NAME', 'Title', 'title', 'name'], 'NOFIJUIDI BIN JUMRI');
       const firstName = rawName.split(' ')[0];
 
-      document.getElementById('modalGreeting').innerText = `Dear ${firstName},`;
+      document.getElementById('modalGreeting').innerText = `Dear ${firstName}`;
       document.getElementById('modalEquipNum').innerText = equipmentNo;
       document.getElementById('modalIssue').innerText = issue;
       document.getElementById('modalFormattedDate').innerText = `On ${new Date().toLocaleDateString()}`;
+
+      // Reset action checkboxes
+      document.querySelectorAll('.action-chk').forEach(chk => chk.checked = false);
 
       document.getElementById('confirmModal').classList.remove('hidden');
     }
@@ -726,9 +823,13 @@
       const shiftText = document.getElementById('shiftBanner').innerText;
       const confirmBtn = document.getElementById('confirmSubmitBtn');
 
+      // Get joined string of checked action items
+      const selectedActions = Array.from(document.querySelectorAll('.action-chk:checked'))
+                                  .map(c => c.value)
+                                  .join(', ');
+
       const userIdVal = getPropValue(currentUser, ['COMPANY_ID', 'company_id', 'Company_ID', 'ID', 'id'], 'T5218');
       
-      // Restored 'group' parameter inside submission payload
       const payload = {
         date: new Date().toISOString().replace('T', ' ').substring(0, 19),
         shift: shiftText,
@@ -739,6 +840,7 @@
         equipment: String(equipment),
         equipnum: String(equipmentNo),
         area: String(issue),
+        action: String(selectedActions), // Value sent to Power Automate for INSPECTIONLOG column
         isNewIssue: true
       };
 
@@ -753,7 +855,8 @@
         });
 
         if (response.ok) {
-          clearAllInputs();
+          // Clear issue input while preserving equipment selection
+          document.getElementById('selectIssue').value = '';
           hideConfirmModal();
           loadUser12HourLogs();
         } else {
