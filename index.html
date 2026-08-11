@@ -3,402 +3,105 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SPTS - Portal</title>
+  <title>SPTS - Home</title>
   <meta name="theme-color" content="#0f172a">
-  <link rel="manifest" href="manifest.json">
 
   <style>
-    * { 
-      box-sizing: border-box; 
-      margin: 0; 
-      padding: 0; 
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      
+      /* Disable native text selection & contextual search pop-ups globally */
+      -webkit-touch-callout: none !important;
+      -webkit-user-select: none !important;
+      -khtml-user-select: none !important;
+      -moz-user-select: none !important;
+      -ms-user-select: none !important;
+      user-select: none !important;
     }
 
-    html, body { 
-      width: 100%; 
-      height: 100%; 
-      overflow: hidden; 
-      background-color: #0f172a; 
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-      color: #334155; 
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0f172a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #334155;
     }
 
-    .app-viewport { 
-      width: 100vw; 
-      height: 100vh; 
-      max-width: 412px; 
-      max-height: 892px; 
-      background-color: #ffffff; 
-      display: flex; 
-      flex-direction: column; 
-      overflow: hidden; 
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+    .app-viewport {
+      width: 100vw;
+      height: 100vh;
+      max-width: 412px;
+      max-height: 892px;
+      background-color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
 
-    @media (min-width: 480px) { 
-      .app-viewport { 
-        border-radius: 28px; 
-        height: 844px; 
-      } 
+    @media (min-width: 480px) {
+      .app-viewport {
+        border-radius: 28px;
+        height: 844px;
+      }
     }
 
-    .view-screen { 
-      flex: 1; 
-      display: flex; 
-      flex-direction: column; 
-      padding: 20px; 
-      overflow-y: auto; 
+    .main-container {
+      flex: 1;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
     }
 
-    .hidden { 
-      display: none !important; 
+    .app-title {
+      color: #002060;
+      font-size: 24px;
+      font-weight: 800;
+      text-align: center;
     }
 
-    .top-right-app-icon { 
-      width: 40px; 
-      height: 40px; 
-      border-radius: 10px; 
-      object-fit: cover; 
-      border: 1px solid #cbd5e1; 
+    .btn-nav {
+      width: 100%;
+      padding: 14px;
+      background-color: #0078D4;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: background-color 0.2s;
     }
 
-    .main-top-nav { 
-      display: flex; 
-      align-items: center; 
-      justify-content: space-between; 
-      margin-bottom: 16px; 
-    }
-
-    .brand-section { 
-      text-align: center; 
-      margin-top: 20px; 
-      margin-bottom: 28px; 
-    }
-
-    .brand-logo-icon { 
-      width: 60px; 
-      height: 60px; 
-      background: linear-gradient(135deg, #0078D4, #005A9E); 
-      border-radius: 16px; 
-      display: inline-flex; 
-      align-items: center; 
-      justify-content: center; 
-      color: white; 
-      font-size: 20px; 
-      font-weight: bold; 
-      margin-bottom: 12px; 
-    }
-
-    .brand-title { 
-      font-size: 24px; 
-      font-weight: 800; 
-      color: #0f172a; 
-    }
-
-    .brand-subtitle { 
-      font-size: 14px; 
-      color: #64748b; 
-      margin-top: 4px; 
-    }
-
-    .form-group { 
-      margin-bottom: 14px; 
-    }
-
-    .form-label { 
-      display: block; 
-      font-size: 14px; 
-      font-weight: 700; 
-      color: #1e293b; 
-      margin-bottom: 6px; 
-    }
-
-    .form-input { 
-      width: 100%; 
-      padding: 12px 14px; 
-      font-size: 15px; 
-      border: 1.5px solid #0078D4; 
-      border-radius: 8px; 
-      outline: none; 
-    }
-
-    .btn-primary { 
-      width: 100%; 
-      height: 50px; 
-      background-color: #0078D4; 
-      color: #ffffff; 
-      font-size: 17px; 
-      font-weight: 700; 
-      border: none; 
-      border-radius: 8px; 
-      cursor: pointer; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-    }
-
-    .alert-error { 
-      background-color: #fef2f2; 
-      border: 1px solid #fecaca; 
-      color: #dc2626; 
-      padding: 12px; 
-      border-radius: 8px; 
-      font-size: 14px; 
-      margin-bottom: 16px; 
-      text-align: center; 
-    }
-
-    .user-card { 
-      background: #f1f5f9; 
-      border-radius: 16px; 
-      padding: 18px 20px; 
-      margin-bottom: 22px; 
-    }
-
-    .user-name { 
-      font-size: 22px; 
-      font-weight: 800; 
-      color: #0f172a; 
-    }
-
-    .badge-group { 
-      display: flex; 
-      flex-wrap: wrap; 
-      gap: 8px; 
-      margin-top: 10px; 
-    }
-
-    .badge { 
-      font-size: 13px; 
-      font-weight: 700; 
-      padding: 4px 10px; 
-      border-radius: 14px; 
-      background-color: #e2e8f0; 
-      color: #334155; 
-    }
-
-    .badge-highlight { 
-      background-color: #0078D4 !important; 
-      color: #ffffff !important; 
-    }
-
-    .nav-card { 
-      background: #ffffff; 
-      border: 1.5px solid #e2e8f0; 
-      border-radius: 14px; 
-      padding: 20px; 
-      display: flex; 
-      align-items: center; 
-      gap: 16px; 
-      cursor: pointer; 
-      transition: all 0.2s ease; 
-      margin-bottom: 14px; 
-    }
-
-    .nav-card:hover { 
-      border-color: #0078D4; 
-      transform: translateY(-2px); 
-    }
-
-    .nav-card-icon { 
-      width: 48px; 
-      height: 48px; 
-      background: #eff6ff; 
-      color: #0078D4; 
-      border-radius: 12px; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      font-size: 22px; 
-    }
-
-    .nav-card-title { 
-      font-weight: 800; 
-      font-size: 17px; 
-      color: #0f172a; 
-    }
-
-    .nav-card-sub { 
-      font-size: 13px; 
-      color: #64748b; 
-      margin-top: 3px; 
+    .btn-nav:active {
+      background-color: #005a9e;
+      transform: scale(0.98);
     }
   </style>
 </head>
 <body>
 
   <div class="app-viewport">
-
-    <!-- LOGIN SCREEN -->
-    <div id="loginView" class="view-screen">
-      <div class="brand-section">
-        <div class="brand-logo-icon">SPTS</div>
-        <div class="brand-title">SPTS Portal</div>
-        <div class="brand-subtitle">Sign in with your credentials</div>
-      </div>
-
-      <div id="errorMessage" class="alert-error hidden"></div>
-
-      <form id="loginForm" onsubmit="handleLogin(event)">
-        <div class="form-group">
-          <label class="form-label" for="usernameInput">USERNAME</label>
-          <input type="text" id="usernameInput" class="form-input" placeholder="Enter Username" required autocomplete="off" />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="passwordInput">PASSWORD</label>
-          <input type="password" id="passwordInput" class="form-input" placeholder="Enter Password" required />
-        </div>
-
-        <button type="submit" id="submitBtn" class="btn-primary" style="margin-top: 20px;">
-          <span id="btnText">Sign In</span>
-        </button>
-      </form>
+    <div class="main-container">
+      <div class="app-title">SPTS OPERATIONS</div>
+      <button class="btn-nav" onclick="window.location.href='modules/manpower-booking.html'">Open Module</button>
     </div>
-
-    <!-- MAIN HOME PAGE -->
-    <div id="mainView" class="view-screen hidden">
-      <div class="main-top-nav">
-        <div style="font-size: 18px; font-weight: 800; color: #0f172a;">SPTS PORTAL</div>
-        <img src="icon-192.png" alt="App Icon" class="top-right-app-icon" onerror="this.style.display='none'" />
-      </div>
-
-      <div class="user-card">
-        <div class="user-name" id="displayName">-</div>
-        <div class="badge-group">
-          <span class="badge" id="displayCompany">SPTS</span>
-          <span class="badge badge-highlight" id="displayUserId">ID: -</span>
-          <span class="badge" id="displayGroup">Group: -</span>
-        </div>
-      </div>
-
-      <div style="font-size: 14px; font-weight: 700; color: #64748b; margin-bottom: 12px; text-transform: uppercase;">
-        Available Modules
-      </div>
-
-      <!-- Module 1: Equipment Checklist -->
-      <div class="nav-card" onclick="navigateTo('modules/equipment-checklist.html')">
-        <div class="nav-card-icon">📋</div>
-        <div>
-          <div class="nav-card-title">Equipment Checklist</div>
-          <div class="nav-card-sub">Perform daily equipment & PM inspection</div>
-        </div>
-      </div>
-
-      <!-- Module 2: Manpower Booking (ACTIVATED) -->
-      <div class="nav-card" onclick="navigateTo('modules/manpower-booking.html')">
-        <div class="nav-card-icon">👷</div>
-        <div>
-          <div class="nav-card-title">Manpower Booking</div>
-          <div class="nav-card-sub">View daily booking documents</div>
-        </div>
-      </div>
-
-      <!-- Module 3: Walkie Talkie Declaration (Placeholder) -->
-      <div class="nav-card" style="opacity: 0.6; cursor: not-allowed;">
-        <div class="nav-card-icon">📻</div>
-        <div>
-          <div class="nav-card-title">Walkie Talkie Declaration</div>
-          <div class="nav-card-sub">Coming Soon</div>
-        </div>
-      </div>
-
-      <button onclick="handleLogout()" class="btn-primary" style="background-color: #64748b; margin-top: auto;">
-        Sign Out
-      </button>
-    </div>
-
   </div>
 
   <script>
-    const LOGIN_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/23/workflows/29ef85880a4c4deaa667684c428d530d/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=MBH_x3BWausPompPfN0xNODkcPhbDVA7Bv3vGgFW2SY";
-    let currentUser = null;
-
-    async function handleLogin(e) {
-      e.preventDefault();
-      const usernameInput = document.getElementById('usernameInput').value.trim();
-      const passwordInput = document.getElementById('passwordInput').value.trim();
-      const errorBox = document.getElementById('errorMessage');
-      const submitBtn = document.getElementById('submitBtn');
-      const btnText = document.getElementById('btnText');
-
-      errorBox.classList.add('hidden');
-      submitBtn.disabled = true;
-      btnText.innerText = 'Authenticating...';
-
-      try {
-        const response = await fetch(LOGIN_FLOW_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: usernameInput, password: passwordInput })
-        });
-
-        const result = await response.json();
-
-        if (response.ok && (result.status === 'success' || result.Title || result.NAME || result.ID || result.COMPANY_ID || result.name)) {
-          currentUser = result;
-          sessionStorage.setItem('userSession', JSON.stringify(result));
-          showHomeView();
-        } else {
-          showError(result.message || 'Invalid Username or Password.');
-        }
-      } catch (err) {
-        showError('Network error. Unable to connect.');
-      } finally {
-        submitBtn.disabled = false;
-        btnText.innerText = 'Sign In';
-      }
-    }
-
-    function navigateTo(path) {
-      window.location.href = path;
-    }
-
-    function getPropValue(obj, keys, defaultValue = 'N/A') {
-      if (!obj) return defaultValue;
-      for (const k of keys) {
-        if (obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== '') return obj[k];
-      }
-      return defaultValue;
-    }
-
-    function showHomeView() {
-      document.getElementById('loginView').classList.add('hidden');
-      document.getElementById('mainView').classList.remove('hidden');
-
-      if (currentUser) {
-        document.getElementById('displayName').innerText = getPropValue(currentUser, ['NAME', 'Title', 'title', 'name'], 'User');
-        document.getElementById('displayCompany').innerText = getPropValue(currentUser, ['COMPANY', 'Company', 'company'], 'SPTS');
-        document.getElementById('displayUserId').innerText = `ID: ${getPropValue(currentUser, ['COMPANY_ID', 'company_id', 'Company_ID', 'ID', 'id', 'Username', 'username'], 'N/A')}`;
-        document.getElementById('displayGroup').innerText = `Group: ${getPropValue(currentUser, ['GROUP', 'Group', 'group'], 'N/A')}`;
-      }
-    }
-
-    function handleLogout() {
-      sessionStorage.removeItem('userSession');
-      currentUser = null;
-      document.getElementById('usernameInput').value = '';
-      document.getElementById('passwordInput').value = '';
-      document.getElementById('mainView').classList.add('hidden');
-      document.getElementById('loginView').classList.remove('hidden');
-    }
-
-    function showError(msg) {
-      const errorBox = document.getElementById('errorMessage');
-      errorBox.innerText = msg;
-      errorBox.classList.remove('hidden');
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      const activeSession = sessionStorage.getItem('userSession');
-      if (activeSession) {
-        currentUser = JSON.parse(activeSession);
-        showHomeView();
-      }
-    });
+    // Prevent context menu (long-press popups)
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
   </script>
 </body>
 </html>
