@@ -285,7 +285,7 @@
         <div id="zoomControls" class="zoom-toolbar hidden">
           <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">＋</button>
           <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">－</button>
-          <button class="zoom-btn" onclick="rotateClockwise()" title="Rotate 90° Clockwise">↻</button>
+          <button class="zoom-btn" onclick="toggleLandscape()" title="Toggle Landscape/Portrait">↻</button>
           <button class="zoom-btn" onclick="resetZoom()" title="Reset View">↺</button>
         </div>
 
@@ -311,7 +311,7 @@
     const GET_BOOKING_FILES_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/0ec41aab7114455687c2ce778f4c9459/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yzAu6ONVD7_Rm01FBxTuj4QLPcJZ4-9QD-aCXAPhnh0";
 
     let panzoomInstance = null;
-    let currentRotation = 0; // Degrees: 0, 90, 180, 270
+    let isLandscapeMode = false; // Tracks state: false = Portrait (0°), true = Landscape (90°)
 
     function checkSession() {
       const activeSession = sessionStorage.getItem('userSession');
@@ -398,7 +398,8 @@
 
       target.innerHTML = '<div style="color: white; padding: 20px;">Loading HD document...</div>';
 
-      currentRotation = 0; // Reset rotation on file change
+      isLandscapeMode = false; // Reset to portrait orientation on new file render
+      target.style.transform = `rotate(0deg)`;
 
       if (panzoomInstance) {
         panzoomInstance.destroy();
@@ -459,12 +460,14 @@
     }
 
     // ==========================================
-    // ROTATE & ZOOM CONTROL FUNCTIONS
+    // LANDSCAPE/PORTRAIT TOGGLE LOGIC
     // ==========================================
-    function rotateClockwise() {
-      currentRotation = (currentRotation + 90) % 360;
+    function toggleLandscape() {
+      isLandscapeMode = !isLandscapeMode; // Toggle back and forth
       const target = document.getElementById('panzoomTarget');
-      target.style.transform = `rotate(${currentRotation}deg)`;
+      
+      const angle = isLandscapeMode ? 90 : 0;
+      target.style.transform = `rotate(${angle}deg)`;
       
       if (panzoomInstance) {
         panzoomInstance.reset({ animate: true });
@@ -480,7 +483,7 @@
     }
 
     function resetZoom() {
-      currentRotation = 0;
+      isLandscapeMode = false;
       const target = document.getElementById('panzoomTarget');
       target.style.transform = `rotate(0deg)`;
       if (panzoomInstance) panzoomInstance.reset({ animate: true });
