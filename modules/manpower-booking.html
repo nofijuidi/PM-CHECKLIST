@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SPTS - Manpower Booking</title>
+  <title>SPTS - Manpower Booking (Orientation-Aware)</title>
   <meta name="theme-color" content="#0f172a">
 
   <style>
@@ -13,7 +13,7 @@
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       
-      /* Disable touch callouts and context menu text popups */
+      /* Block long-press contextual search & text selection */
       -webkit-touch-callout: none !important;
       -webkit-user-select: none !important;
       -khtml-user-select: none !important;
@@ -100,7 +100,7 @@
       border: 1px solid #cbd5e1;
     }
 
-    /* Today's Bookings Header Banner */
+    /* Today Date Banner */
     .today-banner {
       width: 100%;
       background-color: #eff6ff;
@@ -110,13 +110,13 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       color: #002060;
       font-weight: 800;
       font-size: 14px;
     }
 
-    /* Stacked Document Cards Container */
+    /* Dynamic File Selector Cards */
     .file-list-container {
       display: flex;
       flex-direction: column;
@@ -124,7 +124,6 @@
       margin-bottom: 12px;
     }
 
-    /* Card Box matching your screenshot style */
     .file-card {
       width: 100%;
       background-color: #f8fafc;
@@ -159,11 +158,11 @@
       font-weight: 800;
     }
 
-    /* PDF Viewer Frame Box */
+    /* Embedded PDF Document Viewer Box */
     .pdf-viewer-container {
       flex: 1;
       width: 100%;
-      min-height: 460px;
+      min-height: 480px; /* Base portrait height */
       border: 1.5px solid #cbd5e1;
       border-radius: 12px;
       overflow: hidden;
@@ -197,6 +196,43 @@
       justify-content: center;
       cursor: pointer;
     }
+
+    /* =========================================
+       Landscape Orientation Styles (Point 2)
+       ========================================= */
+    @media (orientation: landscape) and (max-height: 600px) {
+      /* Hide all header elements, selectors, and banners for immersive viewing */
+      .booking-top-nav, 
+      .today-banner, 
+      .file-list-container,
+      .action-footer {
+        display: none !important;
+      }
+
+      /* Make viewport cover full landscape screen */
+      .app-viewport {
+        max-width: 100vw !important;
+        max-height: 100vh !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important; /* No rounded corners in immersive mode */
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      .view-screen {
+        padding: 0 !important; /* Remove screen padding */
+      }
+
+      /* Expand the PDF container to take 100% space */
+      .pdf-viewer-container {
+        width: 100vw !important;
+        height: 100vh !important;
+        min-height: 100vh !important;
+        border: none !important;
+        border-radius: 0 !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -211,15 +247,15 @@
         <img src="../icon-192.png" alt="App Icon" class="top-right-app-icon" onerror="this.style.display='none'" />
       </div>
 
-      <!-- Today's Bookings Header Banner -->
+      <!-- Today Date Banner -->
       <div class="today-banner">
         <span>📅 Today's Bookings</span>
         <span id="displayDateStr">11/08/2026</span>
       </div>
 
-      <!-- List of Files stacked beneath Today's Bookings -->
+      <!-- Dynamic File Selector Cards Stack -->
       <div id="fileListContainer" class="file-list-container">
-        <!-- Rendered dynamically by JavaScript -->
+        <!-- Rendered dynamically by JS -->
       </div>
 
       <!-- PDF Viewer Box -->
@@ -236,23 +272,26 @@
   </div>
 
   <script>
-    // List of available files for today. 
-    // The LAST item in the array is treated as the LATEST document and opened by default.
+    // Corrected Data Array with Correct Google Drive Embed Format (Point 1)
+    // IMPORTANT: You MUST replace 'FILE_ID_1_HERE' and 'FILE_ID_2_HERE' with
+    // the actual IDs from your Google Drive files.
     const BOOKING_FILES = [
       {
         id: "FILE_001",
         name: "11 AUG 2026 BOOKING GROUP.pdf",
-        embedUrl: "https://drive.google.com/file/d/13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b/preview"
+        // Corrected format: .../file/d/FILE_ID/preview
+        embedUrl: "https://drive.google.com/file/d/FILE_ID_1_HERE/preview"
       },
       {
         id: "FILE_002",
         name: "11 AUG 2026 EXTRA BOOKING.pdf",
-        embedUrl: "https://drive.google.com/file/d/13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b/preview"
+        // Corrected format: .../file/d/FILE_ID/preview
+        embedUrl: "https://drive.google.com/file/d/FILE_ID_2_HERE/preview"
       }
     ];
 
-    // Set default active index to the latest file (last array item)
-    let currentActiveIndex = BOOKING_FILES.length > 0 ? BOOKING_FILES.length - 1 : 0;
+    // Default active file is the first one
+    let currentActiveIndex = 0;
 
     function goHome() {
       window.location.href = '../index.html';
@@ -269,6 +308,11 @@
     function renderFileCards() {
       const container = document.getElementById('fileListContainer');
       container.innerHTML = '';
+
+      if (BOOKING_FILES.length === 0) {
+        container.innerHTML = '<div class="file-card">No files available for today.</div>';
+        return;
+      }
 
       BOOKING_FILES.forEach((file, index) => {
         const card = document.createElement('div');
@@ -295,19 +339,19 @@
         // Update PDF iframe source
         document.getElementById('pdfViewerFrame').src = selectedFile.embedUrl;
         
-        // Re-render card highlights
+        // Refresh card highlights
         renderFileCards();
       }
     }
 
-    // Suppress native touch context menus
+    // Block native context menus (Copy/Web Search)
     document.addEventListener('contextmenu', (e) => e.preventDefault());
 
     window.addEventListener('DOMContentLoaded', () => {
       setLiveDate();
       renderFileCards();
       
-      // Auto-load the latest file on startup
+      // Load the first PDF automatically
       if (BOOKING_FILES.length > 0) {
         switchPdfFile(currentActiveIndex);
       }
