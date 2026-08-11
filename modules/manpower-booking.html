@@ -334,18 +334,6 @@
     let panzoomInstance = null;
     let isLandscape = false;
 
-    // Trigger true full-screen mode on mobile
-    function requestFullScreen() {
-      const doc = document.documentElement;
-      if (doc.requestFullscreen) {
-        doc.requestFullscreen();
-      } else if (doc.webkitRequestFullscreen) {
-        doc.webkitRequestFullscreen();
-      } else if (doc.msRequestFullscreen) {
-        doc.msRequestFullscreen();
-      }
-    }
-
     function checkSession() {
       const activeSession = sessionStorage.getItem('userSession');
       if (!activeSession) {
@@ -521,14 +509,13 @@
 
     document.addEventListener('contextmenu', (e) => e.preventDefault());
 
-    // Enter full-screen mode on first touch/tap anywhere
-    document.addEventListener('touchstart', requestFullScreen, { once: true });
-    document.addEventListener('click', requestFullScreen, { once: true });
-
     window.addEventListener('DOMContentLoaded', () => {
       checkSession();
       fetchTodayBookings();
     });
   </script>
+
+  <!-- Global Full-Screen Trigger -->
+  <script src="../js/fullscreen-global.js"></script>
 </body>
 </html>
