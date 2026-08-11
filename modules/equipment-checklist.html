@@ -13,7 +13,6 @@
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       
-      /* Disable touch callout and context menu selection popups */
       -webkit-touch-callout: none !important;
       -webkit-user-select: none !important;
       -khtml-user-select: none !important;
@@ -22,7 +21,6 @@
       user-select: none !important;
     }
 
-    /* Allow selection and typing in input fields */
     input, textarea {
       -webkit-user-select: text !important;
       user-select: text !important;
@@ -107,7 +105,6 @@
       padding: 0 8px;
     }
 
-    /* Banner Bar for Shift & Clock with Seconds */
     .banner-bar {
       display: flex;
       width: 100%;
@@ -143,7 +140,6 @@
       font-weight: 800;
     }
 
-    /* User Info Section */
     .user-info-banner {
       color: #002060;
       font-weight: 800;
@@ -200,7 +196,6 @@
     .grid-box-list { background-color: #3b62b0; color: #ffffff; font-size: 12px; font-weight: 700; text-align: left; padding: 9px 12px; border-radius: 6px; cursor: pointer; border: 1px solid #2d4e93; }
     .grid-box.selected, .grid-box-list.selected { background-color: #1d4ed8; box-shadow: inset 0 0 0 2px #ffffff; }
 
-    /* Declaration Header Bar & Buttons */
     .declaration-header-row {
       display: flex;
       align-items: center;
@@ -363,23 +358,23 @@
 
       <div id="errorMessage" class="alert-error hidden"></div>
 
-      <!-- Live Shift & Date Banner with Seconds -->
+      <!-- Live Shift & Date Banner -->
       <div class="banner-bar">
         <div class="banner-shift shift-day" id="shiftBanner">DAY SHIFT</div>
         <div class="banner-date" id="liveDateTime">
-          <span id="datePart">11/08/2026</span>
-          <span id="timePart">08:07</span>
+          <span id="datePart">--/--/----</span>
+          <span id="timePart">--:--</span>
           <span id="secPart">00ss</span>
         </div>
       </div>
 
-      <!-- User Identity Info Header -->
+      <!-- User Info Header -->
       <div class="user-info-banner">
         <div class="user-info-company" id="inspCompany">SPTS</div>
         <div class="user-info-details" id="inspOperator">T5218 | NOFIJUIDI BIN JUMRI</div>
       </div>
 
-      <!-- Equipment Type and Number Inputs -->
+      <!-- Inputs -->
       <div class="form-row-2col">
         <div class="form-group-flex">
           <label class="form-label">Select Equipment</label>
@@ -391,18 +386,17 @@
         </div>
       </div>
 
-      <!-- Select Issue Field -->
       <div class="form-group">
         <label class="form-label">Select Issue</label>
         <input type="text" id="selectIssue" class="form-input" placeholder="Type or select issue..." autocomplete="off" onfocus="setActiveMode('issue')" oninput="refreshActivePillbox()" />
       </div>
 
-      <!-- Pillbox Interactive Grid -->
+      <!-- Grid Area -->
       <div id="activePillboxArea" class="active-pillbox-area">
         <div id="pillboxGrid" class="grid-container-eq"></div>
       </div>
 
-      <!-- Declaration Section with CLEAR and REFRESH -->
+      <!-- Declaration Table Section -->
       <div class="form-group">
         <div class="declaration-header-row">
           <label class="form-label" style="margin-bottom: 0;" id="declarationLabel">Declaration (last 12 hours)</label>
@@ -429,7 +423,7 @@
         </div>
       </div>
 
-      <!-- Action Row Footer -->
+      <!-- Action Footer -->
       <div class="action-row">
         <button id="sendBtn" class="btn-submit-inspection" onclick="showConfirmModal()">Submit</button>
         <div class="btn-back-round" onclick="goHome()">➔</div>
@@ -583,12 +577,10 @@
       } else if (activePillboxMode === 'number') {
         grid.className = 'grid-container-num';
         
-        // Dynamic source of all numbers or numbers specific to selected equipment type
         let numSource = [];
         if (eqVal !== '' && EQUIPMENT_DATABASE[eqVal.toUpperCase()]) {
           numSource = EQUIPMENT_DATABASE[eqVal.toUpperCase()];
         } else {
-          // Flatten all numbers in database
           numSource = Object.values(EQUIPMENT_DATABASE).flat();
           if (numSource.length === 0) {
             numSource = ["EQ-01", "EQ-02", "EQ-03", "EQ-04", "EQ-05", "EQ-06", "EQ-07", "EQ-08"];
@@ -653,6 +645,24 @@
       }
     }
 
+    // Helper to format ISO dates to local dd/mm/yyyy hh:mm
+    function formatLogDate(rawDateStr) {
+      if (!rawDateStr || rawDateStr === '-') return '-';
+      const str = String(rawDateStr).trim();
+      try {
+        const d = new Date(str);
+        if (!isNaN(d.getTime())) {
+          const dd = String(d.getDate()).padStart(2, '0');
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const yyyy = d.getFullYear();
+          const hh = String(d.getHours()).padStart(2, '0');
+          const min = String(d.getMinutes()).padStart(2, '0');
+          return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+        }
+      } catch(e) {}
+      return rawDateStr;
+    }
+
     function renderLogsTable(logs) {
       const tbody = document.getElementById('declarationLogsBody');
       tbody.innerHTML = '';
@@ -664,8 +674,10 @@
 
       logs.forEach(row => {
         const tr = document.createElement('tr');
+        const formattedDate = formatLogDate(row.DATE || row.date || row.Date || '-');
+        
         tr.innerHTML = `
-          <td>${row.DATE || '-'}</td>
+          <td>${formattedDate}</td>
           <td><strong>${row.EQUIPNUM || '-'}</strong></td>
           <td>${row.AREA || '-'}</td>
           <td><strong>${row.ID || '-'}</strong></td>
@@ -759,7 +771,6 @@
       errorBox.classList.remove('hidden');
     }
 
-    // Block native context menus (long-press popups)
     document.addEventListener('contextmenu', (e) => e.preventDefault());
 
     window.addEventListener('DOMContentLoaded', () => {
