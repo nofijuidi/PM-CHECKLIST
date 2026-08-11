@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-  <title>SPTS - Manpower Booking (HD Viewer)</title>
+  <title>SPTS - Manpower Booking (GPU Effortless Zoom)</title>
   <meta name="theme-color" content="#0f172a">
 
-  <!-- Include PDF.js Library for HD Vector Rendering -->
+  <!-- Include PDF.js Library for One-Time HD Rendering -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
   <style>
@@ -146,14 +146,14 @@
       font-weight: 800;
     }
 
-    /* HD Canvas Viewing Box with Pan Scroll */
+    /* Scrollable Container with Pan/Drag Capability */
     .pdf-viewer-container {
       flex: 1;
       width: 100%;
       min-height: 460px;
       border: 1.5px solid #cbd5e1;
       border-radius: 12px;
-      overflow: auto; /* Enables dragging/scrolling when zoomed in */
+      overflow: auto;
       background-color: #334155;
       position: relative;
       touch-action: pan-x pan-y pinch-zoom;
@@ -168,12 +168,14 @@
       padding: 10px;
     }
 
+    /* GPU-Accelerated Hardware Canvas */
     #pdfCanvas {
       display: block;
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
       background-color: #ffffff;
-      transition: transform 0.2s ease-out;
-      transform-origin: center center;
+      transform-origin: top left;
+      will-change: transform;
+      transition: transform 0.15s cubic-bezier(0.2, 0, 0.2, 1);
     }
 
     .pdf-controls-overlay {
@@ -254,15 +256,15 @@
 
       <div id="fileListContainer" class="file-list-container"></div>
 
-      <!-- Native HD Canvas Viewport -->
+      <!-- HD Memory Pre-Rendered Viewport -->
       <div class="pdf-viewer-container" id="pdfViewerContainer">
-        <div class="pdf-canvas-wrapper">
+        <div class="pdf-canvas-wrapper" id="canvasWrapper">
           <canvas id="pdfCanvas"></canvas>
         </div>
 
         <div class="pdf-controls-overlay">
-          <button class="control-btn" onclick="zoomIn()" title="Zoom In">+</button>
-          <button class="control-btn" onclick="zoomOut()" title="Zoom Out">-</button>
+          <button class="control-btn" onclick="zoomIn()" title="Zoom In (+200%)">+</button>
+          <button class="control-btn" onclick="zoomOut()" title="Zoom Out (-200%)">-</button>
           <button class="control-btn" onclick="rotate90()" title="Rotate 90 Degrees">↻</button>
           <button class="control-btn control-btn-reset" onclick="resetTransform()" title="Reset View">RESET</button>
         </div>
@@ -276,27 +278,26 @@
   </div>
 
   <script>
-    // Direct Google Drive Download/Stream URL for Native HD Rendering
     const BOOKING_FILES = [
       {
         id: "FILE_001",
         name: "11 AUG 2026 BOOKING GROUP.pdf",
-        // Direct stream URL
         pdfUrl: "https://docs.google.com/uc?export=download&id=1yCu2RUrz6olE1Bi7NVCXXBtTEazxRnP2"
       }
     ];
 
-    // PDF.js configuration
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
     let currentActiveIndex = 0;
     let pdfDoc = null;
-    let scale = 1.0;
+    
+    // Zoom and Rotation State
+    let zoomScale = 1.0;
     let rotation = 0;
 
     // Pinch-to-zoom tracking
     let initialPinchDist = 0;
-    let initialScale = 1.0;
+    let initialZoomOnPinch = 1.0;
 
     function goHome() { window.location.href = '../index.html'; }
 
@@ -328,38 +329,52 @@
       });
     }
 
-    // High-Definition Vector Rendering Engine
-    async function renderPDFPage() {
+    // =========================================================================
+    // ONE-TIME HD MEMORY PRE-RENDER
+    // Renders the document ONCE at high resolution (3.0x scale) into GPU memory
+    // =========================================================================
+    async function renderPDFOnce() {
       if (!pdfDoc) return;
 
       const page = await pdfDoc.getPage(1);
       const canvas = document.getElementById('pdfCanvas');
       const ctx = canvas.getContext('2d');
+      const container = document.getElementById('pdfViewerContainer');
 
-      // Increase pixel ratio for ultra-sharp HD rendering on high-DPI screens
-      const outputScale = window.devicePixelRatio || 2;
-      const viewport = page.getViewport({ scale: scale, rotation: rotation });
+      // Pre-render at 3.0 scale for ultra-crisp vector sharpness
+      const HD_PRE_RENDER_FACTOR = 3.0;
+      const viewport = page.getViewport({ scale: HD_PRE_RENDER_FACTOR, rotation: rotation });
 
-      canvas.width = Math.floor(viewport.width * outputScale);
-      canvas.height = Math.floor(viewport.height * outputScale);
-      canvas.style.width = Math.floor(viewport.width) + "px";
-      canvas.style.height = Math.floor(viewport.height) + "px";
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
 
-      const transform = outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null;
+      // Display size matches container initially
+      const containerWidth = container.clientWidth - 20;
+      const displayWidth = containerWidth;
+      const displayHeight = (viewport.height / viewport.width) * displayWidth;
+
+      canvas.style.width = displayWidth + "px";
+      canvas.style.height = displayHeight + "px";
 
       const renderContext = {
         canvasContext: ctx,
-        transform: transform,
         viewport: viewport
       };
 
       await page.render(renderContext).promise;
+      applyGpuTransform(); // Apply initial zoom scale
+    }
+
+    // Effortless GPU Hardware-Accelerated Zoom (CSS Transform)
+    function applyGpuTransform() {
+      const canvas = document.getElementById('pdfCanvas');
+      canvas.style.transform = `scale3d(${zoomScale}, ${zoomScale}, 1) rotate(${rotation}deg)`;
     }
 
     async function loadPdfDocument(url) {
       try {
         pdfDoc = await pdfjsLib.getDocument(url).promise;
-        renderPDFPage();
+        renderPDFOnce();
       } catch (err) {
         console.error("PDF.js Load Error:", err);
       }
@@ -368,40 +383,42 @@
     function switchPdfFile(index) {
       if (index >= 0 && index < BOOKING_FILES.length) {
         currentActiveIndex = index;
-        scale = 1.0;
+        zoomScale = 1.0;
         rotation = 0;
         renderFileCards();
         loadPdfDocument(BOOKING_FILES[index].pdfUrl);
       }
     }
 
-    // Control Functions
+    // ==========================================
+    // EFFORTLESS 200% ZOOM PER CLICK
+    // ==========================================
     function zoomIn() {
-      if (scale < 4.0) {
-        scale += 0.3;
-        renderPDFPage();
+      if (zoomScale < 6.0) { // Max 600% zoom
+        zoomScale += 2.0;    // +200% per click!
+        applyGpuTransform();
       }
     }
 
     function zoomOut() {
-      if (scale > 0.5) {
-        scale -= 0.2;
-        renderPDFPage();
+      if (zoomScale > 1.0) {
+        zoomScale = Math.max(1.0, zoomScale - 2.0);
+        applyGpuTransform();
       }
     }
 
     function rotate90() {
       rotation = (rotation + 90) % 360;
-      renderPDFPage();
+      renderPDFOnce(); // Re-renders rotation once
     }
 
     function resetTransform() {
-      scale = 1.0;
+      zoomScale = 1.0;
       rotation = 0;
-      renderPDFPage();
+      applyGpuTransform();
     }
 
-    // Touch Pinch-to-Zoom Handler
+    // Effortless Native Touch Pinch-to-Zoom
     function initPinchToZoom() {
       const container = document.getElementById('pdfViewerContainer');
 
@@ -411,7 +428,7 @@
             e.touches[0].clientX - e.touches[1].clientX,
             e.touches[0].clientY - e.touches[1].clientY
           );
-          initialScale = scale;
+          initialZoomOnPinch = zoomScale;
         }
       }, { passive: true });
 
@@ -422,11 +439,11 @@
             e.touches[0].clientY - e.touches[1].clientY
           );
           const factor = currentDist / initialPinchDist;
-          let newScale = initialScale * factor;
+          let newScale = initialZoomOnPinch * factor;
 
-          if (newScale >= 0.5 && newScale <= 4.0) {
-            scale = newScale;
-            renderPDFPage();
+          if (newScale >= 1.0 && newScale <= 6.0) {
+            zoomScale = newScale;
+            applyGpuTransform(); // Instant 60fps GPU scaling
           }
         }
       }, { passive: true });
@@ -448,6 +465,10 @@
       if (BOOKING_FILES.length > 0) {
         switchPdfFile(0);
       }
+    });
+
+    window.addEventListener('resize', () => {
+      renderPDFOnce();
     });
   </script>
 </body>
