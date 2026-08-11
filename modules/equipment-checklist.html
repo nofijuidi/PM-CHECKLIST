@@ -465,7 +465,8 @@
         currentUser = {
           COMPANY: "SPTS",
           COMPANY_ID: "T5218",
-          NAME: "NOFIJUIDI BIN JUMRI"
+          NAME: "NOFIJUIDI BIN JUMRI",
+          GROUP: "N/A"
         };
       }
 
@@ -726,12 +727,15 @@
       const confirmBtn = document.getElementById('confirmSubmitBtn');
 
       const userIdVal = getPropValue(currentUser, ['COMPANY_ID', 'company_id', 'Company_ID', 'ID', 'id'], 'T5218');
+      
+      // Restored 'group' parameter inside submission payload
       const payload = {
         date: new Date().toISOString().replace('T', ' ').substring(0, 19),
         shift: shiftText,
         COMPANY_ID: String(userIdVal),
         Title: String(getPropValue(currentUser, ['NAME', 'Title', 'title', 'name'], 'Unknown')),
         company: String(getPropValue(currentUser, ['COMPANY', 'Company', 'company'], 'SPTS')),
+        group: String(getPropValue(currentUser, ['GROUP', 'Group', 'group'], 'N/A')),
         equipment: String(equipment),
         equipnum: String(equipmentNo),
         area: String(issue),
