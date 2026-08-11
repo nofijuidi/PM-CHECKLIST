@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-  <title>SPTS - Manpower Booking</title>
+  <title>SPTS - Manpower Booking (HD Viewer)</title>
   <meta name="theme-color" content="#0f172a">
+
+  <!-- Include PDF.js Library for HD Vector Rendering -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
   <style>
     * {
@@ -13,12 +16,8 @@
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       
-      /* Disable text selection & touch context popups */
       -webkit-touch-callout: none !important;
       -webkit-user-select: none !important;
-      -khtml-user-select: none !important;
-      -moz-user-select: none !important;
-      -ms-user-select: none !important;
       user-select: none !important;
     }
 
@@ -33,7 +32,6 @@
       color: #334155;
     }
 
-    /* Outer Viewport Box */
     .app-viewport {
       width: 100vw;
       height: 100vh;
@@ -62,7 +60,6 @@
       overflow-y: auto;
     }
 
-    /* Top Navigation Header */
     .booking-top-nav {
       display: flex;
       align-items: center;
@@ -93,7 +90,6 @@
       padding: 0 8px;
     }
 
-    /* Today's Date Banner */
     .today-banner {
       width: 100%;
       background-color: #eff6ff;
@@ -109,7 +105,6 @@
       font-size: 14px;
     }
 
-    /* Dynamic File Selector Cards */
     .file-list-container {
       display: flex;
       flex-direction: column;
@@ -151,42 +146,36 @@
       font-weight: 800;
     }
 
-    /* Embedded PDF Viewer Container */
+    /* HD Canvas Viewing Box with Pan Scroll */
     .pdf-viewer-container {
       flex: 1;
       width: 100%;
       min-height: 460px;
       border: 1.5px solid #cbd5e1;
       border-radius: 12px;
-      overflow: hidden;
+      overflow: auto; /* Enables dragging/scrolling when zoomed in */
       background-color: #334155;
       position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      touch-action: none; /* Allows custom pinch-to-zoom handling */
+      touch-action: pan-x pan-y pinch-zoom;
     }
 
-    /* Transform Wrapper for Pinch, Zoom, and 90-Degree Rotation */
-    .pdf-transform-wrapper {
-      width: 100%;
-      height: 100%;
-      transition: transform 0.1s ease-out;
-      transform-origin: center center;
+    .pdf-canvas-wrapper {
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
+      min-width: 100%;
+      min-height: 100%;
+      padding: 10px;
     }
 
-    .pdf-viewer-frame {
-      width: 100%;
-      height: 100%;
-      border: none;
+    #pdfCanvas {
+      display: block;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
       background-color: #ffffff;
-      pointer-events: auto;
+      transition: transform 0.2s ease-out;
+      transform-origin: center center;
     }
 
-    /* Floating Control Toolbar */
     .pdf-controls-overlay {
       position: absolute;
       bottom: 12px;
@@ -216,13 +205,6 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      transition: background-color 0.15s ease, transform 0.1s ease;
-    }
-
-    .control-btn:active {
-      transform: scale(0.92);
-      background-color: #e2e8f0;
     }
 
     .control-btn-reset {
@@ -233,7 +215,6 @@
       border-radius: 12px;
     }
 
-    /* Bottom Action Footer */
     .action-footer {
       display: flex;
       justify-content: flex-end;
@@ -261,32 +242,24 @@
   <div class="app-viewport">
     <div class="view-screen">
       
-      <!-- Top Navigation -->
       <div class="booking-top-nav">
         <div class="btn-home-icon" onclick="goHome()">🏠</div>
         <div class="booking-header-title">MANPOWER BOOKING</div>
       </div>
 
-      <!-- Today's Date Banner -->
       <div class="today-banner">
         <span>📅 Today's Bookings</span>
         <span id="displayDateStr">11/08/2026</span>
       </div>
 
-      <!-- File List Container -->
-      <div id="fileListContainer" class="file-list-container">
-        <!-- JS Renders cards here -->
-      </div>
+      <div id="fileListContainer" class="file-list-container"></div>
 
-      <!-- Embedded PDF Viewer with Pinch & Zoom Container -->
-      <div class="pdf-viewer-container" id="pdfContainer">
-        <div id="pdfWrapper" class="pdf-transform-wrapper">
-          <iframe id="pdfViewerFrame" class="pdf-viewer-frame" 
-                  src="" title="Manpower Booking Viewer"
-                  allow="autoplay"></iframe>
+      <!-- Native HD Canvas Viewport -->
+      <div class="pdf-viewer-container" id="pdfViewerContainer">
+        <div class="pdf-canvas-wrapper">
+          <canvas id="pdfCanvas"></canvas>
         </div>
 
-        <!-- Floating Controls Toolbar -->
         <div class="pdf-controls-overlay">
           <button class="control-btn" onclick="zoomIn()" title="Zoom In">+</button>
           <button class="control-btn" onclick="zoomOut()" title="Zoom Out">-</button>
@@ -295,7 +268,6 @@
         </div>
       </div>
 
-      <!-- Bottom Navigation Footer -->
       <div class="action-footer">
         <div class="btn-next-round" onclick="goHome()">➔</div>
       </div>
@@ -304,28 +276,29 @@
   </div>
 
   <script>
-    // Configured with your verified Google Drive File ID
+    // Direct Google Drive Download/Stream URL for Native HD Rendering
     const BOOKING_FILES = [
       {
         id: "FILE_001",
         name: "11 AUG 2026 BOOKING GROUP.pdf",
-        embedUrl: "https://drive.google.com/file/d/1yCu2RUrz6olE1Bi7NVCXXBtTEazxRnP2/preview"
+        // Direct stream URL
+        pdfUrl: "https://docs.google.com/uc?export=download&id=1yCu2RUrz6olE1Bi7NVCXXBtTEazxRnP2"
       }
     ];
 
+    // PDF.js configuration
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
     let currentActiveIndex = 0;
-    
-    // Extended Zoom (Max 5.0 = 500%) & Rotation State
-    let currentScale = 1.0;
-    let currentRotation = 0; 
+    let pdfDoc = null;
+    let scale = 1.0;
+    let rotation = 0;
 
-    // Pinch-to-Zoom Touch Variables
-    let initialPinchDistance = 0;
-    let initialScaleOnPinch = 1.0;
+    // Pinch-to-zoom tracking
+    let initialPinchDist = 0;
+    let initialScale = 1.0;
 
-    function goHome() { 
-      window.location.href = '../index.html'; 
-    }
+    function goHome() { window.location.href = '../index.html'; }
 
     function setLiveDate() {
       const now = new Date();
@@ -338,11 +311,6 @@
     function renderFileCards() {
       const container = document.getElementById('fileListContainer');
       container.innerHTML = '';
-
-      if (BOOKING_FILES.length === 0) {
-        container.innerHTML = '<div class="file-card">No files available for today.</div>';
-        return;
-      }
 
       BOOKING_FILES.forEach((file, index) => {
         const card = document.createElement('div');
@@ -360,100 +328,123 @@
       });
     }
 
-    function switchPdfFile(index) {
-      if (index >= 0 && index < BOOKING_FILES.length) {
-        currentActiveIndex = index;
-        const selectedFile = BOOKING_FILES[index];
-        const frame = document.getElementById('pdfViewerFrame');
-        
-        resetTransform();
-        frame.src = selectedFile.embedUrl;
-        renderFileCards();
+    // High-Definition Vector Rendering Engine
+    async function renderPDFPage() {
+      if (!pdfDoc) return;
+
+      const page = await pdfDoc.getPage(1);
+      const canvas = document.getElementById('pdfCanvas');
+      const ctx = canvas.getContext('2d');
+
+      // Increase pixel ratio for ultra-sharp HD rendering on high-DPI screens
+      const outputScale = window.devicePixelRatio || 2;
+      const viewport = page.getViewport({ scale: scale, rotation: rotation });
+
+      canvas.width = Math.floor(viewport.width * outputScale);
+      canvas.height = Math.floor(viewport.height * outputScale);
+      canvas.style.width = Math.floor(viewport.width) + "px";
+      canvas.style.height = Math.floor(viewport.height) + "px";
+
+      const transform = outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null;
+
+      const renderContext = {
+        canvasContext: ctx,
+        transform: transform,
+        viewport: viewport
+      };
+
+      await page.render(renderContext).promise;
+    }
+
+    async function loadPdfDocument(url) {
+      try {
+        pdfDoc = await pdfjsLib.getDocument(url).promise;
+        renderPDFPage();
+      } catch (err) {
+        console.error("PDF.js Load Error:", err);
       }
     }
 
-    // ==========================================
-    // ROTATION & EXTENDED ZOOM LOGIC
-    // ==========================================
-    function updateTransform() {
-      const wrapper = document.getElementById('pdfWrapper');
-      wrapper.style.transform = `rotate(${currentRotation}deg) scale(${currentScale})`;
+    function switchPdfFile(index) {
+      if (index >= 0 && index < BOOKING_FILES.length) {
+        currentActiveIndex = index;
+        scale = 1.0;
+        rotation = 0;
+        renderFileCards();
+        loadPdfDocument(BOOKING_FILES[index].pdfUrl);
+      }
     }
 
-    function rotate90() {
-      currentRotation = (currentRotation + 90) % 360;
-      updateTransform();
-    }
-
+    // Control Functions
     function zoomIn() {
-      if (currentScale < 5.0) { // Max 500% zoom
-        currentScale += 0.4;
-        updateTransform();
+      if (scale < 4.0) {
+        scale += 0.3;
+        renderPDFPage();
       }
     }
 
     function zoomOut() {
-      if (currentScale > 0.6) {
-        currentScale -= 0.2;
-        updateTransform();
+      if (scale > 0.5) {
+        scale -= 0.2;
+        renderPDFPage();
       }
     }
 
+    function rotate90() {
+      rotation = (rotation + 90) % 360;
+      renderPDFPage();
+    }
+
     function resetTransform() {
-      currentScale = 1.0;
-      currentRotation = 0;
-      updateTransform();
+      scale = 1.0;
+      rotation = 0;
+      renderPDFPage();
     }
 
-    // ==========================================
-    // NATIVE PINCH-TO-ZOOM TOUCH HANDLING
-    // ==========================================
-    function getDistanceBetweenTouches(touches) {
-      const dx = touches[0].clientX - touches[1].clientX;
-      const dy = touches[0].clientY - touches[1].clientY;
-      return Math.sqrt(dx * dx + dy * dy);
-    }
-
+    // Touch Pinch-to-Zoom Handler
     function initPinchToZoom() {
-      const container = document.getElementById('pdfContainer');
+      const container = document.getElementById('pdfViewerContainer');
 
       container.addEventListener('touchstart', (e) => {
         if (e.touches.length === 2) {
-          initialPinchDistance = getDistanceBetweenTouches(e.touches);
-          initialScaleOnPinch = currentScale;
+          initialPinchDist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          initialScale = scale;
         }
       }, { passive: true });
 
       container.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 2) {
-          const currentDistance = getDistanceBetweenTouches(e.touches);
-          if (initialPinchDistance > 0) {
-            const factor = currentDistance / initialPinchDistance;
-            let newScale = initialScaleOnPinch * factor;
-            
-            // Clamp between 0.6x and 5.0x
-            newScale = Math.min(Math.max(newScale, 0.6), 5.0);
-            currentScale = parseFloat(newScale.toFixed(2));
-            updateTransform();
+        if (e.touches.length === 2 && initialPinchDist > 0) {
+          const currentDist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          const factor = currentDist / initialPinchDist;
+          let newScale = initialScale * factor;
+
+          if (newScale >= 0.5 && newScale <= 4.0) {
+            scale = newScale;
+            renderPDFPage();
           }
         }
       }, { passive: true });
 
       container.addEventListener('touchend', (e) => {
         if (e.touches.length < 2) {
-          initialPinchDistance = 0;
+          initialPinchDist = 0;
         }
       }, { passive: true });
     }
 
-    // Disable default browser context menus
     document.addEventListener('contextmenu', (e) => e.preventDefault());
 
     window.addEventListener('DOMContentLoaded', () => {
       setLiveDate();
       renderFileCards();
       initPinchToZoom();
-      
+
       if (BOOKING_FILES.length > 0) {
         switchPdfFile(0);
       }
