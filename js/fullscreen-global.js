@@ -1,16 +1,9 @@
 // js/fullscreen-global.js
 
 function enableGlobalFullScreen() {
-  // Check if running as Installed PWA / Standalone Home Screen App
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                       window.navigator.standalone || 
-                       document.referrer.includes('android-app://');
-
-  // If already running standalone PWA, browser status bars are automatically hidden!
-  if (isStandalone) return;
-
-  // Otherwise, if running inside standard web browser tab, request fullscreen on tap
   const doc = document.documentElement;
+
+  // Don't re-trigger if the document is ALREADY in full-screen mode
   if (document.fullscreenElement || document.webkitFullscreenElement) return;
 
   try {
@@ -22,10 +15,10 @@ function enableGlobalFullScreen() {
       doc.msRequestFullscreen();
     }
   } catch (err) {
-    // Suppress console errors on navigation
+    // Suppress console errors on page transitions
   }
 }
 
-// Trigger only on first user touch per page load
+// Request full-screen mode on the first tap/touch on ANY loaded page
 document.addEventListener('touchstart', enableGlobalFullScreen, { once: true });
 document.addEventListener('click', enableGlobalFullScreen, { once: true });
