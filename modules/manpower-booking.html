@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SPTS - Manpower Booking (Live Data)</title>
+  <title>SPTS - Manpower Booking</title>
   <meta name="theme-color" content="#0f172a">
 
   <style>
@@ -13,7 +13,7 @@
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       
-      /* Block long-press contextual search & text selection */
+      /* Disable text selection & touch context popups */
       -webkit-touch-callout: none !important;
       -webkit-user-select: none !important;
       -khtml-user-select: none !important;
@@ -33,6 +33,7 @@
       color: #334155;
     }
 
+    /* Outer Wrapper - Default Portrait Dimensions */
     .app-viewport {
       width: 100vw;
       height: 100vh;
@@ -92,7 +93,7 @@
       padding: 0 8px;
     }
 
-    /* Today Date Banner */
+    /* Today's Date Banner */
     .today-banner {
       width: 100%;
       background-color: #eff6ff;
@@ -189,12 +190,41 @@
       cursor: pointer;
     }
 
-    /* Orientation-aware styles */
-    @media (orientation: landscape) and (max-height: 600px) {
-      .booking-top-nav, .today-banner, .file-list-container, .action-footer { display: none !important; }
-      .app-viewport { max-width: 100vw; max-height: 100vh; width: 100vw; height: 100vh; border-radius: 0; margin: 0; padding: 0; }
-      .view-screen { padding: 0; }
-      .pdf-viewer-container { width: 100vw; height: 100vh; min-height: 100vh; border: none; border-radius: 0; }
+    /* =========================================================
+       DYNAMIC LANDSCAPE ORIENTATION MEDIA QUERY
+       ========================================================= */
+    @media screen and (orientation: landscape) {
+      /* Hide top navigation, header banners, and action footers */
+      .booking-top-nav, 
+      .today-banner, 
+      .file-list-container, 
+      .action-footer { 
+        display: none !important; 
+      }
+
+      /* Stretch app container to 100% full screen width/height */
+      .app-viewport { 
+        max-width: 100vw !important; 
+        max-height: 100vh !important; 
+        width: 100vw !important; 
+        height: 100vh !important; 
+        border-radius: 0 !important; 
+        margin: 0 !important; 
+        padding: 0 !important; 
+      }
+
+      .view-screen { 
+        padding: 0 !important; 
+      }
+
+      /* Expand PDF viewer to take 100% of the landscape screen */
+      .pdf-viewer-container { 
+        width: 100vw !important; 
+        height: 100vh !important; 
+        min-height: 100vh !important; 
+        border: none !important; 
+        border-radius: 0 !important; 
+      }
     }
   </style>
 </head>
@@ -203,26 +233,31 @@
   <div class="app-viewport">
     <div class="view-screen">
       
+      <!-- Top Navigation -->
       <div class="booking-top-nav">
         <div class="btn-home-icon" onclick="goHome()">🏠</div>
         <div class="booking-header-title">MANPOWER BOOKING</div>
       </div>
 
+      <!-- Today's Date Banner -->
       <div class="today-banner">
         <span>📅 Today's Bookings</span>
         <span id="displayDateStr">11/08/2026</span>
       </div>
 
+      <!-- File List Container -->
       <div id="fileListContainer" class="file-list-container">
         <!-- JS Renders cards here -->
       </div>
 
+      <!-- Embedded PDF Viewer -->
       <div class="pdf-viewer-container">
         <iframe id="pdfViewerFrame" class="pdf-viewer-frame" 
                 src="" title="Manpower Booking Viewer"
                 allow="autoplay"></iframe>
       </div>
 
+      <!-- Bottom Navigation Footer -->
       <div class="action-footer">
         <div class="btn-next-round" onclick="goHome()">➔</div>
       </div>
@@ -231,21 +266,20 @@
   </div>
 
   <script>
-    // =========================================================================
-    // UPDATED DATA: Placeholder replaced with actual File ID from your link
-    // =========================================================================
+    // Configured with your verified Google Drive File ID: 1yCu2RUrz6olE1Bi7NVCXXBtTEazxRnP2
     const BOOKING_FILES = [
       {
         id: "FILE_001",
         name: "11 AUG 2026 BOOKING GROUP.pdf",
-        // ID verified and replaced: 1yCu2RUrz6olE1Bi7NVCXXBtTEazxRnP2
         embedUrl: "https://drive.google.com/file/d/1yCu2RUrz6olE1Bi7NVCXXBtTEazxRnP2/preview"
       }
     ];
 
     let currentActiveIndex = 0;
 
-    function goHome() { window.location.href = '../index.html'; }
+    function goHome() { 
+      window.location.href = '../index.html'; 
+    }
 
     function setLiveDate() {
       const now = new Date();
@@ -286,21 +320,22 @@
         const selectedFile = BOOKING_FILES[index];
         const frame = document.getElementById('pdfViewerFrame');
         
-        // Update PDF iframe source
+        // Load PDF inside iframe
         frame.src = selectedFile.embedUrl;
         
-        // Refresh card highlights
+        // Refresh active card styling
         renderFileCards();
       }
     }
 
+    // Disable default browser context menus
     document.addEventListener('contextmenu', (e) => e.preventDefault());
 
     window.addEventListener('DOMContentLoaded', () => {
       setLiveDate();
       renderFileCards();
       
-      // Load the PDF automatically
+      // Auto-load document
       if (BOOKING_FILES.length > 0) {
         switchPdfFile(0);
       }
