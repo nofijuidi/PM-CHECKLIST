@@ -7,13 +7,8 @@
   <meta name="theme-color" content="#0f172a">
   <link rel="manifest" href="manifest.json">
 
-  <!-- Full-screen Mobile Web App Metadata -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="mobile-web-app-capable" content="yes">
-
   <style>
-    /* 1. Global Callout & Text Selection Suppression */
+    /* 1. Global Callout & Text Selection Suppression (Same method as Manpower Booking) */
     * { 
       box-sizing: border-box; 
       margin: 0; 
@@ -43,10 +38,6 @@
       justify-content: center; 
       align-items: center; 
       color: #334155; 
-
-      /* Handle device safe area notches / status bars */
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
     }
 
     .app-viewport { 
@@ -415,7 +406,7 @@
       errorBox.classList.remove('hidden');
     }
 
-    // Suppress native touch context menus
+    // Suppress native touch context menus (Copy/Share/Select All/Web Search) across the entire application
     document.addEventListener('contextmenu', (e) => e.preventDefault());
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -426,8 +417,5 @@
       }
     });
   </script>
-
-  <!-- Global Full-Screen Trigger -->
-  <script src="js/fullscreen-global.js"></script>
 </body>
 </html>
