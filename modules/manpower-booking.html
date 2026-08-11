@@ -17,7 +17,6 @@
       margin: 0;
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      /* Disable native text selection and search callouts globally */
       -webkit-touch-callout: none !important;
       -webkit-user-select: none !important;
       -khtml-user-select: none !important;
@@ -122,12 +121,12 @@
 
     .file-card {
       background-color: #f8fafc;
-      border: 1.5px solid #cbd5e1;
+      border: 1.5px solid #0078D4;
       border-radius: 8px;
       padding: 10px 12px;
       font-size: 13px;
       font-weight: 700;
-      color: #0f172a;
+      color: #0078D4;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -135,12 +134,12 @@
     }
 
     .file-card.active {
-      border-color: #0078D4;
-      background-color: #f0f7ff;
-      color: #0078D4;
+      border-color: #005a9e;
+      background-color: #0078D4;
+      color: #ffffff;
     }
 
-    /* PDF Interactive Box Container */
+    /* PDF Interactive Container */
     .pdf-card-container {
       flex: 1;
       width: 100%;
@@ -154,28 +153,29 @@
       touch-action: none;
     }
 
-    /* Zoom & Rotate Control Floating Toolbar */
+    /* Bottom Control Bar Layout (Matching Screenshot UI) */
     .zoom-toolbar {
       position: absolute;
-      bottom: 12px;
-      right: 12px;
+      bottom: 8px;
+      left: 8px;
+      right: 8px;
       z-index: 20;
       display: flex;
-      gap: 6px;
-      background: rgba(15, 23, 42, 0.9);
-      padding: 5px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.85);
+      padding: 6px 10px;
       border-radius: 10px;
       backdrop-filter: blur(4px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
     .zoom-btn {
-      width: 36px;
-      height: 36px;
+      height: 40px;
       background: #ffffff;
-      border: none;
+      border: 1px solid #0f172a;
       border-radius: 8px;
-      font-weight: bold;
+      font-weight: 800;
       font-size: 18px;
       color: #0f172a;
       cursor: pointer;
@@ -183,14 +183,30 @@
       align-items: center;
       justify-content: center;
       touch-action: manipulation;
+      flex: 1;
+    }
+
+    .zoom-btn-icon {
+      min-width: 44px;
+      max-width: 50px;
+    }
+
+    .zoom-btn-text {
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      background-color: #fef3c7; /* Light cream accent matching screenshot RESET */
+      border-color: #d97706;
+      color: #0f172a;
+      flex: 1.5;
     }
 
     .zoom-btn:active {
       background: #e2e8f0;
-      transform: scale(0.92);
+      transform: scale(0.95);
     }
 
-    /* Draggable Target Layer */
+    /* Panzoom Target Container */
     .panzoom-wrapper {
       width: 100%;
       height: 100%;
@@ -199,9 +215,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      transform-origin: center center;
-      transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1);
       touch-action: none;
+      transition: transform 0.25s cubic-bezier(0.2, 0, 0.2, 1);
     }
 
     .panzoom-wrapper:active {
@@ -209,10 +224,10 @@
     }
 
     canvas.pdf-page-canvas {
-      width: 96% !important;
+      width: 94% !important;
       height: auto !important;
       margin: 8px 0;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
       border-radius: 4px;
       background-color: #ffffff;
       touch-action: none;
@@ -281,12 +296,12 @@
       <!-- PDF Canvas Viewport -->
       <div class="pdf-card-container" id="pdfCardBox">
         
-        <!-- Floating Zoom & Rotate Controls -->
+        <!-- Updated Toolbar UI matching screenshot -->
         <div id="zoomControls" class="zoom-toolbar hidden">
-          <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">＋</button>
-          <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">－</button>
-          <button class="zoom-btn" onclick="toggleLandscape()" title="Toggle Landscape/Portrait">↻</button>
-          <button class="zoom-btn" onclick="resetZoom()" title="Reset View">↺</button>
+          <button class="zoom-btn zoom-btn-icon" onclick="toggleLandscape()" title="Rotate 90° Landscape/Portrait">↻</button>
+          <button class="zoom-btn zoom-btn-icon" onclick="zoomIn()" title="Zoom In">＋</button>
+          <button class="zoom-btn zoom-btn-icon" onclick="zoomOut()" title="Zoom Out">－</button>
+          <button class="zoom-btn zoom-btn-text" onclick="resetZoom()" title="Reset View">RESET</button>
         </div>
 
         <div id="pdfPlaceholder" class="pdf-placeholder">
@@ -311,7 +326,7 @@
     const GET_BOOKING_FILES_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/0ec41aab7114455687c2ce778f4c9459/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yzAu6ONVD7_Rm01FBxTuj4QLPcJZ4-9QD-aCXAPhnh0";
 
     let panzoomInstance = null;
-    let isLandscapeMode = false; // Tracks state: false = Portrait (0°), true = Landscape (90°)
+    let isLandscape = false; // Toggle state: false = 0°, true = 90°
 
     function checkSession() {
       const activeSession = sessionStorage.getItem('userSession');
@@ -398,8 +413,7 @@
 
       target.innerHTML = '<div style="color: white; padding: 20px;">Loading HD document...</div>';
 
-      isLandscapeMode = false; // Reset to portrait orientation on new file render
-      target.style.transform = `rotate(0deg)`;
+      isLandscape = false;
 
       if (panzoomInstance) {
         panzoomInstance.destroy();
@@ -435,13 +449,18 @@
           }).promise;
         }
 
+        // Initialize Panzoom with setTransform hook to preserve landscape rotation
         panzoomInstance = Panzoom(target, {
           maxScale: 20,
           minScale: 0.5,
           step: 0.35,
           contain: false,
           startScale: 1,
-          canvas: true
+          canvas: true,
+          setTransform: (elem, { scale, x, y }) => {
+            const rot = isLandscape ? 90 : 0;
+            elem.style.transform = `translate(${x}px, ${y}px) scale(${scale}) rotate(${rot}deg)`;
+          }
         });
 
         parentBox.addEventListener('pointerdown', panzoomInstance.handleDown);
@@ -460,16 +479,17 @@
     }
 
     // ==========================================
-    // LANDSCAPE/PORTRAIT TOGGLE LOGIC
+    // ROTATE & ZOOM CONTROL FUNCTIONS
     // ==========================================
     function toggleLandscape() {
-      isLandscapeMode = !isLandscapeMode; // Toggle back and forth
-      const target = document.getElementById('panzoomTarget');
+      if (!panzoomInstance) return;
       
-      const angle = isLandscapeMode ? 90 : 0;
-      target.style.transform = `rotate(${angle}deg)`;
+      isLandscape = !isLandscape; // Toggles between 0° and 90°
       
-      if (panzoomInstance) {
+      // Auto-fit scale on landscape rotation so wide PDF fills viewport
+      if (isLandscape) {
+        panzoomInstance.zoom(1.15, { animate: true });
+      } else {
         panzoomInstance.reset({ animate: true });
       }
     }
@@ -483,9 +503,7 @@
     }
 
     function resetZoom() {
-      isLandscapeMode = false;
-      const target = document.getElementById('panzoomTarget');
-      target.style.transform = `rotate(0deg)`;
+      isLandscape = false;
       if (panzoomInstance) panzoomInstance.reset({ animate: true });
     }
 
