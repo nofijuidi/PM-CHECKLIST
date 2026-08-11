@@ -330,7 +330,6 @@
       padding: 24px; z-index: 100;
     }
 
-    /* Modal styling updated for Image 2 layout */
     .modal-card {
       background-color: #ffffff;
       width: 100%;
@@ -508,7 +507,7 @@
 
     </div>
 
-    <!-- Confirmation Modal updated to match Image 2 -->
+    <!-- Confirmation Modal -->
     <div id="confirmModal" class="modal-overlay hidden">
       <div class="modal-card">
         <div class="modal-greeting-line" id="modalGreeting">Dear Operator,</div>
@@ -806,7 +805,7 @@
       document.getElementById('modalIssue').innerText = issue;
       document.getElementById('modalFormattedDate').innerText = `On ${new Date().toLocaleDateString()}`;
 
-      // Reset action checkboxes
+      // Clear any previously checked actions
       document.querySelectorAll('.action-chk').forEach(chk => chk.checked = false);
 
       document.getElementById('confirmModal').classList.remove('hidden');
@@ -823,7 +822,7 @@
       const shiftText = document.getElementById('shiftBanner').innerText;
       const confirmBtn = document.getElementById('confirmSubmitBtn');
 
-      // Get joined string of checked action items
+      // Get combined comma-separated string of selected checkboxes
       const selectedActions = Array.from(document.querySelectorAll('.action-chk:checked'))
                                   .map(c => c.value)
                                   .join(', ');
@@ -840,7 +839,8 @@
         equipment: String(equipment),
         equipnum: String(equipmentNo),
         area: String(issue),
-        action: String(selectedActions), // Value sent to Power Automate for INSPECTIONLOG column
+        declaration: String(selectedActions),
+        action: String(selectedActions), // Synchronized with your updated JSON schema and ACTION column
         isNewIssue: true
       };
 
@@ -855,7 +855,6 @@
         });
 
         if (response.ok) {
-          // Clear issue input while preserving equipment selection
           document.getElementById('selectIssue').value = '';
           hideConfirmModal();
           loadUser12HourLogs();
