@@ -3,483 +3,477 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SPTS - Equipment Checklist</title>
+  <title>SPTS - Equipment Inspection</title>
   <meta name="theme-color" content="#0f172a">
 
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      
-      /* Disable contextual search & long-press popups */
-      -webkit-touch-callout: none !important;
-      -webkit-user-select: none !important;
-      -khtml-user-select: none !important;
-      -moz-user-select: none !important;
-      -ms-user-select: none !important;
-      user-select: none !important;
-    }
-
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background-color: #0f172a;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: #334155;
-    }
-
-    .app-viewport {
-      width: 100vw;
-      height: 100vh;
-      max-width: 412px;
-      max-height: 892px;
-      background-color: #ffffff;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    }
-
-    @media (min-width: 480px) {
-      .app-viewport {
-        border-radius: 28px;
-        height: 844px;
-      }
-    }
-
-    /* Top Animated Status Banner (#1) */
-    .top-status-banner {
-      width: 100%;
-      padding: 8px 12px;
-      font-size: 13px;
-      font-weight: 700;
-      text-align: center;
-      color: #ffffff;
-      display: none;
-      transition: all 0.3s ease;
-      z-index: 50;
-    }
-    .status-info { background-color: #0284c7; display: block; }
-    .status-success { background-color: #16a34a; display: block; }
-    .status-error { background-color: #dc2626; display: block; }
-
-    .view-screen {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 16px;
-      overflow-y: auto;
-    }
-
-    /* Enlarged Clock Header (#4) */
-    .booking-top-nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-
-    .btn-home-icon {
-      width: 40px;
-      height: 40px;
-      background-color: #f1f5f9;
-      border: 1px solid #cbd5e1;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      cursor: pointer;
-      color: #002060;
-    }
-
-    .header-clock-display {
-      flex: 1;
-      text-align: center;
-      color: #002060;
-      font-size: 16px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-    }
-
-    .form-group {
-      margin-bottom: 12px;
-    }
-
-    .form-label {
-      font-size: 12px;
-      font-weight: 700;
-      color: #0f172a;
-      margin-bottom: 4px;
-      display: block;
-    }
-
-    .form-control {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1.5px solid #cbd5e1;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      color: #0f172a;
-      background-color: #f8fafc;
-      outline: none;
-
-      /* Allow input typing */
-      -webkit-user-select: text !important;
-      user-select: text !important;
-    }
-
-    .form-control:focus {
-      border-color: #0078D4;
-      background-color: #ffffff;
-    }
-
-    /* Action Buttons Row (#6) */
-    .btn-toolbar {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .btn-action {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-    }
-
-    .btn-refresh { background-color: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
-    .btn-clear { background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-    .btn-submit { background-color: #0078D4; color: #ffffff; }
-
-    /* Modal Pop-up (#7) */
-    .modal-overlay {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.7);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 16px;
-      z-index: 100;
-    }
-
-    .modal-card {
-      background: #ffffff;
-      width: 100%;
-      max-width: 360px;
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-
-    .modal-header {
-      font-size: 15px;
-      font-weight: 800;
-      color: #002060;
-      margin-bottom: 8px;
-    }
-
-    .modal-declaration-text {
-      font-size: 12px;
-      color: #334155;
-      background: #f1f5f9;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-      line-height: 1.4;
-      font-weight: 600;
-      white-space: pre-wrap;
-    }
-
-    .action-checkbox-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 16px;
-      background: #fafafa;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #e2e8f0;
-    }
-
-    .checkbox-label {
-      font-size: 12px;
-      font-weight: 700;
-      color: #0f172a;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-    }
-
-    .checkbox-label input {
-      width: 16px;
-      height: 16px;
-      accent-color: #0078D4;
-    }
-
-    .modal-btn-row {
-      display: flex;
-      gap: 8px;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background-color: #0f172a; display: flex; justify-content: center; align-items: center; color: #334155; }
+    .app-viewport { width: 100vw; height: 100vh; max-width: 412px; max-height: 892px; background-color: #ffffff; display: flex; flex-direction: column; position: relative; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+    @media (min-width: 480px) { .app-viewport { border-radius: 28px; height: 844px; } }
+    .view-screen { flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
     .hidden { display: none !important; }
+    .top-right-app-icon { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; border: 1px solid #cbd5e1; }
+    .inspection-top-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .btn-home-icon { width: 40px; height: 40px; background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; color: #002060; }
+    .inspection-header-title { flex: 1; text-align: center; color: #002060; font-size: 18px; font-weight: 800; padding: 0 8px; }
+    .banner-bar { display: flex; width: 100%; height: 36px; border-radius: 6px; overflow: hidden; font-size: 13px; font-weight: 700; margin-bottom: 14px; }
+    .shift-day { background-color: #FFD700 !important; color: #000000 !important; }
+    .shift-night { background-color: #002060 !important; color: #ffffff !important; }
+    .banner-shift { padding: 0 14px; display: flex; align-items: center; justify-content: center; white-space: nowrap; font-weight: 800; }
+    .banner-date { background-color: #1f6bc6; color: white; flex: 1; display: flex; align-items: center; justify-content: center; }
+    .user-info-banner { color: #002060; font-weight: 800; font-size: 15px; margin-bottom: 16px; line-height: 1.4; }
+    .form-row-2col { display: flex; gap: 12px; margin-bottom: 14px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group-flex { flex: 1; margin-bottom: 0; }
+    .form-label { display: block; font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
+    .form-input { width: 100%; padding: 12px 14px; font-size: 15px; border: 1.5px solid #0078D4; border-radius: 8px; outline: none; }
+    .active-pillbox-area { margin-bottom: 14px; }
+    .grid-container-num { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 5px; max-height: 150px; overflow-y: auto; padding: 2px; }
+    .grid-container-eq { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 6px; max-height: 150px; overflow-y: auto; padding: 2px; }
+    .grid-container-list { display: flex; flex-direction: column; gap: 5px; max-height: 150px; overflow-y: auto; padding: 2px; }
+    .grid-box { background-color: #3b62b0; color: #ffffff; font-size: 12px; font-weight: 700; text-align: center; padding: 8px 4px; border-radius: 5px; cursor: pointer; border: 1px solid #2d4e93; display: flex; align-items: center; justify-content: center; }
+    .grid-box-list { background-color: #3b62b0; color: #ffffff; font-size: 13px; font-weight: 700; text-align: left; padding: 9px 12px; border-radius: 5px; cursor: pointer; border: 1px solid #2d4e93; }
+    .grid-box.selected, .grid-box-list.selected { background-color: #1d4ed8; box-shadow: inset 0 0 0 2px #ffffff; }
+    .declaration-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .btn-refresh { background-color: #00a651; color: white; font-size: 13px; font-weight: 800; padding: 6px 14px; border: none; border-radius: 6px; cursor: pointer; }
+    .declaration-table-box { width: 100%; max-height: 150px; overflow-y: auto; border: 1.5px solid #0078D4; border-radius: 8px; background-color: #f8fafc; padding: 2px; }
+    .declaration-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .declaration-table th { background-color: #002060; color: #ffffff; font-weight: 800; text-align: left; padding: 6px 5px; position: sticky; top: 0; z-index: 2; border-right: 1px solid #1a365d; }
+    .declaration-table td { padding: 6px 5px; border-bottom: 1px solid #e2e8f0; color: #1e293b; font-weight: 600; word-break: break-word; }
+    .declaration-table tr:nth-child(even) { background-color: #ffffff; }
+    .declaration-empty { text-align: center; padding: 12px; color: #64748b; font-size: 13px; font-style: italic; }
+    .action-row { display: flex; gap: 12px; align-items: center; margin-top: 18px; }
+    .btn-submit-inspection { flex: 1; background-color: #3b62b0; color: white; font-size: 18px; font-weight: 700; border: none; border-radius: 8px; height: 50px; cursor: pointer; }
+    .btn-back-round { width: 50px; height: 50px; border: 2px solid #3b62b0; border-radius: 50%; background: white; color: #3b62b0; font-size: 22px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .alert-error { background-color: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 12px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; text-align: center; }
+    .alert-success { background-color: #f0fdf4; border: 1.5px solid #86efac; color: #166534; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700; margin-bottom: 14px; text-align: center; }
+    .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 100; }
+    .modal-card { background-color: #ffffff; width: 100%; border-radius: 16px; padding: 26px 22px; }
+    .modal-greeting-line, .modal-declaring-line { font-size: 19px; font-weight: 500; color: #0f172a; margin-bottom: 4px; }
+    .modal-status-highlight, .modal-date-line { font-size: 18px; font-weight: 800; color: #000; margin-bottom: 20px; }
+    .modal-btn-row { display: flex; gap: 12px; }
+    .btn-popup-cancel { flex: 1; height: 48px; background-color: #cc0000; color: white; font-weight: 800; border: none; border-radius: 10px; cursor: pointer; }
+    .btn-popup-confirm { flex: 1; height: 48px; background-color: #4172cd; color: white; font-weight: 800; border: none; border-radius: 10px; cursor: pointer; }
   </style>
 </head>
 <body>
 
   <div class="app-viewport">
-    <!-- Top Status Banner (#1) -->
-    <div id="topStatusBanner" class="top-status-banner"></div>
-
     <div class="view-screen">
-      
-      <!-- Top Navigation & Live Clock Header (#4) -->
-      <div class="booking-top-nav">
-        <div class="btn-home-icon" onclick="goHome()">🏠</div>
-        <div id="liveClockDisplay" class="header-clock-display">--/--/---- 00:00:00ss</div>
+      <div class="inspection-top-nav">
+        <!-- Return to Index Home -->
+        <div class="btn-home-icon" onclick="goHome()" title="Go to Home Page">🏠</div>
+        <div class="inspection-header-title">EQUIPMENT INSPECTION</div>
+        <img src="../icon-192.png" alt="App Icon" class="top-right-app-icon" onerror="this.style.display='none'" />
       </div>
 
-      <!-- Staff Details Field (#3) -->
+      <div id="errorMessage" class="alert-error hidden"></div>
+      <div id="successBanner" class="alert-success hidden">✓ Inspection logged successfully!</div>
+
+      <div class="banner-bar">
+        <div class="banner-shift" id="shiftBanner">-- SHIFT</div>
+        <div class="banner-date" id="liveDateTime">Date: --/--/---- --:-- hrs</div>
+      </div>
+
+      <div class="user-info-banner">
+        <div id="inspCompany">-</div>
+        <div id="inspOperator">-</div>
+      </div>
+
+      <div class="form-row-2col">
+        <div class="form-group-flex">
+          <label class="form-label">Select Equipment</label>
+          <input type="text" id="selectEquipment" class="form-input" placeholder="Select type..." autocomplete="off" onfocus="setActiveMode('equipment')" oninput="refreshActivePillbox()" />
+        </div>
+        <div class="form-group-flex">
+          <label class="form-label">Equipment Number</label>
+          <input type="text" id="selectEquipmentNo" class="form-input" placeholder="Select number..." autocomplete="off" onfocus="setActiveMode('number')" oninput="onEquipmentNoInputChange(this.value)" />
+        </div>
+      </div>
+
       <div class="form-group">
-        <label class="form-label">Declared By (Staff ID & Name)</label>
-        <input type="text" id="staffInput" class="form-control" readonly />
+        <label class="form-label">Select Issue</label>
+        <input type="text" id="selectIssue" class="form-input" placeholder="Type or select issue..." autocomplete="off" onfocus="setActiveMode('issue')" oninput="refreshActivePillbox()" />
       </div>
 
-      <!-- Select Equipment -->
+      <div id="activePillboxArea" class="active-pillbox-area hidden">
+        <div id="pillboxGrid"></div>
+      </div>
+
       <div class="form-group">
-        <label class="form-label">Select Equipment</label>
-        <select id="selectEquipment" class="form-control">
-          <option value="">-- Choose Equipment --</option>
-          <option value="TC03">TC03</option>
-          <option value="TC04">TC04</option>
-          <option value="RS01">RS01</option>
-        </select>
+        <div class="declaration-header-row">
+          <label class="form-label" style="margin-bottom: 0;" id="declarationLabel">Declaration (last 12 hours)</label>
+          <button class="btn-refresh" onclick="loadUser12HourLogs()">REFRESH</button>
+        </div>
+
+        <div class="declaration-table-box">
+          <table class="declaration-table">
+            <thead>
+              <tr>
+                <th style="width: 33%;">DATE</th>
+                <th style="width: 20%;">EQUIPNUM</th>
+                <th style="width: 32%;">AREA</th>
+                <th style="width: 15%;">ID</th>
+              </tr>
+            </thead>
+            <tbody id="declarationLogsBody">
+              <tr><td colspan="4" class="declaration-empty">Loading logs...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <!-- Equipment Number -->
-      <div class="form-group">
-        <label class="form-label">Equipment Number</label>
-        <input type="text" id="equipmentNumber" class="form-control" placeholder="e.g. EQ-9002" />
+      <div class="action-row">
+        <button id="sendBtn" class="btn-submit-inspection" onclick="showConfirmModal()">Submit</button>
+        <div class="btn-back-round" onclick="goHome()">➔</div>
       </div>
-
-      <!-- Select Issue with Multi-Word Search Filter (#5) -->
-      <div class="form-group">
-        <label class="form-label">Select Issue (Type multiple keywords)</label>
-        <input type="text" id="selectIssueSearch" class="form-control" placeholder="e.g. Aircond Swing Tidak Berfungsi" oninput="filterIssueList()" />
-        <select id="selectIssueDropdown" class="form-control" style="margin-top: 4px;" size="4" onchange="syncSelectedIssue()">
-          <option value="Aircond - Swing Tidak Berfungsi">Aircond - Swing Tidak Berfungsi</option>
-          <option value="Aircond - Tidak Sejuk">Aircond - Tidak Sejuk</option>
-          <option value="Engine - Leaking Oil">Engine - Leaking Oil</option>
-          <option value="Brake - Low Pressure">Brake - Low Pressure</option>
-        </select>
-      </div>
-
-      <!-- Toolbar Buttons: Refresh & Clear (#6) -->
-      <div class="btn-toolbar">
-        <button class="btn-action btn-refresh" onclick="refreshForm()">🔄 REFRESH</button>
-        <button class="btn-action btn-clear" onclick="clearSelectedFields()">🧹 CLEAR</button>
-      </div>
-
-      <!-- Submit Button -->
-      <button class="btn-action btn-submit" style="width: 100%; padding: 12px;" onclick="openConfirmationModal()">SUBMIT ISSUE</button>
-
     </div>
 
-    <!-- Confirmation Pop-up Modal (#7) -->
+    <!-- CONFIRMATION MODAL -->
     <div id="confirmModal" class="modal-overlay hidden">
       <div class="modal-card">
-        <div class="modal-header">Confirm Declaration</div>
-        
-        <div id="modalDeclarationText" class="modal-declaration-text"></div>
-
-        <div class="form-label" style="margin-bottom: 6px;">Select Action(s):</div>
-        <div class="action-checkbox-group">
-          <label class="checkbox-label">
-            <input type="checkbox" class="action-chk" value="Sent to Workshop"> Sent to Workshop
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" class="action-chk" value="Continue with Issue"> Continue with Issue
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" class="action-chk" value="Change Equipment"> Change Equipment
-          </label>
-        </div>
+        <div class="modal-greeting-line" id="modalGreeting">Dear Operator,</div>
+        <div class="modal-declaring-line">You are declaring <strong id="modalEquipNum">-</strong>,</div>
+        <div class="modal-status-highlight" id="modalIssue">-</div>
+        <div class="modal-date-line" id="modalFormattedDate">-</div>
 
         <div class="modal-btn-row">
-          <button class="btn-action btn-clear" style="flex:1;" onclick="closeModal()">Cancel</button>
-          <button class="btn-action btn-submit" style="flex:1;" onclick="submitFinalLog()">CONFIRM</button>
+          <button class="btn-popup-cancel" onclick="hideConfirmModal()">CANCEL</button>
+          <button id="confirmSubmitBtn" class="btn-popup-confirm" onclick="executeSubmission()">CONFIRM</button>
         </div>
       </div>
     </div>
-
   </div>
 
   <script>
-    const SUBMIT_LOG_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/0ec41aab7114455687c2ce778f4c9459/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yzAu6ONVD7_Rm01FBxTuj4QLPcJZ4-9QD-aCXAPhnh0";
+    let EQUIPMENT_DATABASE = {};
+    let ISSUE_DATABASE = {};
+    let REVERSE_LOOKUP = {};
+    let currentUser = null;
+    let activePillboxMode = null;
 
-    let currentUser = { staffId: "EMP-1042", name: "NOFIJUIDI" };
+    const CHECKLIST_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/08/workflows/d7ac73d3d7d7423eb077a2895b0738df/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=OLDn8ig2sbXDzxKke7ijuD4cLHTaQS-3v2oVkSIDrMw";
+    const GET_LOGS_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/23/workflows/41d16fdee72843db94d61e4ec314841a/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_qpB6B3yesT9KNhGtnsB6oRu4TFovZPbjrKnykFpXck";
 
-    // Live Clock with Seconds Ticker (#4)
-    function startLiveClock() {
-      const clockEl = document.getElementById('liveClockDisplay');
-      setInterval(() => {
-        const now = new Date();
-        const dd = String(now.getDate()).padStart(2, '0');
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        const yyyy = now.getFullYear();
-        
-        const hh = String(now.getHours()).padStart(2, '0');
-        const min = String(now.getMinutes()).padStart(2, '0');
-        const ss = String(now.getSeconds()).padStart(2, '0');
-
-        clockEl.innerText = `${dd}/${mm}/${yyyy}   ${hh}:${min}:${ss}ss`;
-      }, 1000);
-    }
-
-    // Top Status Banner Helper (#1)
-    function showTopBanner(message, type = 'info') {
-      const banner = document.getElementById('topStatusBanner');
-      banner.className = `top-status-banner status-${type}`;
-      banner.innerText = message;
-      setTimeout(() => {
-        banner.className = 'top-status-banner';
-      }, 4000);
+    // 1. Session Auth Check
+    function checkSession() {
+      const activeSession = sessionStorage.getItem('userSession');
+      if (!activeSession) {
+        window.location.href = '../index.html';
+        return;
+      }
+      currentUser = JSON.parse(activeSession);
+      document.getElementById('inspOperator').innerText = getPropValue(currentUser, ['NAME', 'Title', 'title', 'name'], 'OPERATOR NAME');
+      document.getElementById('inspCompany').innerText = getPropValue(currentUser, ['COMPANY', 'Company', 'company'], 'SPTS SERVICES SDN BHD');
     }
 
     function goHome() {
       window.location.href = '../index.html';
     }
 
-    // Multi-Word Search Filter (#5)
-    function filterIssueList() {
-      const input = document.getElementById('selectIssueSearch').value.toLowerCase().trim();
-      const keywords = input.split(' ').filter(k => k.length > 0);
-      const dropdown = document.getElementById('selectIssueDropdown');
-      const options = dropdown.options;
+    // Load data.json from parent folder
+    async function loadConfigData() {
+      try {
+        const cached = localStorage.getItem('spts_config_data');
+        if (cached) applyConfig(JSON.parse(cached));
 
-      for (let i = 0; i < options.length; i++) {
-        const text = options[i].value.toLowerCase();
-        const matchesAll = keywords.every(kw => text.includes(kw));
-        options[i].style.display = matchesAll ? '' : 'none';
+        const res = await fetch('../data.json');
+        if (res.ok) {
+          const freshData = await res.json();
+          localStorage.setItem('spts_config_data', JSON.stringify(freshData));
+          applyConfig(freshData);
+        }
+      } catch (e) {
+        console.warn("Using cached configuration.");
       }
     }
 
-    function syncSelectedIssue() {
-      const dropdown = document.getElementById('selectIssueDropdown');
-      if (dropdown.value) {
-        document.getElementById('selectIssueSearch').value = dropdown.value;
+    function applyConfig(data) {
+      EQUIPMENT_DATABASE = data.EQUIPMENT_DATABASE || {};
+      ISSUE_DATABASE = data.ISSUE_DATABASE || {};
+      REVERSE_LOOKUP = {};
+      for (const [eqType, numList] of Object.entries(EQUIPMENT_DATABASE)) {
+        numList.forEach(num => { REVERSE_LOOKUP[num.toUpperCase()] = eqType; });
+      }
+      refreshActivePillbox();
+    }
+
+    function setActiveMode(mode) {
+      activePillboxMode = mode;
+      document.getElementById('activePillboxArea').classList.remove('hidden');
+      refreshActivePillbox();
+    }
+
+    function renderGridBoxes(containerId, items, selectedValue, onSelectCallback, isList = false, gridClass = 'grid-container-num') {
+      const container = document.getElementById(containerId);
+      container.className = gridClass;
+      container.innerHTML = '';
+      items.forEach(item => {
+        const box = document.createElement('div');
+        box.className = isList ? 'grid-box-list' : 'grid-box';
+        box.innerText = item;
+        if (item.toUpperCase() === selectedValue.toUpperCase()) box.classList.add('selected');
+        box.onclick = () => { onSelectCallback(item); };
+        container.appendChild(box);
+      });
+    }
+
+    function refreshActivePillbox() {
+      if (!activePillboxMode) return;
+      const eqVal = document.getElementById('selectEquipment').value.trim();
+      const numVal = document.getElementById('selectEquipmentNo').value.trim();
+      const issueVal = document.getElementById('selectIssue').value.trim();
+
+      if (activePillboxMode === 'equipment') {
+        const eqQuery = eqVal.toUpperCase();
+        const eqFiltered = Object.keys(EQUIPMENT_DATABASE).filter(eq => eq.includes(eqQuery));
+        renderGridBoxes('pillboxGrid', eqFiltered, eqVal, (selected) => {
+          document.getElementById('selectEquipment').value = selected;
+          document.getElementById('selectEquipmentNo').value = '';
+          document.getElementById('selectIssue').value = '';
+          setActiveMode('number');
+        }, false, 'grid-container-eq');
+      } else if (activePillboxMode === 'number') {
+        const numQuery = numVal.toUpperCase();
+        let numSource = eqVal !== "" ? (EQUIPMENT_DATABASE[eqVal.toUpperCase()] || []) : Object.values(EQUIPMENT_DATABASE).flat();
+        let numFiltered = numSource.filter(n => n.toUpperCase().includes(numQuery));
+        renderGridBoxes('pillboxGrid', numFiltered, numVal, (selected) => {
+          document.getElementById('selectEquipmentNo').value = selected;
+          if (REVERSE_LOOKUP[selected.toUpperCase()]) {
+            document.getElementById('selectEquipment').value = REVERSE_LOOKUP[selected.toUpperCase()];
+          }
+          setActiveMode('issue');
+        }, false, 'grid-container-num');
+      } else if (activePillboxMode === 'issue') {
+        const rawIssueQuery = issueVal.trim().toUpperCase();
+        let issueSource = eqVal && ISSUE_DATABASE[eqVal.toUpperCase()] ? ISSUE_DATABASE[eqVal.toUpperCase()] : ["I've checked and declared all OK"];
+        let issueFiltered = rawIssueQuery === "" ? issueSource : issueSource.filter(i => i.toUpperCase().includes(rawIssueQuery));
+        renderGridBoxes('pillboxGrid', issueFiltered, issueVal, (selected) => {
+          document.getElementById('selectIssue').value = selected;
+          refreshActivePillbox();
+        }, true, 'grid-container-list');
       }
     }
 
-    // CLEAR Button Handler (#6)
-    function clearSelectedFields() {
-      document.getElementById('selectEquipment').value = '';
-      document.getElementById('equipmentNumber').value = '';
-      document.getElementById('selectIssueSearch').value = '';
-      document.getElementById('selectIssueDropdown').selectedIndex = -1;
-      filterIssueList();
-      showTopBanner('Fields cleared', 'info');
+    function onEquipmentNoInputChange(val) {
+      const num = val.trim().toUpperCase();
+      if (REVERSE_LOOKUP[num]) document.getElementById('selectEquipment').value = REVERSE_LOOKUP[num];
+      refreshActivePillbox();
     }
 
-    function refreshForm() {
-      fetchTodayState();
-      showTopBanner('Form refreshed', 'info');
+    async function loadUser12HourLogs() {
+      const tbody = document.getElementById('declarationLogsBody');
+      tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">Loading logs...</td></tr>`;
+      const userIdVal = getPropValue(currentUser, ['COMPANY_ID', 'company_id', 'Company_ID', 'ID', 'id', 'Username', 'username'], '');
+
+      if (!userIdVal) return;
+
+      try {
+        const response = await fetch(GET_LOGS_FLOW_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ COMPANY_ID: String(userIdVal) })
+        });
+        if (response.ok) {
+          const logs = await response.json();
+          renderLogsTable(logs);
+        } else {
+          tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">Unable to fetch declarations.</td></tr>`;
+        }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">No declarations found.</td></tr>`;
+      }
     }
 
-    // Confirmation Modal Formatting (#3 & #7)
-    function openConfirmationModal() {
-      const equip = document.getElementById('selectEquipment').value;
-      const issue = document.getElementById('selectIssueSearch').value || document.getElementById('selectIssueDropdown').value;
+    function formatLogDate(rawDateStr) {
+      if (!rawDateStr || rawDateStr === '-') return '-';
+      const str = String(rawDateStr).trim();
+      if (str.includes(' ') || str.includes('T')) {
+        const cleanStr = str.replace('T', ' ');
+        const parts = cleanStr.split(' ');
+        if (parts.length >= 2) {
+          const dateParts = parts[0].split('-');
+          const timeParts = parts[1].split(':');
+          if (dateParts.length === 3 && timeParts.length >= 2) {
+            return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]} ${timeParts[0]}:${timeParts[1]}`;
+          }
+        }
+      }
+      return rawDateStr;
+    }
 
-      if (!equip || !issue) {
-        showTopBanner('Please select Equipment and Issue first', 'error');
+    function parseLogTimestamp(rawDateStr) {
+      if (!rawDateStr) return 0;
+      let cleanStr = String(rawDateStr).trim().replace(' ', 'T');
+      let d = new Date(cleanStr);
+      return isNaN(d.getTime()) ? 0 : d.getTime();
+    }
+
+    function renderLogsTable(logs) {
+      const tbody = document.getElementById('declarationLogsBody');
+      const labelEl = document.getElementById('declarationLabel');
+      tbody.innerHTML = '';
+
+      if (!logs || !Array.isArray(logs) || logs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">No declarations found.</td></tr>`;
         return;
       }
 
-      const now = new Date();
-      const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()}`;
+      const selectedEq = document.getElementById('selectEquipment').value.trim().toUpperCase();
+      let filteredLogs = [];
 
-      // Insert Staff ID before Name (#3)
-      const modalText = `Dear ${currentUser.staffId} ${currentUser.name}\n\nYou are declaring ${equip}\n${issue}\n\nOn ${dateStr}`;
-      
-      document.getElementById('modalDeclarationText').innerText = modalText;
-      
-      // Uncheck action checkboxes
-      document.querySelectorAll('.action-chk').forEach(c => c.checked = false);
+      if (selectedEq !== '') {
+        labelEl.innerText = `Declaration (${selectedEq})`;
+        filteredLogs = logs.filter(row => (row.EQUIPMENT || row.equipment || row.Equipment || '').trim().toUpperCase() === selectedEq);
+      } else {
+        labelEl.innerText = 'Declaration (last 12 hours)';
+        const twelveHoursAgo = new Date(Date.now() - (12 * 60 * 60 * 1000));
+        filteredLogs = logs.filter(row => {
+          let ts = parseLogTimestamp(row.DATE || row.date || row.Date);
+          return ts === 0 || new Date(ts) >= twelveHoursAgo;
+        });
+      }
+
+      if (filteredLogs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="declaration-empty">No matching declarations found.</td></tr>`;
+        return;
+      }
+
+      filteredLogs.sort((a, b) => parseLogTimestamp(b.DATE || b.date) - parseLogTimestamp(a.DATE || a.date));
+
+      filteredLogs.forEach(row => {
+        const tr = document.createElement('tr');
+        const formattedDate = formatLogDate(row.DATE || row.date || row.Date || '-');
+        const equipNum = row.EQUIPNUM || row.equipnum || row.EquipNum || '-';
+        const area = row.AREA || row.area || row.Area || '-';
+        const userLogId = row.ID || row.id || row.COMPANY_ID || '-';
+
+        tr.innerHTML = `
+          <td>${formattedDate}</td>
+          <td><strong>${equipNum}</strong></td>
+          <td>${area}</td>
+          <td><strong>${userLogId}</strong></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function getPropValue(obj, keys, defaultValue = 'N/A') {
+      if (!obj) return defaultValue;
+      for (const k of keys) {
+        if (obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== '') return obj[k];
+      }
+      return defaultValue;
+    }
+
+    function updateLiveShiftAndDate() {
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, '0');
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const yyyy = now.getFullYear();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const min = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('liveDateTime').innerText = `Date: ${dd}/${mm}/${yyyy} ${hh}:${min} hrs`;
+
+      const totalMinutes = (now.getHours() * 60) + now.getMinutes();
+      const shiftBanner = document.getElementById('shiftBanner');
+      if (totalMinutes >= (8 * 60) && totalMinutes <= (20 * 60)) {
+        shiftBanner.innerText = "DAY SHIFT";
+        shiftBanner.className = "banner-shift shift-day";
+      } else {
+        shiftBanner.innerText = "NIGHT SHIFT";
+        shiftBanner.className = "banner-shift shift-night";
+      }
+    }
+
+    function showConfirmModal() {
+      const equipment = document.getElementById('selectEquipment').value.trim();
+      const equipmentNo = document.getElementById('selectEquipmentNo').value.trim();
+      const issue = document.getElementById('selectIssue').value.trim();
+
+      if (!equipment) return showError("Please select the Equipment.");
+      if (!equipmentNo) return showError("Please put the Equipment Number");
+      if (!issue) return showError("Please update the Equipment Condition");
+
+      const rawName = getPropValue(currentUser, ['NAME', 'Title', 'title', 'name'], 'Operator');
+      const firstName = rawName.split(' ')[0];
+
+      document.getElementById('modalGreeting').innerText = `Dear ${firstName},`;
+      document.getElementById('modalEquipNum').innerText = equipmentNo;
+      document.getElementById('modalIssue').innerText = issue;
+      document.getElementById('modalFormattedDate').innerText = `On ${new Date().toLocaleDateString()}`;
+
       document.getElementById('confirmModal').classList.remove('hidden');
     }
 
-    function closeModal() {
+    function hideConfirmModal() {
       document.getElementById('confirmModal').classList.add('hidden');
     }
 
-    // Submit Final Payload to Power Automate
-    async function submitFinalLog() {
-      const selectedActions = Array.from(document.querySelectorAll('.action-chk:checked'))
-                                  .map(c => c.value)
-                                  .join(', ');
+    async function executeSubmission() {
+      const equipment = document.getElementById('selectEquipment').value.trim();
+      const equipmentNo = document.getElementById('selectEquipmentNo').value.trim();
+      const issue = document.getElementById('selectIssue').value.trim();
+      const shiftText = document.getElementById('shiftBanner').innerText;
+      const confirmBtn = document.getElementById('confirmSubmitBtn');
 
+      const userIdVal = getPropValue(currentUser, ['COMPANY_ID', 'company_id', 'Company_ID', 'ID', 'id', 'Username', 'username'], 'N/A');
       const payload = {
-        staffId: currentUser.staffId,
-        staffName: currentUser.name,
-        equipment: document.getElementById('selectEquipment').value,
-        equipmentNumber: document.getElementById('equipmentNumber').value,
-        issue: document.getElementById('selectIssueSearch').value || document.getElementById('selectIssueDropdown').value,
-        action: selectedActions, // Comma-separated value for INSPECTIONLOG column "ACTION"
-        timestamp: new Date().toISOString()
+        date: new Date().toISOString().replace('T', ' ').substring(0, 19),
+        shift: shiftText,
+        COMPANY_ID: String(userIdVal),
+        Title: String(getPropValue(currentUser, ['NAME', 'Title', 'title', 'name'], 'Unknown')),
+        company: String(getPropValue(currentUser, ['COMPANY', 'Company', 'company'], 'SPTS')),
+        group: String(getPropValue(currentUser, ['GROUP', 'Group', 'group'], 'N/A')),
+        equipment: String(equipment),
+        equipnum: String(equipmentNo),
+        area: String(issue),
+        isNewIssue: true
       };
 
-      closeModal();
-      showTopBanner('Submitting inspection log...', 'info');
+      confirmBtn.disabled = true;
+      confirmBtn.innerText = 'Submitting...';
 
       try {
-        const response = await fetch(SUBMIT_LOG_FLOW_URL, {
+        const response = await fetch(CHECKLIST_FLOW_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
 
         if (response.ok) {
-          showTopBanner('Submission sent successfully!', 'success');
-          
-          // Retain Select Equipment & Equipment Number values (#2)
-          document.getElementById('selectIssueSearch').value = '';
-          document.getElementById('selectIssueDropdown').selectedIndex = -1;
+          document.getElementById('selectEquipment').value = '';
+          document.getElementById('selectEquipmentNo').value = '';
+          document.getElementById('selectIssue').value = '';
+          hideConfirmModal();
+          setActiveMode('equipment');
+          loadUser12HourLogs();
         } else {
-          showTopBanner('Failed to submit log to server', 'error');
+          hideConfirmModal();
+          showError('Failed to submit inspection log.');
         }
       } catch (err) {
-        showTopBanner('Network error on submission', 'error');
+        hideConfirmModal();
+        showError('Network error.');
+      } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.innerText = 'CONFIRM';
       }
     }
 
-    function fetchTodayState() {
-      // Set Staff ID before Name (#3)
-      document.getElementById('staffInput').value = `${currentUser.staffId} - ${currentUser.name}`;
+    function showError(msg) {
+      const errorBox = document.getElementById('errorMessage');
+      errorBox.innerText = msg;
+      errorBox.classList.remove('hidden');
     }
 
-    // Prevent context menu (long-press searches)
-    document.addEventListener('contextmenu', (e) => e.preventDefault());
-
     window.addEventListener('DOMContentLoaded', () => {
-      startLiveClock();
-      fetchTodayState();
+      checkSession();
+      loadConfigData();
+      updateLiveShiftAndDate();
+      setActiveMode('equipment');
+      loadUser12HourLogs();
     });
   </script>
 </body>
