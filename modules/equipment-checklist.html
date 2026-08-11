@@ -193,7 +193,7 @@
     }
 
     .active-pillbox-area { margin-bottom: 14px; }
-    .grid-container-num { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 5px; max-height: 150px; overflow-y: auto; padding: 2px; }
+    .grid-container-num { display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 6px; max-height: 150px; overflow-y: auto; padding: 2px; }
     .grid-container-eq { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 160px; overflow-y: auto; padding: 2px; }
     .grid-container-list { display: flex; flex-direction: column; gap: 5px; max-height: 150px; overflow-y: auto; padding: 2px; }
     .grid-box { background-color: #3b62b0; color: #ffffff; font-size: 11px; font-weight: 800; text-align: center; padding: 10px 2px; border-radius: 6px; cursor: pointer; border: 1px solid #2d4e93; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
@@ -399,20 +399,7 @@
 
       <!-- Pillbox Interactive Grid -->
       <div id="activePillboxArea" class="active-pillbox-area">
-        <div id="pillboxGrid" class="grid-container-eq">
-          <div class="grid-box" onclick="selectPill('PM')">PM</div>
-          <div class="grid-box" onclick="selectPill('TRAILER')">TRAILER</div>
-          <div class="grid-box" onclick="selectPill('FORKLIFT')">FORKLIFT</div>
-          <div class="grid-box" onclick="selectPill('TIPPER')">TIPPER</div>
-          <div class="grid-box" onclick="selectPill('RTG')">RTG</div>
-          <div class="grid-box" onclick="selectPill('ECH')">ECH</div>
-          <div class="grid-box" onclick="selectPill('CRS')">CRS</div>
-          <div class="grid-box" onclick="selectPill('SHOVEL')">SHOVEL</div>
-          <div class="grid-box" onclick="selectPill('SHIPLOADER')">SHIPLOADER</div>
-          <div class="grid-box" onclick="selectPill('RECLAIMER')">RECLAIMER</div>
-          <div class="grid-box" onclick="selectPill('STACKER')">STACKER</div>
-          <div class="grid-box" onclick="selectPill('CONVEYOR')">CONVEYOR</div>
-        </div>
+        <div id="pillboxGrid" class="grid-container-eq"></div>
       </div>
 
       <!-- Declaration Section with CLEAR and REFRESH -->
@@ -533,12 +520,17 @@
     function selectPill(val) {
       if (activePillboxMode === 'equipment') {
         document.getElementById('selectEquipment').value = val;
+        document.getElementById('selectEquipmentNo').value = '';
         setActiveMode('number');
       } else if (activePillboxMode === 'number') {
         document.getElementById('selectEquipmentNo').value = val;
+        if (REVERSE_LOOKUP[val.toUpperCase()]) {
+          document.getElementById('selectEquipment').value = REVERSE_LOOKUP[val.toUpperCase()];
+        }
         setActiveMode('issue');
       } else if (activePillboxMode === 'issue') {
         document.getElementById('selectIssue').value = val;
+        refreshActivePillbox();
       }
     }
 
@@ -553,13 +545,15 @@
           const freshData = await res.json();
           EQUIPMENT_DATABASE = freshData.EQUIPMENT_DATABASE || {};
           ISSUE_DATABASE = freshData.ISSUE_DATABASE || {};
+          REVERSE_LOOKUP = {};
           for (const [eqType, numList] of Object.entries(EQUIPMENT_DATABASE)) {
             numList.forEach(num => { REVERSE_LOOKUP[num.toUpperCase()] = eqType; });
           }
         }
       } catch (e) {
-        console.warn("Using default view.");
+        console.warn("Using default view config.");
       }
+      refreshActivePillbox();
     }
 
     function setActiveMode(mode) {
@@ -576,23 +570,65 @@
       
       if (activePillboxMode === 'equipment') {
         grid.className = 'grid-container-eq';
-        const defaultEqs = ["PM", "TRAILER", "FORKLIFT", "TIPPER", "RTG", "ECH", "CRS", "SHOVEL", "SHIPLOADER", "RECLAIMER", "STACKER", "CONVEYOR"];
-        grid.innerHTML = defaultEqs.map(eq => `<div class="grid-box ${eq === eqVal.toUpperCase() ? 'selected' : ''}" onclick="selectPill('${eq}')">${eq}</div>`).join('');
+        let defaultEqs = Object.keys(EQUIPMENT_DATABASE);
+        if (defaultEqs.length === 0) {
+          defaultEqs = ["PM", "TRAILER", "FORKLIFT", "TIPPER", "RTG", "ECH", "CRS", "SHOVEL", "SHIPLOADER", "RECLAIMER", "STACKER", "CONVEYOR"];
+        }
+        
+        const eqQuery = eqVal.toUpperCase();
+        const filteredEqs = eqQuery === '' ? defaultEqs : defaultEqs.filter(e => e.includes(eqQuery));
+
+        grid.innerHTML = filteredEqs.map(eq => `<div class="grid-box ${eq === eqVal.toUpperCase() ? 'selected' : ''}" onclick="selectPill('${eq}')">${eq}</div>`).join('');
+
       } else if (activePillboxMode === 'number') {
         grid.className = 'grid-container-num';
-        let numSource = eqVal !== "" ? (EQUIPMENT_DATABASE[eqVal.toUpperCase()] || ["EQ-01", "EQ-02", "EQ-03", "EQ-04"]) : ["EQ-01", "EQ-02", "EQ-03"];
-        grid.innerHTML = numSource.map(n => `<div class="grid-box ${n === numVal.toUpperCase() ? 'selected' : ''}" onclick="selectPill('${n}')">${n}</div>`).join('');
+        
+        // Dynamic source of all numbers or numbers specific to selected equipment type
+        let numSource = [];
+        if (eqVal !== '' && EQUIPMENT_DATABASE[eqVal.toUpperCase()]) {
+          numSource = EQUIPMENT_DATABASE[eqVal.toUpperCase()];
+        } else {
+          // Flatten all numbers in database
+          numSource = Object.values(EQUIPMENT_DATABASE).flat();
+          if (numSource.length === 0) {
+            numSource = ["EQ-01", "EQ-02", "EQ-03", "EQ-04", "EQ-05", "EQ-06", "EQ-07", "EQ-08"];
+          }
+        }
+
+        const numQuery = numVal.toUpperCase();
+        const numFiltered = numQuery === '' ? numSource : numSource.filter(n => String(n).toUpperCase().includes(numQuery));
+
+        if (numFiltered.length === 0) {
+          grid.innerHTML = `<div style="grid-column: 1/-1; color: #64748b; font-size: 12px; font-style: italic; text-align: center; padding: 10px;">No matching numbers</div>`;
+        } else {
+          grid.innerHTML = numFiltered.map(n => `<div class="grid-box ${String(n).toUpperCase() === numVal.toUpperCase() ? 'selected' : ''}" onclick="selectPill('${n}')">${n}</div>`).join('');
+        }
+
       } else if (activePillboxMode === 'issue') {
         grid.className = 'grid-container-list';
-        let issueSource = eqVal && ISSUE_DATABASE[eqVal.toUpperCase()] ? ISSUE_DATABASE[eqVal.toUpperCase()] : ["Aircond - Swing Tidak Berfungsi", "Engine - Leaking Oil", "I've checked and declared all OK"];
-        grid.innerHTML = issueSource.map(i => `<div class="grid-box-list ${i === issueVal ? 'selected' : ''}" onclick="selectPill('${i}')">${i}</div>`).join('');
+        let issueSource = (eqVal && ISSUE_DATABASE[eqVal.toUpperCase()]) ? ISSUE_DATABASE[eqVal.toUpperCase()] : ["Aircond - Swing Tidak Berfungsi", "Engine - Leaking Oil", "Brake - Low Pressure", "I've checked and declared all OK"];
+        
+        const rawIssueQuery = issueVal.trim().toUpperCase();
+        const keywords = rawIssueQuery.split(' ').filter(k => k.length > 0);
+
+        let issueFiltered = keywords.length === 0 
+          ? issueSource 
+          : issueSource.filter(i => keywords.every(kw => i.toUpperCase().includes(kw)));
+
+        if (issueFiltered.length === 0) {
+          grid.innerHTML = `<div style="color: #64748b; font-size: 12px; font-style: italic; text-align: center; padding: 10px;">No matching issues found</div>`;
+        } else {
+          grid.innerHTML = issueFiltered.map(i => `<div class="grid-box-list ${i === issueVal ? 'selected' : ''}" onclick="selectPill('${i}')">${i}</div>`).join('');
+        }
       }
     }
 
     function onEquipmentNoInputChange(val) {
       const num = val.trim().toUpperCase();
-      if (REVERSE_LOOKUP[num]) document.getElementById('selectEquipment').value = REVERSE_LOOKUP[num];
-      refreshActivePillbox();
+      if (REVERSE_LOOKUP[num]) {
+        document.getElementById('selectEquipment').value = REVERSE_LOOKUP[num];
+      }
+      setActiveMode('number');
     }
 
     async function loadUser12HourLogs() {
