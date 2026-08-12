@@ -377,53 +377,53 @@
     }
 
     .modal-greeting-line, .modal-declaring-line { 
-      font-size: 18px; 
+      font-size: 16px; 
       font-weight: 500; 
       color: #0f172a; 
       margin-bottom: 2px; 
     }
 
     .modal-status-highlight { 
-      font-size: 19px; 
+      font-size: 17px; 
       font-weight: 800; 
       color: #000; 
-      margin-bottom: 16px; 
+      margin-bottom: 14px; 
     }
 
     .modal-date-line { 
-      font-size: 18px; 
+      font-size: 15px; 
       font-weight: 500; 
       color: #0f172a; 
-      margin-bottom: 20px; 
+      margin-bottom: 16px; 
     }
 
     .modal-action-title {
-      font-size: 18px;
-      font-weight: 500;
+      font-size: 16px;
+      font-weight: 600;
       color: #0f172a;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .modal-checkbox-group {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      margin-bottom: 24px;
+      gap: 10px;
+      margin-bottom: 20px;
     }
 
     .modal-checkbox-item {
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-size: 18px;
-      font-weight: 500;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 600;
       color: #0f172a;
       cursor: pointer;
     }
 
     .modal-checkbox-item input[type="checkbox"] {
-      width: 22px;
-      height: 22px;
+      width: 20px;
+      height: 20px;
       border: 2px solid #0f172a;
       border-radius: 4px;
       accent-color: #0078D4;
@@ -434,25 +434,25 @@
     
     .btn-popup-cancel { 
       flex: 1; 
-      height: 48px; 
+      height: 44px; 
       background-color: #cc0000; 
       color: white; 
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 800; 
       border: none; 
-      border-radius: 10px; 
+      border-radius: 8px; 
       cursor: pointer; 
     }
 
     .btn-popup-confirm { 
       flex: 1; 
-      height: 48px; 
+      height: 44px; 
       background-color: #1d68d8; 
       color: white; 
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 800; 
       border: none; 
-      border-radius: 10px; 
+      border-radius: 8px; 
       cursor: pointer; 
     }
   </style>
@@ -557,16 +557,20 @@
 
         <div class="modal-date-line" id="modalFormattedDate">On --/--/----</div>
 
-        <div class="modal-action-title">Your action will be</div>
+        <div class="modal-action-title">Your action taken..</div>
 
         <div class="modal-checkbox-group">
-          <label class="modal-checkbox-item">
+          <label class="modal-checkbox-item" id="optWorkshop">
             <input type="checkbox" class="action-chk" value="Sent to Workshop">
             <span>Sent to Workshop</span>
           </label>
           <label class="modal-checkbox-item">
-            <input type="checkbox" class="action-chk" value="Continue with Issue">
-            <span>Continue with Issue</span>
+            <input type="checkbox" class="action-chk" value="Call FEM for assistance">
+            <span>Call FEM for assistance</span>
+          </label>
+          <label class="modal-checkbox-item">
+            <input type="checkbox" class="action-chk" value="Continue operation with issue">
+            <span>Continue operation with issue</span>
           </label>
           <label class="modal-checkbox-item">
             <input type="checkbox" class="action-chk" value="Change Equipment">
@@ -588,6 +592,9 @@
     let REVERSE_LOOKUP = {};
     let currentUser = null;
     let activePillboxMode = 'equipment';
+
+    // Equipment types that CANNOT be sent to the workshop
+    const NO_WORKSHOP_EQUIPMENT = ["SHIPLOADER", "RECLAIMER", "STACKER", "QC", "CONVEYOR"];
 
     const CHECKLIST_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/08/workflows/d7ac73d3d7d7423eb077a2895b0738df/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=OLDn8ig2sbXDzxKke7ijuD4cLHTaQS-3v2oVkSIDrMw";
     const GET_LOGS_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/23/workflows/41d16fdee72843db94d61e4ec314841a/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_qpB6B3yesT9KNhGtnsB6oRu4TFovZPbjrKnykFpXck";
@@ -855,9 +862,25 @@
       document.getElementById('modalGreeting').innerText = `Dear ${firstName}`;
       document.getElementById('modalEquipNum').innerText = equipmentNo;
       document.getElementById('modalIssue').innerText = issue;
-      document.getElementById('modalFormattedDate').innerText = `On ${new Date().toLocaleDateString()}`;
+      
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, '0');
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const yyyy = now.getFullYear();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const min = String(now.getMinutes()).padStart(2, '0');
 
-      // Clear any previously checked actions
+      document.getElementById('modalFormattedDate').innerText = `On ${dd}/${mm}/${yyyy} ${hh}:${min}`;
+
+      // Check if selected equipment cannot go to workshop
+      const workshopOption = document.getElementById('optWorkshop');
+      if (NO_WORKSHOP_EQUIPMENT.includes(equipment.toUpperCase())) {
+        workshopOption.classList.add('hidden');
+      } else {
+        workshopOption.classList.remove('hidden');
+      }
+
+      // Clear all checked choices
       document.querySelectorAll('.action-chk').forEach(chk => chk.checked = false);
 
       document.getElementById('confirmModal').classList.remove('hidden');
@@ -874,7 +897,7 @@
       const shiftText = document.getElementById('shiftBanner').innerText;
       const confirmBtn = document.getElementById('confirmSubmitBtn');
 
-      // Get combined comma-separated string of selected checkboxes
+      // Get combined comma-separated string of checked items
       const selectedActions = Array.from(document.querySelectorAll('.action-chk:checked'))
                                   .map(c => c.value)
                                   .join(', ');
