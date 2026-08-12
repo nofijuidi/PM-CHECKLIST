@@ -11,7 +11,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
 
-  <!-- Panzoom Library for touch zoom & dragging -->
+  <!-- PDF.js Engine & Panzoom for Touch/Gesture Support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
 
   <style>
@@ -22,9 +23,6 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       -webkit-touch-callout: none !important;
       -webkit-user-select: none !important;
-      -khtml-user-select: none !important;
-      -moz-user-select: none !important;
-      -ms-user-select: none !important;
       user-select: none !important;
     }
 
@@ -114,7 +112,7 @@
       justify-content: space-between;
     }
 
-    /* File Name Header Display */
+    /* File Name Banner */
     .file-list-container {
       display: flex;
       flex-direction: column;
@@ -135,7 +133,7 @@
       justify-content: space-between;
     }
 
-    /* PDF Viewport Container */
+    /* Interactive Canvas Box */
     .pdf-card-container {
       flex: 1;
       width: 100%;
@@ -149,7 +147,7 @@
       touch-action: none;
     }
 
-    /* Zoom Toolbar - ALWAYS PERMANENTLY VISIBLE */
+    /* Permanent Zoom Toolbar */
     .zoom-toolbar {
       position: absolute;
       bottom: 8px;
@@ -202,7 +200,7 @@
       transform: scale(0.95);
     }
 
-    /* Panzoom Wrapper */
+    /* Panzoom Target Wrapper */
     .panzoom-wrapper {
       width: 100%;
       height: 100%;
@@ -212,19 +210,35 @@
       align-items: center;
       justify-content: center;
       touch-action: none;
-      transition: transform 0.25s cubic-bezier(0.2, 0, 0.2, 1);
     }
 
     .panzoom-wrapper:active {
       cursor: grabbing;
     }
 
-    .gdrive-iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
+    canvas.pdf-page-canvas {
+      width: 96% !important;
+      height: auto !important;
+      margin: 8px 0;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+      border-radius: 4px;
       background-color: #ffffff;
-      pointer-events: auto;
+      touch-action: none;
+    }
+
+    .pdf-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #ffffff;
+      font-size: 14px;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .hidden {
+      display: none !important;
     }
 
     .action-row {
@@ -267,15 +281,15 @@
         <span id="currentDateDisplay">--/--/----</span>
       </div>
 
-      <!-- File Name Banner Card -->
+      <!-- File Name Card -->
       <div id="fileListContainer" class="file-list-container">
         <div class="file-card" id="fileNameCard"><span>📄 Booking Document</span> <span>➔</span></div>
       </div>
 
-      <!-- PDF Canvas Viewport -->
+      <!-- PDF Canvas Area -->
       <div class="pdf-card-container" id="pdfCardBox">
         
-        <!-- Interactive Controls Bar ALWAYS THERE -->
+        <!-- Permanent Controls -->
         <div id="zoomControls" class="zoom-toolbar">
           <button class="zoom-btn zoom-btn-icon" onclick="toggleLandscape()" title="Rotate 90° Landscape/Portrait">↻</button>
           <button class="zoom-btn zoom-btn-icon" onclick="zoomIn()" title="Zoom In">＋</button>
@@ -283,14 +297,11 @@
           <button class="zoom-btn zoom-btn-text" onclick="resetZoom()" title="Reset View">RESET</button>
         </div>
 
-        <div id="panzoomTarget" class="panzoom-wrapper">
-          <iframe 
-            id="pdfViewerFrame" 
-            class="gdrive-iframe" 
-            src="https://drive.google.com/embeddedfolderview?id=13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b#grid">
-          </iframe>
+        <div id="pdfPlaceholder" class="pdf-placeholder">
+          Loading HD booking document...
         </div>
 
+        <div id="panzoomTarget" class="panzoom-wrapper hidden"></div>
       </div>
 
       <!-- Footer Action -->
@@ -302,7 +313,7 @@
   </div>
 
   <script>
-    const GDRIVE_FOLDER_ID = "13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b";
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
     let panzoomInstance = null;
     let isLandscape = false;
@@ -326,35 +337,78 @@
       return { dayNum: dd, monthNum: mm, formattedDisplay: `${dd}/${mm}/${yyyy}` };
     }
 
-    function initViewer() {
-      const dateInfo = getDateParams();
-      document.getElementById('currentDateDisplay').innerText = dateInfo.formattedDisplay;
-      document.getElementById('fileNameCard').innerHTML = `<span>📄 Booking Group (${dateInfo.formattedDisplay}).pdf</span> <span>➔</span>`;
-
+    async function loadPdfFromData(base64Data, fileName) {
       const target = document.getElementById('panzoomTarget');
+      const placeholder = document.getElementById('pdfPlaceholder');
       const parentBox = document.getElementById('pdfCardBox');
 
-      // Initialize Panzoom on the viewer wrapper
-      panzoomInstance = Panzoom(target, {
-        maxScale: 20,
-        minScale: 0.5,
-        step: 0.35,
-        contain: false,
-        startScale: 1,
-        setTransform: (elem, { scale, x, y }) => {
-          const rot = isLandscape ? 90 : 0;
-          elem.style.transform = `translate(${x}px, ${y}px) scale(${scale}) rotate(${rot}deg)`;
+      document.getElementById('fileNameCard').innerHTML = `<span>📄 ${fileName}</span> <span>➔</span>`;
+
+      placeholder.classList.add('hidden');
+      target.classList.remove('hidden');
+      target.innerHTML = '';
+
+      if (panzoomInstance) {
+        panzoomInstance.destroy();
+        panzoomInstance = null;
+      }
+
+      try {
+        const cleanBase64 = base64Data.replace(/^data:application\/pdf;base64,/, "");
+        const rawBinary = atob(cleanBase64);
+        
+        const loadingTask = pdfjsLib.getDocument({ data: rawBinary });
+        const pdf = await loadingTask.promise;
+
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          // Scale 4.0 renders extreme HD crispness
+          const viewport = page.getViewport({ scale: 4.0 });
+
+          const canvas = document.createElement('canvas');
+          canvas.className = 'pdf-page-canvas';
+          const context = canvas.getContext('2d');
+          
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+
+          target.appendChild(canvas);
+
+          await page.render({
+            canvasContext: context,
+            viewport: viewport
+          }).promise;
         }
-      });
 
-      parentBox.addEventListener('pointerdown', panzoomInstance.handleDown);
-      parentBox.addEventListener('pointermove', panzoomInstance.handleMove);
-      parentBox.addEventListener('pointerup', panzoomInstance.handleUp);
+        // Initialize Panzoom on parent container so touch events capture properly
+        panzoomInstance = Panzoom(target, {
+          maxScale: 20,
+          minScale: 0.5,
+          step: 0.35,
+          contain: false,
+          startScale: 1,
+          canvas: true,
+          setTransform: (elem, { scale, x, y }) => {
+            const rot = isLandscape ? 90 : 0;
+            elem.style.transform = `translate(${x}px, ${y}px) scale(${scale}) rotate(${rot}deg)`;
+          }
+        });
 
-      parentBox.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        panzoomInstance.zoomWithWheel(e);
-      }, { passive: false });
+        // Touch event bindings
+        parentBox.addEventListener('pointerdown', panzoomInstance.handleDown);
+        parentBox.addEventListener('pointermove', panzoomInstance.handleMove);
+        parentBox.addEventListener('pointerup', panzoomInstance.handleUp);
+
+        parentBox.addEventListener('wheel', (e) => {
+          e.preventDefault();
+          panzoomInstance.zoomWithWheel(e);
+        }, { passive: false });
+
+      } catch (err) {
+        console.error('Render Error:', err);
+        placeholder.innerHTML = `<div style="color: #ef4444; padding: 20px;">Failed to render HD document.</div>`;
+        placeholder.classList.remove('hidden');
+      }
     }
 
     function toggleLandscape() {
@@ -384,7 +438,8 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       checkSession();
-      initViewer();
+      const dateInfo = getDateParams();
+      document.getElementById('currentDateDisplay').innerText = dateInfo.formattedDisplay;
     });
   </script>
 
