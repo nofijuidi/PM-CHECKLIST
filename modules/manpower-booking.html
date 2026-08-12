@@ -278,6 +278,12 @@
       justify-content: center;
       cursor: pointer;
     }
+
+    .gdrive-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
   </style>
 </head>
 <body>
@@ -331,6 +337,9 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
     const GET_BOOKING_FILES_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/0ec41aab7114455687c2ce778f4c9459/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yzAu6ONVD7_Rm01FBxTuj4QLPcJZ4-9QD-aCXAPhnh0";
+    
+    // Google Drive Folder ID synchronized from Power Automate sync flow
+    const GDRIVE_FOLDER_ID = "13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b";
 
     let panzoomInstance = null;
     let isLandscape = false;
@@ -370,10 +379,10 @@
           const result = await response.json();
           renderFileList(result, dateInfo);
         } else {
-          container.innerHTML = `<div class="file-card" style="color: #dc2626;">Flow Error (${response.status}).</div>`;
+          fallbackToGoogleDriveFolder(dateInfo);
         }
       } catch (err) {
-        container.innerHTML = `<div class="file-card" style="color: #dc2626;">Network connection failed.</div>`;
+        fallbackToGoogleDriveFolder(dateInfo);
       }
     }
 
@@ -384,7 +393,7 @@
       const files = Array.isArray(result) ? result : [result];
 
       if (!files || files.length === 0 || !files[0]) {
-        container.innerHTML = `<div class="file-card" style="color: #64748b;">No booking files found for ${dateInfo.formattedDisplay}.</div>`;
+        fallbackToGoogleDriveFolder(dateInfo);
         return;
       }
 
@@ -400,12 +409,44 @@
           
           if (file.pdfBase64) {
             renderPdfWithPanzoom(file.pdfBase64);
+          } else if (file.driveEmbedUrl) {
+            renderGDriveIframe(file.driveEmbedUrl);
           }
         };
 
         container.appendChild(card);
         if (index === 0) card.click();
       });
+    }
+
+    function fallbackToGoogleDriveFolder(dateInfo) {
+      const container = document.getElementById('fileListContainer');
+      container.innerHTML = '';
+
+      const card = document.createElement('div');
+      card.className = 'file-card active';
+      card.innerHTML = `<span>📄 Daily Booking Document (${dateInfo.formattedDisplay})</span> <span>➔</span>`;
+      container.appendChild(card);
+
+      const embedUrl = `https://drive.google.com/embeddedfolderview?id=${GDRIVE_FOLDER_ID}#list`;
+      renderGDriveIframe(embedUrl);
+    }
+
+    function renderGDriveIframe(embedUrl) {
+      const target = document.getElementById('panzoomTarget');
+      const placeholder = document.getElementById('pdfPlaceholder');
+      const controls = document.getElementById('zoomControls');
+
+      placeholder.classList.add('hidden');
+      controls.classList.add('hidden');
+      target.classList.remove('hidden');
+
+      if (panzoomInstance) {
+        panzoomInstance.destroy();
+        panzoomInstance = null;
+      }
+
+      target.innerHTML = `<iframe class="gdrive-iframe" src="${embedUrl}"></iframe>`;
     }
 
     async function renderPdfWithPanzoom(base64Data) {
