@@ -114,6 +114,34 @@
       padding: 0 8px;
     }
 
+    /* Notification Banner Styling */
+    .toast-notification {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      right: 16px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 800;
+      text-align: center;
+      z-index: 200;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease-in-out;
+    }
+
+    .toast-success {
+      background-color: #10b981;
+      color: #ffffff;
+      border: 1.5px solid #059669;
+    }
+
+    .toast-error {
+      background-color: #ef4444;
+      color: #ffffff;
+      border: 1.5px solid #dc2626;
+    }
+
     .banner-bar {
       display: flex;
       width: 100%;
@@ -432,6 +460,10 @@
 <body>
 
   <div class="app-viewport">
+    
+    <!-- Toast Notification Banner -->
+    <div id="toastNotification" class="toast-notification hidden"></div>
+
     <div class="view-screen">
       
       <!-- Top Nav -->
@@ -559,6 +591,17 @@
 
     const CHECKLIST_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/08/workflows/d7ac73d3d7d7423eb077a2895b0738df/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=OLDn8ig2sbXDzxKke7ijuD4cLHTaQS-3v2oVkSIDrMw";
     const GET_LOGS_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/23/workflows/41d16fdee72843db94d61e4ec314841a/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_qpB6B3yesT9KNhGtnsB6oRu4TFovZPbjrKnykFpXck";
+
+    function showToastNotification(message, isSuccess = true) {
+      const toast = document.getElementById('toastNotification');
+      toast.innerText = message;
+      toast.className = `toast-notification ${isSuccess ? 'toast-success' : 'toast-error'}`;
+      toast.classList.remove('hidden');
+
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 3500);
+    }
 
     function checkSession() {
       const activeSession = sessionStorage.getItem('userSession');
@@ -866,14 +909,15 @@
         if (response.ok) {
           document.getElementById('selectIssue').value = '';
           hideConfirmModal();
+          showToastNotification('Your Equipment Inspection has been successfully submitted!', true);
           loadUser12HourLogs();
         } else {
           hideConfirmModal();
-          showError('Failed to submit inspection log.');
+          showToastNotification('Failed to submit inspection log. Please try again.', false);
         }
       } catch (err) {
         hideConfirmModal();
-        showError('Network error.');
+        showToastNotification('Network error during submission.', false);
       } finally {
         confirmBtn.disabled = false;
         confirmBtn.innerText = 'CONFIRM';
