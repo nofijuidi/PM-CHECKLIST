@@ -11,11 +11,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
 
-  <!-- PDF.js Engine for cross-platform rendering -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <!-- Panzoom Library for touch zoom & dragging -->
-  <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
-
   <style>
     * {
       box-sizing: border-box;
@@ -40,7 +35,7 @@
       align-items: center;
       color: #334155;
 
-      /* Handle device safe area notches / status bars */
+      /* Device safe area padding */
       padding-top: env(safe-area-inset-top);
       padding-bottom: env(safe-area-inset-bottom);
     }
@@ -118,7 +113,7 @@
       justify-content: space-between;
     }
 
-    /* File Name Header Display (As seen in yesterday's screenshot) */
+    /* Document Header Display */
     .file-list-container {
       display: flex;
       flex-direction: column;
@@ -139,7 +134,7 @@
       justify-content: space-between;
     }
 
-    /* PDF Interactive Container */
+    /* PDF Viewport Frame */
     .pdf-card-container {
       flex: 1;
       width: 100%;
@@ -150,102 +145,20 @@
       display: flex;
       flex-direction: column;
       position: relative;
-      touch-action: none;
     }
 
-    /* Bottom Zoom Toolbar Layout (Identical to yesterday's screen) */
-    .zoom-toolbar {
-      position: absolute;
-      bottom: 8px;
-      left: 8px;
-      right: 8px;
-      z-index: 20;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      background: rgba(15, 23, 42, 0.85);
-      padding: 6px 10px;
-      border-radius: 10px;
-      backdrop-filter: blur(4px);
-    }
-
-    .zoom-btn {
-      height: 40px;
-      background: #ffffff;
-      border: 1px solid #0f172a;
-      border-radius: 8px;
-      font-weight: 800;
-      font-size: 18px;
-      color: #0f172a;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      touch-action: manipulation;
-      flex: 1;
-    }
-
-    .zoom-btn-icon {
-      min-width: 44px;
-      max-width: 50px;
-    }
-
-    .zoom-btn-text {
-      font-size: 13px;
-      font-weight: 900;
-      letter-spacing: 0.5px;
-      background-color: #fef3c7;
-      border-color: #d97706;
-      color: #0f172a;
-      flex: 1.5;
-    }
-
-    .zoom-btn:active {
-      background: #e2e8f0;
-      transform: scale(0.95);
-    }
-
-    /* Panzoom Target Container */
-    .panzoom-wrapper {
+    .iframe-wrapper {
       width: 100%;
       height: 100%;
-      cursor: grab;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      touch-action: none;
-      transition: transform 0.25s cubic-bezier(0.2, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
     }
 
-    .panzoom-wrapper:active {
-      cursor: grabbing;
-    }
-
-    canvas.pdf-page-canvas {
-      width: 94% !important;
-      height: auto !important;
-      margin: 8px 0;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-      border-radius: 4px;
-      background-color: #ffffff;
-      touch-action: none;
-    }
-
-    .pdf-placeholder {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .gdrive-iframe {
+      width: 100%;
       height: 100%;
-      color: #ffffff;
-      font-size: 14px;
-      text-align: center;
-      padding: 20px;
-    }
-
-    .hidden {
-      display: none !important;
+      border: none;
+      background-color: #525659;
     }
 
     .action-row {
@@ -288,27 +201,19 @@
         <span id="currentDateDisplay">--/--/----</span>
       </div>
 
-      <!-- File Name Card -->
+      <!-- Single File Indicator Card -->
       <div id="fileListContainer" class="file-list-container">
-        <div class="file-card" id="fileNameCard">📄 Loading document... <span>➔</span></div>
+        <div class="file-card" id="fileNameCard"><span>📄 Daily Booking Document</span> <span>➔</span></div>
       </div>
 
-      <!-- PDF Viewport -->
+      <!-- Main Viewer Area -->
       <div class="pdf-card-container" id="pdfCardBox">
-        
-        <!-- Controls Bar -->
-        <div id="zoomControls" class="zoom-toolbar">
-          <button class="zoom-btn zoom-btn-icon" onclick="toggleLandscape()" title="Rotate 90° Landscape/Portrait">↻</button>
-          <button class="zoom-btn zoom-btn-icon" onclick="zoomIn()" title="Zoom In">＋</button>
-          <button class="zoom-btn zoom-btn-icon" onclick="zoomOut()" title="Zoom Out">－</button>
-          <button class="zoom-btn zoom-btn-text" onclick="resetZoom()" title="Reset View">RESET</button>
+        <div class="iframe-wrapper">
+          <iframe 
+            class="gdrive-iframe" 
+            src="https://drive.google.com/embeddedfolderview?id=13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b#grid">
+          </iframe>
         </div>
-
-        <div id="pdfPlaceholder" class="pdf-placeholder">
-          Loading booking document...
-        </div>
-
-        <div id="panzoomTarget" class="panzoom-wrapper hidden"></div>
       </div>
 
       <!-- Footer Action -->
@@ -320,13 +225,6 @@
   </div>
 
   <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-    const GET_BOOKING_FILES_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/0ec41aab7114455687c2ce778f4c9459/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yzAu6ONVD7_Rm01FBxTuj4QLPcJZ4-9QD-aCXAPhnh0";
-
-    let panzoomInstance = null;
-    let isLandscape = false;
-
     function checkSession() {
       const activeSession = sessionStorage.getItem('userSession');
       if (!activeSession) {
@@ -338,163 +236,20 @@
       window.location.href = '../index.html';
     }
 
-    function getDateParams() {
+    function setTodayDate() {
       const now = new Date();
       const dd = String(now.getDate()).padStart(2, '0');
       const mm = String(now.getMonth() + 1).padStart(2, '0');
       const yyyy = now.getFullYear();
-      return { dayNum: dd, monthNum: mm, formattedDisplay: `${dd}/${mm}/${yyyy}` };
-    }
-
-    async function fetchTodayBookings() {
-      const dateInfo = getDateParams();
-      document.getElementById('currentDateDisplay').innerText = dateInfo.formattedDisplay;
-
-      try {
-        const response = await fetch(GET_BOOKING_FILES_FLOW_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ monthNum: dateInfo.monthNum, dayNum: dateInfo.dayNum })
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          processAndDisplayFile(result);
-        } else {
-          showErrorMessage(`Server connection error (${response.status})`);
-        }
-      } catch (err) {
-        showErrorMessage("Network connection failed.");
-      }
-    }
-
-    function processAndDisplayFile(result) {
-      const files = Array.isArray(result) ? result : [result];
-
-      if (files && files.length > 0 && files[0]) {
-        const file = files[0];
-        const fileName = file.fileName || file.Name || file.DisplayName || 'BOOKING GROUP.pdf';
-        
-        document.getElementById('fileNameCard').innerHTML = `<span>📄 ${fileName}</span> <span>➔</span>`;
-
-        if (file.pdfBase64) {
-          renderPdfWithPanzoom(file.pdfBase64);
-        } else {
-          showErrorMessage("No binary data found for file.");
-        }
-      } else {
-        showErrorMessage("No booking document found for today.");
-      }
-    }
-
-    function showErrorMessage(msg) {
-      const placeholder = document.getElementById('pdfPlaceholder');
-      placeholder.innerHTML = `<div style="color: #f87171; padding: 20px;">${msg}</div>`;
-      placeholder.classList.remove('hidden');
-    }
-
-    async function renderPdfWithPanzoom(base64Data) {
-      const target = document.getElementById('panzoomTarget');
-      const placeholder = document.getElementById('pdfPlaceholder');
-      const parentBox = document.getElementById('pdfCardBox');
-
-      placeholder.classList.add('hidden');
-      target.classList.remove('hidden');
-
-      target.innerHTML = '<div style="color: white; padding: 20px;">Loading HD document...</div>';
-
-      isLandscape = false;
-
-      if (panzoomInstance) {
-        panzoomInstance.destroy();
-        panzoomInstance = null;
-      }
-
-      try {
-        const cleanBase64 = base64Data.replace(/^data:application\/pdf;base64,/, "");
-        const rawBinary = atob(cleanBase64);
-        
-        const loadingTask = pdfjsLib.getDocument({ data: rawBinary });
-        const pdf = await loadingTask.promise;
-
-        target.innerHTML = '';
-
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-          const page = await pdf.getPage(pageNum);
-          const viewport = page.getViewport({ scale: 4.0 });
-
-          const canvas = document.createElement('canvas');
-          canvas.className = 'pdf-page-canvas';
-
-          const context = canvas.getContext('2d');
-          
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
-
-          target.appendChild(canvas);
-
-          await page.render({
-            canvasContext: context,
-            viewport: viewport
-          }).promise;
-        }
-
-        panzoomInstance = Panzoom(target, {
-          maxScale: 20,
-          minScale: 0.5,
-          step: 0.35,
-          contain: false,
-          startScale: 1,
-          canvas: true,
-          setTransform: (elem, { scale, x, y }) => {
-            const rot = isLandscape ? 90 : 0;
-            elem.style.transform = `translate(${x}px, ${y}px) scale(${scale}) rotate(${rot}deg)`;
-          }
-        });
-
-        parentBox.addEventListener('pointerdown', panzoomInstance.handleDown);
-        parentBox.addEventListener('pointermove', panzoomInstance.handleMove);
-        parentBox.addEventListener('pointerup', panzoomInstance.handleUp);
-
-        parentBox.addEventListener('wheel', (e) => {
-          e.preventDefault();
-          panzoomInstance.zoomWithWheel(e);
-        }, { passive: false });
-
-      } catch (err) {
-        console.error('PDF Render Error:', err);
-        showErrorMessage("Failed to render document.");
-      }
-    }
-
-    function toggleLandscape() {
-      if (!panzoomInstance) return;
-      isLandscape = !isLandscape;
-      if (isLandscape) {
-        panzoomInstance.zoom(1.15, { animate: true });
-      } else {
-        panzoomInstance.reset({ animate: true });
-      }
-    }
-
-    function zoomIn() {
-      if (panzoomInstance) panzoomInstance.zoomIn({ animate: true });
-    }
-
-    function zoomOut() {
-      if (panzoomInstance) panzoomInstance.zoomOut({ animate: true });
-    }
-
-    function resetZoom() {
-      isLandscape = false;
-      if (panzoomInstance) panzoomInstance.reset({ animate: true });
+      document.getElementById('currentDateDisplay').innerText = `${dd}/${mm}/${yyyy}`;
+      document.getElementById('fileNameCard').innerHTML = `<span>📄 Daily Booking Document (${dd}/${mm}/${yyyy})</span> <span>➔</span>`;
     }
 
     document.addEventListener('contextmenu', (e) => e.preventDefault());
 
     window.addEventListener('DOMContentLoaded', () => {
       checkSession();
-      fetchTodayBookings();
+      setTodayDate();
     });
   </script>
 
