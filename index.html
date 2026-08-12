@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>SPTS - Portal</title>
+  <title>Operation Portal</title>
   <meta name="theme-color" content="#0f172a">
   <link rel="manifest" href="manifest.json">
 
@@ -101,17 +101,12 @@
       margin-bottom: 28px; 
     }
 
-    .brand-logo-icon { 
-      width: 60px; 
-      height: 60px; 
-      background: linear-gradient(135deg, #0078D4, #005A9E); 
-      border-radius: 16px; 
-      display: inline-flex; 
-      align-items: center; 
-      justify-content: center; 
-      color: white; 
-      font-size: 20px; 
-      font-weight: bold; 
+    .brand-logo-img { 
+      width: 70px; 
+      height: 70px; 
+      border-radius: 18px; 
+      object-fit: cover;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       margin-bottom: 12px; 
     }
 
@@ -258,8 +253,8 @@
     <!-- LOGIN SCREEN -->
     <div id="loginView" class="view-screen">
       <div class="brand-section">
-        <div class="brand-logo-icon">SPTS</div>
-        <div class="brand-title">SPTS Portal</div>
+        <img src="icon-512.png" alt="Portal Logo" class="brand-logo-img" onerror="this.style.display='none'" />
+        <div class="brand-title">Operation Portal</div>
         <div class="brand-subtitle">Sign in with your credentials</div>
       </div>
 
@@ -285,8 +280,8 @@
     <!-- MAIN HOME PAGE -->
     <div id="mainView" class="view-screen hidden">
       <div class="main-top-nav">
-        <div style="font-size: 18px; font-weight: 800; color: #0f172a;">SPTS PORTAL</div>
-        <img src="icon-192.png" alt="App Icon" class="top-right-app-icon" onerror="this.style.display='none'" />
+        <div style="font-size: 18px; font-weight: 800; color: #0f172a;">OPERATION PORTAL</div>
+        <img src="icon-512.png" alt="App Icon" class="top-right-app-icon" onerror="this.style.display='none'" />
       </div>
 
       <div class="user-card">
@@ -320,7 +315,7 @@
         </div>
       </div>
 
-      <!-- Module 3: Walkie Talkie Declaration (ACTIVATED) -->
+      <!-- Module 3: Walkie Talkie Declaration -->
       <div class="nav-card" onclick="navigateTo('modules/walkie-talkie-declaration.html')">
         <div class="nav-card-icon">📻</div>
         <div>
