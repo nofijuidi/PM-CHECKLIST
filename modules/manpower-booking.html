@@ -11,6 +11,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
 
+  <!-- High Definition PDF Engine & Touch Panzoom -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -34,8 +38,6 @@
       justify-content: center;
       align-items: center;
       color: #334155;
-
-      /* Device safe area padding */
       padding-top: env(safe-area-inset-top);
       padding-bottom: env(safe-area-inset-bottom);
     }
@@ -113,7 +115,7 @@
       justify-content: space-between;
     }
 
-    /* Document Header Display */
+    /* File Name Card */
     .file-list-container {
       display: flex;
       flex-direction: column;
@@ -122,19 +124,19 @@
     }
 
     .file-card {
-      background-color: #0078D4;
-      border: 1.5px solid #005a9e;
+      background-color: #f8fafc;
+      border: 1.5px solid #0078D4;
       border-radius: 8px;
       padding: 10px 12px;
       font-size: 13px;
       font-weight: 700;
-      color: #ffffff;
+      color: #0078D4;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
-    /* PDF Viewport Frame */
+    /* Interactive PDF Container */
     .pdf-card-container {
       flex: 1;
       width: 100%;
@@ -145,20 +147,102 @@
       display: flex;
       flex-direction: column;
       position: relative;
+      touch-action: none;
     }
 
-    .iframe-wrapper {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      overflow: hidden;
+    /* Bottom Zoom Controls Bar */
+    .zoom-toolbar {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      right: 8px;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.85);
+      padding: 6px 10px;
+      border-radius: 10px;
+      backdrop-filter: blur(4px);
     }
 
-    .gdrive-iframe {
+    .zoom-btn {
+      height: 40px;
+      background: #ffffff;
+      border: 1px solid #0f172a;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 18px;
+      color: #0f172a;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+      flex: 1;
+    }
+
+    .zoom-btn-icon {
+      min-width: 44px;
+      max-width: 50px;
+    }
+
+    .zoom-btn-text {
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      background-color: #fef3c7;
+      border-color: #d97706;
+      color: #0f172a;
+      flex: 1.5;
+    }
+
+    .zoom-btn:active {
+      background: #e2e8f0;
+      transform: scale(0.95);
+    }
+
+    /* Panzoom Canvas Wrapper */
+    .panzoom-wrapper {
       width: 100%;
       height: 100%;
-      border: none;
-      background-color: #525659;
+      cursor: grab;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+      transition: transform 0.25s cubic-bezier(0.2, 0, 0.2, 1);
+    }
+
+    .panzoom-wrapper:active {
+      cursor: grabbing;
+    }
+
+    canvas.pdf-page-canvas {
+      width: 94% !important;
+      height: auto !important;
+      margin: 8px 0;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+      border-radius: 4px;
+      background-color: #ffffff;
+      touch-action: none;
+    }
+
+    .pdf-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #ffffff;
+      font-size: 14px;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .hidden {
+      display: none !important;
     }
 
     .action-row {
@@ -201,19 +285,27 @@
         <span id="currentDateDisplay">--/--/----</span>
       </div>
 
-      <!-- Single File Indicator Card -->
+      <!-- File Name Banner Card -->
       <div id="fileListContainer" class="file-list-container">
-        <div class="file-card" id="fileNameCard"><span>📄 Daily Booking Document</span> <span>➔</span></div>
+        <div class="file-card" id="fileNameCard"><span>📄 Loading document...</span> <span>➔</span></div>
       </div>
 
-      <!-- Main Viewer Area -->
+      <!-- PDF Canvas Viewport -->
       <div class="pdf-card-container" id="pdfCardBox">
-        <div class="iframe-wrapper">
-          <iframe 
-            class="gdrive-iframe" 
-            src="https://drive.google.com/embeddedfolderview?id=13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b#grid">
-          </iframe>
+        
+        <!-- Interactive Controls Bar -->
+        <div id="zoomControls" class="zoom-toolbar hidden">
+          <button class="zoom-btn zoom-btn-icon" onclick="toggleLandscape()" title="Rotate 90° Landscape/Portrait">↻</button>
+          <button class="zoom-btn zoom-btn-icon" onclick="zoomIn()" title="Zoom In">＋</button>
+          <button class="zoom-btn zoom-btn-icon" onclick="zoomOut()" title="Zoom Out">－</button>
+          <button class="zoom-btn zoom-btn-text" onclick="resetZoom()" title="Reset View">RESET</button>
         </div>
+
+        <div id="pdfPlaceholder" class="pdf-placeholder">
+          Fetching daily booking document...
+        </div>
+
+        <div id="panzoomTarget" class="panzoom-wrapper hidden"></div>
       </div>
 
       <!-- Footer Action -->
@@ -225,6 +317,14 @@
   </div>
 
   <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    // Google Drive Folder ID synchronized from Power Automate
+    const GDRIVE_FOLDER_ID = "13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b";
+
+    let panzoomInstance = null;
+    let isLandscape = false;
+
     function checkSession() {
       const activeSession = sessionStorage.getItem('userSession');
       if (!activeSession) {
@@ -236,20 +336,154 @@
       window.location.href = '../index.html';
     }
 
-    function setTodayDate() {
+    function getDateParams() {
       const now = new Date();
       const dd = String(now.getDate()).padStart(2, '0');
       const mm = String(now.getMonth() + 1).padStart(2, '0');
       const yyyy = now.getFullYear();
-      document.getElementById('currentDateDisplay').innerText = `${dd}/${mm}/${yyyy}`;
-      document.getElementById('fileNameCard').innerHTML = `<span>📄 Daily Booking Document (${dd}/${mm}/${yyyy})</span> <span>➔</span>`;
+      return { dayNum: dd, monthNum: mm, formattedDisplay: `${dd}/${mm}/${yyyy}` };
+    }
+
+    async function fetchAndRenderGDrivePdf() {
+      const dateInfo = getDateParams();
+      document.getElementById('currentDateDisplay').innerText = dateInfo.formattedDisplay;
+
+      try {
+        // Query the Google Drive folder RSS/API endpoint to get the file stream URL directly
+        const folderApiUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://drive.google.com/embeddedfolderview?id=${GDRIVE_FOLDER_ID}#list`)}`;
+        
+        const response = await fetch(folderApiUrl);
+        const htmlText = await response.text();
+
+        // Extract the target PDF File ID from folder list HTML
+        const idMatches = htmlText.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+        const titleMatches = htmlText.match(/class="entry-title">([^<]+)/);
+
+        if (idMatches && idMatches[1]) {
+          const fileId = idMatches[1];
+          const fileName = titleMatches && titleMatches[1] ? titleMatches[1] : `BOOKING GROUP (${dateInfo.formattedDisplay}).pdf`;
+          
+          document.getElementById('fileNameCard').innerHTML = `<span>📄 ${fileName}</span> <span>➔</span>`;
+          
+          // Render HD Canvas directly via CORS Proxy stream
+          const directPdfUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://drive.google.com/uc?export=download&id=${fileId}`)}`;
+          renderPdfDocument(directPdfUrl);
+        } else {
+          // Fallback if folder HTML scraping is delayed: render through drive proxy stream
+          const fallbackPdfUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://drive.google.com/uc?export=download&id=${GDRIVE_FOLDER_ID}`)}`;
+          document.getElementById('fileNameCard').innerHTML = `<span>📄 BOOKING GROUP (${dateInfo.formattedDisplay}).pdf</span> <span>➔</span>`;
+          renderPdfDocument(fallbackPdfUrl);
+        }
+      } catch (err) {
+        console.error("GDrive Fetch Error:", err);
+        document.getElementById('pdfPlaceholder').innerHTML = `<div style="color: #ef4444; padding: 20px;">Failed to load PDF document.</div>`;
+      }
+    }
+
+    async function renderPdfDocument(pdfUrl) {
+      const target = document.getElementById('panzoomTarget');
+      const placeholder = document.getElementById('pdfPlaceholder');
+      const controls = document.getElementById('zoomControls');
+      const parentBox = document.getElementById('pdfCardBox');
+
+      placeholder.classList.add('hidden');
+      target.classList.remove('hidden');
+      controls.classList.remove('hidden');
+
+      target.innerHTML = '<div style="color: white; padding: 20px;">Rendering HD Document...</div>';
+
+      isLandscape = false;
+
+      if (panzoomInstance) {
+        panzoomInstance.destroy();
+        panzoomInstance = null;
+      }
+
+      try {
+        const loadingTask = pdfjsLib.getDocument(pdfUrl);
+        const pdf = await loadingTask.promise;
+
+        target.innerHTML = '';
+
+        // Render at 4.0 Scale for crystal-clear sharp text when zoomed in
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const viewport = page.getViewport({ scale: 4.0 });
+
+          const canvas = document.createElement('canvas');
+          canvas.className = 'pdf-page-canvas';
+
+          const context = canvas.getContext('2d');
+          
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+
+          target.appendChild(canvas);
+
+          await page.render({
+            canvasContext: context,
+            viewport: viewport
+          }).promise;
+        }
+
+        // Attach Panzoom controls strictly to the rendered canvas container
+        panzoomInstance = Panzoom(target, {
+          maxScale: 20,
+          minScale: 0.5,
+          step: 0.35,
+          contain: false,
+          startScale: 1,
+          canvas: true,
+          setTransform: (elem, { scale, x, y }) => {
+            const rot = isLandscape ? 90 : 0;
+            elem.style.transform = `translate(${x}px, ${y}px) scale(${scale}) rotate(${rot}deg)`;
+          }
+        });
+
+        parentBox.addEventListener('pointerdown', panzoomInstance.handleDown);
+        parentBox.addEventListener('pointermove', panzoomInstance.handleMove);
+        parentBox.addEventListener('pointerup', panzoomInstance.handleUp);
+
+        parentBox.addEventListener('wheel', (e) => {
+          e.preventDefault();
+          panzoomInstance.zoomWithWheel(e);
+        }, { passive: false });
+
+      } catch (err) {
+        console.error('PDF Render Error:', err);
+        placeholder.innerHTML = `<div style="color: #ef4444; padding: 20px;">Error rendering HD canvas.</div>`;
+        placeholder.classList.remove('hidden');
+      }
+    }
+
+    function toggleLandscape() {
+      if (!panzoomInstance) return;
+      isLandscape = !isLandscape;
+      if (isLandscape) {
+        panzoomInstance.zoom(1.15, { animate: true });
+      } else {
+        panzoomInstance.reset({ animate: true });
+      }
+    }
+
+    function zoomIn() {
+      if (panzoomInstance) panzoomInstance.zoomIn({ animate: true });
+    }
+
+    function zoomOut() {
+      if (panzoomInstance) panzoomInstance.zoomOut({ animate: true });
+    }
+
+    function resetZoom() {
+      isLandscape = false;
+      if (panzoomInstance) panzoomInstance.reset({ animate: true });
     }
 
     document.addEventListener('contextmenu', (e) => e.preventDefault());
 
     window.addEventListener('DOMContentLoaded', () => {
       checkSession();
-      setTodayDate();
+      fetchAndRenderGDrivePdf();
     });
   </script>
 
