@@ -264,6 +264,14 @@
       justify-content: center;
       cursor: pointer;
     }
+
+    /* Direct Fast Iframe Stream */
+    .fast-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: white;
+    }
   </style>
 </head>
 <body>
@@ -291,7 +299,7 @@
       <!-- PDF Canvas Viewport -->
       <div class="pdf-card-container" id="pdfCardBox">
         
-        <!-- Controls Bar ALWAYS THERE -->
+        <!-- Controls Bar ALWAYS PERMANENT -->
         <div id="zoomControls" class="zoom-toolbar">
           <button class="zoom-btn zoom-btn-icon" onclick="toggleLandscape()" title="Rotate 90° Landscape/Portrait">↻</button>
           <button class="zoom-btn zoom-btn-icon" onclick="zoomIn()" title="Zoom In">＋</button>
@@ -299,11 +307,18 @@
           <button class="zoom-btn zoom-btn-text" onclick="resetZoom()" title="Reset View">RESET</button>
         </div>
 
-        <div id="pdfPlaceholder" class="pdf-placeholder">
-          Loading HD booking document...
+        <div id="pdfPlaceholder" class="pdf-placeholder hidden">
+          Loading booking document...
         </div>
 
-        <div id="panzoomTarget" class="panzoom-wrapper hidden"></div>
+        <div id="panzoomTarget" class="panzoom-wrapper">
+          <!-- Fast, direct Google Drive Preview Feed -->
+          <iframe 
+            id="gdriveFrame"
+            class="fast-iframe" 
+            src="https://drive.google.com/embeddedfolderview?id=13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b#list">
+          </iframe>
+        </div>
       </div>
 
       <!-- Footer Action -->
@@ -315,8 +330,6 @@
   </div>
 
   <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
     const GDRIVE_FOLDER_ID = "13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b";
 
     let panzoomInstance = null;
@@ -341,109 +354,36 @@
       return { formattedDisplay: `${dd}/${mm}/${yyyy}` };
     }
 
-    async function fetchAndRenderPdf() {
+    function initFastViewer() {
       const dateInfo = getDateParams();
       document.getElementById('currentDateDisplay').innerText = dateInfo.formattedDisplay;
+      document.getElementById('fileNameCard').innerHTML = `<span>📄 Booking Group (${dateInfo.formattedDisplay}).pdf</span> <span>➔</span>`;
 
-      try {
-        // Query folder RSS/Atom feed to get exact file stream URL
-        const rssUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://drive.google.com/embeddedfolderview?id=${GDRIVE_FOLDER_ID}#list`)}`;
-        const response = await fetch(rssUrl);
-        const textData = await response.text();
-
-        const match = textData.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-        const nameMatch = textData.match(/class="entry-title">([^<]+)/);
-
-        if (match && match[1]) {
-          const fileId = match[1];
-          const fileName = nameMatch && nameMatch[1] ? nameMatch[1] : `BOOKING GROUP (${dateInfo.formattedDisplay}).pdf`;
-          
-          document.getElementById('fileNameCard').innerHTML = `<span>📄 ${fileName}</span> <span>➔</span>`;
-          
-          const fileDownloadUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://drive.google.com/uc?export=download&id=${fileId}`)}`;
-          renderPdfCanvas(fileDownloadUrl);
-        } else {
-          showError("No booking document found in Drive.");
-        }
-      } catch (err) {
-        showError("Unable to reach Google Drive server.");
-      }
-    }
-
-    function showError(msg) {
-      const placeholder = document.getElementById('pdfPlaceholder');
-      placeholder.innerHTML = `<div style="color: #f87171; padding: 20px;">${msg}</div>`;
-      placeholder.classList.remove('hidden');
-    }
-
-    async function renderPdfCanvas(pdfUrl) {
       const target = document.getElementById('panzoomTarget');
-      const placeholder = document.getElementById('pdfPlaceholder');
       const parentBox = document.getElementById('pdfCardBox');
 
-      placeholder.classList.add('hidden');
-      target.classList.remove('hidden');
-      target.innerHTML = '';
-
-      isLandscape = false;
-
-      if (panzoomInstance) {
-        panzoomInstance.destroy();
-        panzoomInstance = null;
-      }
-
-      try {
-        const loadingTask = pdfjsLib.getDocument(pdfUrl);
-        const pdf = await loadingTask.promise;
-
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-          const page = await pdf.getPage(pageNum);
-          // High DPI scale for extreme text clarity
-          const viewport = page.getViewport({ scale: 4.0 });
-
-          const canvas = document.createElement('canvas');
-          canvas.className = 'pdf-page-canvas';
-
-          const context = canvas.getContext('2d');
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
-
-          target.appendChild(canvas);
-
-          await page.render({
-            canvasContext: context,
-            viewport: viewport
-          }).promise;
+      // Initialize Panzoom on the target wrapper for smooth touch gestures
+      panzoomInstance = Panzoom(target, {
+        maxScale: 20,
+        minScale: 0.5,
+        step: 0.35,
+        contain: false,
+        startScale: 1,
+        setTransform: (elem, { scale, x, y }) => {
+          const rot = isLandscape ? 90 : 0;
+          elem.style.transform = `translate(${x}px, ${y}px) scale(${scale}) rotate(${rot}deg)`;
         }
+      });
 
-        // Initialize Panzoom over the rendered canvas
-        panzoomInstance = Panzoom(target, {
-          maxScale: 20,
-          minScale: 0.5,
-          step: 0.35,
-          contain: false,
-          startScale: 1,
-          canvas: true,
-          setTransform: (elem, { scale, x, y }) => {
-            const rot = isLandscape ? 90 : 0;
-            elem.style.transform = `translate(${x}px, ${y}px) scale(${scale}) rotate(${rot}deg)`;
-          }
-        });
+      // Bind touch events to parent box
+      parentBox.addEventListener('pointerdown', panzoomInstance.handleDown);
+      parentBox.addEventListener('pointermove', panzoomInstance.handleMove);
+      parentBox.addEventListener('pointerup', panzoomInstance.handleUp);
 
-        // Enable touch and finger gestures
-        parentBox.addEventListener('pointerdown', panzoomInstance.handleDown);
-        parentBox.addEventListener('pointermove', panzoomInstance.handleMove);
-        parentBox.addEventListener('pointerup', panzoomInstance.handleUp);
-
-        parentBox.addEventListener('wheel', (e) => {
-          e.preventDefault();
-          panzoomInstance.zoomWithWheel(e);
-        }, { passive: false });
-
-      } catch (err) {
-        console.error('PDF Render Error:', err);
-        showError("Failed to render document.");
-      }
+      parentBox.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        panzoomInstance.zoomWithWheel(e);
+      }, { passive: false });
     }
 
     function toggleLandscape() {
@@ -473,7 +413,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       checkSession();
-      fetchAndRenderPdf();
+      initFastViewer();
     });
   </script>
 
