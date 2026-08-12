@@ -11,9 +11,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
 
-  <!-- PDF.js Engine for cross-platform rendering -->
+  <!-- High Definition PDF Engine & Touch Panzoom -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <!-- Panzoom Library for touch zoom & dragging -->
   <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
 
   <style>
@@ -24,9 +23,6 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       -webkit-touch-callout: none !important;
       -webkit-user-select: none !important;
-      -khtml-user-select: none !important;
-      -moz-user-select: none !important;
-      -ms-user-select: none !important;
       user-select: none !important;
     }
 
@@ -39,8 +35,6 @@
       justify-content: center;
       align-items: center;
       color: #334155;
-
-      /* Handle device safe area notches / status bars */
       padding-top: env(safe-area-inset-top);
       padding-bottom: env(safe-area-inset-bottom);
     }
@@ -118,7 +112,7 @@
       justify-content: space-between;
     }
 
-    /* File Selection Cards */
+    /* File Name Banner */
     .file-list-container {
       display: flex;
       flex-direction: column;
@@ -288,7 +282,7 @@
         <span id="currentDateDisplay">--/--/----</span>
       </div>
 
-      <!-- File Card Display -->
+      <!-- File Name Card -->
       <div id="fileListContainer" class="file-list-container">
         <div class="file-card" id="fileNameCard"><span>📄 Booking Document</span> <span>➔</span></div>
       </div>
@@ -296,7 +290,7 @@
       <!-- PDF Canvas Viewport -->
       <div class="pdf-card-container" id="pdfCardBox">
         
-        <!-- Permanent Control Toolbar -->
+        <!-- Permanent Controls Bar -->
         <div id="zoomControls" class="zoom-toolbar">
           <button class="zoom-btn zoom-btn-icon" onclick="toggleLandscape()" title="Rotate 90° Landscape/Portrait">↻</button>
           <button class="zoom-btn zoom-btn-icon" onclick="zoomIn()" title="Zoom In">＋</button>
@@ -305,7 +299,7 @@
         </div>
 
         <div id="pdfPlaceholder" class="pdf-placeholder">
-          Fetching daily document...
+          Fetching daily booking document...
         </div>
 
         <div id="panzoomTarget" class="panzoom-wrapper hidden"></div>
@@ -322,8 +316,8 @@
   <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-    // Google Drive Folder ID synchronized from Power Automate
-    const GDRIVE_FOLDER_ID = "13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b";
+    // DIRECT APPS SCRIPT API URL (NO CORS PROXY NEEDED)
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxP5hpOLd4u9PdCTyaOvKaM6zrqdJFuuwRFpoIAa-oULv50SFGDnFc6zsr4Qqsu6jmP/exec";
 
     let panzoomInstance = null;
     let isLandscape = false;
@@ -352,28 +346,17 @@
       document.getElementById('currentDateDisplay').innerText = dateInfo.formattedDisplay;
 
       try {
-        // Query Google Drive folder to stream the latest PDF file directly into PDF.js canvas
-        const folderStreamUrl = `https://drive.google.com/embeddedfolderview?id=${GDRIVE_FOLDER_ID}#list`;
-        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(folderStreamUrl)}`);
-        
+        const response = await fetch(APPS_SCRIPT_URL);
         if (response.ok) {
-          const htmlText = await response.text();
-          const fileMatch = htmlText.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-          const nameMatch = htmlText.match(/class="entry-title">([^<]+)/);
-
-          if (fileMatch && fileMatch[1]) {
-            const fileId = fileMatch[1];
-            const fileName = nameMatch && nameMatch[1] ? nameMatch[1] : `BOOKING GROUP (${dateInfo.formattedDisplay}).pdf`;
-            
-            document.getElementById('fileNameCard').innerHTML = `<span>📄 ${fileName}</span> <span>➔</span>`;
-            
-            const pdfDownloadUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://drive.google.com/uc?export=download&id=${fileId}`)}`;
-            renderPdfWithUrl(pdfDownloadUrl);
+          const result = await response.json();
+          if (result.pdfBase64) {
+            document.getElementById('fileNameCard').innerHTML = `<span>📄 ${result.fileName || 'Booking Document'}</span> <span>➔</span>`;
+            renderPdfWithPanzoom(result.pdfBase64);
           } else {
-            showError(`No booking document found in Drive folder for ${dateInfo.formattedDisplay}.`);
+            showError("No booking document found in Drive.");
           }
         } else {
-          showError("Unable to access booking folder stream.");
+          showError("Unable to connect to Drive API bridge.");
         }
       } catch (err) {
         showError("Network connection failed.");
@@ -382,11 +365,11 @@
 
     function showError(msg) {
       const placeholder = document.getElementById('pdfPlaceholder');
-      placeholder.innerHTML = `<div style="color: #ef4444; padding: 20px;">${msg}</div>`;
+      placeholder.innerHTML = `<div style="color: #f87171; padding: 20px;">${msg}</div>`;
       placeholder.classList.remove('hidden');
     }
 
-    async function renderPdfWithUrl(pdfUrl) {
+    async function renderPdfWithPanzoom(base64Data) {
       const target = document.getElementById('panzoomTarget');
       const placeholder = document.getElementById('pdfPlaceholder');
       const parentBox = document.getElementById('pdfCardBox');
@@ -394,7 +377,7 @@
       placeholder.classList.add('hidden');
       target.classList.remove('hidden');
 
-      target.innerHTML = '<div style="color: white; padding: 20px;">Loading HD document...</div>';
+      target.innerHTML = '<div style="color: white; padding: 20px;">Rendering HD document...</div>';
 
       isLandscape = false;
 
@@ -404,15 +387,17 @@
       }
 
       try {
-        const loadingTask = pdfjsLib.getDocument(pdfUrl);
+        const cleanBase64 = base64Data.replace(/^data:application\/pdf;base64,/, "");
+        const rawBinary = atob(cleanBase64);
+        
+        const loadingTask = pdfjsLib.getDocument({ data: rawBinary });
         const pdf = await loadingTask.promise;
 
         target.innerHTML = '';
 
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum);
-          // High Scale 4.0 for sharp HD text
-          const viewport = page.getViewport({ scale: 4.0 });
+          const viewport = page.getViewport({ scale: 4.0 }); // 4.0 Scale for Crisp HD Text
 
           const canvas = document.createElement('canvas');
           canvas.className = 'pdf-page-canvas';
@@ -460,9 +445,7 @@
 
     function toggleLandscape() {
       if (!panzoomInstance) return;
-      
       isLandscape = !isLandscape;
-      
       if (isLandscape) {
         panzoomInstance.zoom(1.15, { animate: true });
       } else {
