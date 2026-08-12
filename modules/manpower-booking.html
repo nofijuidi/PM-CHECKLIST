@@ -316,7 +316,7 @@
   <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-    // DIRECT GOOGLE APPS SCRIPT WEB APP ENDPOINT
+    // DEPLOYED GOOGLE APPS SCRIPT WEB APP ENDPOINT
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxP5hpOLd4u9PdCTyaOvKaM6zrqdJFuuwRFpoIAa-oULv50SFGDnFc6zsr4Qqsu6jmP/exec";
 
     let panzoomInstance = null;
@@ -346,10 +346,10 @@
       document.getElementById('currentDateDisplay').innerText = dateInfo.formattedDisplay;
 
       try {
-        // Follow redirects explicitly for Apps Script compatibility
         const response = await fetch(APPS_SCRIPT_URL, {
           method: 'GET',
-          redirect: 'follow'
+          redirect: 'follow',
+          cache: 'no-cache'
         });
 
         if (response.ok) {
@@ -357,15 +357,17 @@
           if (result.pdfBase64) {
             document.getElementById('fileNameCard').innerHTML = `<span>📄 ${result.fileName || 'Booking Document'}</span> <span>➔</span>`;
             renderPdfWithPanzoom(result.pdfBase64);
+          } else if (result.error) {
+            showError(`Drive Error: ${result.error}`);
           } else {
             showError("No booking document found in Drive.");
           }
         } else {
-          showError(`HTTP Error (${response.status}): Check Apps Script Deployment Settings.`);
+          showError(`HTTP Error (${response.status}): Re-deploy Web App as 'Anyone'.`);
         }
       } catch (err) {
         console.error("Fetch Exception:", err);
-        showError("Network connection failed. Ensure Apps Script access is set to 'Anyone'.");
+        showError("Network connection failed. Re-deploy Apps Script as Version 3 + 'Anyone'.");
       }
     }
 
@@ -393,7 +395,7 @@
       }
 
       try {
-        const cleanBase64 = base64Data.replace(/^data:application\/pdf;base64,/, "");
+        const cleanBase64 = base64Data.replace(/^data:application\/pdf;base64,/, "").replace(/\s/g, "");
         const rawBinary = atob(cleanBase64);
         
         const loadingTask = pdfjsLib.getDocument({ data: rawBinary });
