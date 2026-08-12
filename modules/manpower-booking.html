@@ -132,21 +132,21 @@
       justify-content: space-between;
     }
 
-    /* PDF Container - DARK GREY BACKGROUND */
+    /* PDF Viewport Box - Dark Grey Background */
     .pdf-card-container {
       flex: 1;
       width: 100%;
       border: 1.5px solid #0078D4;
       border-radius: 12px;
       overflow: hidden;
-      background-color: #525659; /* Dark Grey Background */
+      background-color: #525659;
       display: flex;
       flex-direction: column;
       position: relative;
       touch-action: none;
     }
 
-    /* Permanent Zoom Controls Toolbar */
+    /* Permanent Zoom Toolbar */
     .zoom-toolbar {
       position: absolute;
       bottom: 8px;
@@ -205,10 +205,9 @@
       height: 100%;
       cursor: grab;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      background-color: #525659; /* Dark Grey Background */
+      background-color: #525659;
       touch-action: none;
     }
 
@@ -216,12 +215,24 @@
       cursor: grabbing;
     }
 
-    /* Direct Embedded Viewer Frame */
-    .pdf-viewer-frame {
+    /* Direct Full-Fit Image Display */
+    .document-image {
+      max-width: 98%;
+      max-height: 98%;
+      object-fit: contain;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      border-radius: 4px;
+      background-color: #ffffff;
+      touch-action: none;
+    }
+
+    /* Direct Embed Frame fallback without pointer event blocks */
+    .document-frame {
       width: 100%;
       height: 100%;
       border: none;
       background-color: #525659;
+      pointer-events: none; /* Passes touch events to Panzoom */
     }
 
     .action-row {
@@ -269,10 +280,10 @@
         <div class="file-card" id="fileNameCard"><span>📄 Booking Document</span> <span>➔</span></div>
       </div>
 
-      <!-- PDF Card Box (Dark Grey Background) -->
+      <!-- PDF Card Box (Dark Grey) -->
       <div class="pdf-card-container" id="pdfCardBox">
         
-        <!-- Controls Toolbar (Always Visible) -->
+        <!-- Permanent Controls Bar -->
         <div id="zoomControls" class="zoom-toolbar">
           <button class="zoom-btn zoom-btn-icon" onclick="toggleLandscape()" title="Rotate 90°">↻</button>
           <button class="zoom-btn zoom-btn-icon" onclick="zoomIn()" title="Zoom In">＋</button>
@@ -281,10 +292,9 @@
         </div>
 
         <div id="panzoomTarget" class="panzoom-wrapper">
-          <!-- Embeds Google Drive folder stream directly in full view without file lists -->
           <iframe 
             id="pdfViewerFrame"
-            class="pdf-viewer-frame" 
+            class="document-frame" 
             src="https://drive.google.com/embeddedfolderview?id=13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b#grid">
           </iframe>
         </div>
@@ -300,8 +310,6 @@
   </div>
 
   <script>
-    const GDRIVE_FOLDER_ID = "13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b";
-
     let panzoomInstance = null;
     let isLandscape = false;
 
@@ -324,7 +332,7 @@
       return { formattedDisplay: `${dd}/${mm}/${yyyy}` };
     }
 
-    function initViewer() {
+    function initPanzoomViewer() {
       const dateInfo = getDateParams();
       document.getElementById('currentDateDisplay').innerText = dateInfo.formattedDisplay;
       document.getElementById('fileNameCard').innerHTML = `<span>📄 Booking Group (${dateInfo.formattedDisplay}).pdf</span> <span>➔</span>`;
@@ -332,7 +340,7 @@
       const target = document.getElementById('panzoomTarget');
       const parentBox = document.getElementById('pdfCardBox');
 
-      // Initialize Panzoom on container
+      // Attach Panzoom to target wrapper element
       panzoomInstance = Panzoom(target, {
         maxScale: 20,
         minScale: 0.5,
@@ -345,6 +353,7 @@
         }
       });
 
+      // Bind touch and drag events to parent box so frame doesn't block touch
       parentBox.addEventListener('pointerdown', panzoomInstance.handleDown);
       parentBox.addEventListener('pointermove', panzoomInstance.handleMove);
       parentBox.addEventListener('pointerup', panzoomInstance.handleUp);
@@ -382,7 +391,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       checkSession();
-      initViewer();
+      initPanzoomViewer();
     });
   </script>
 
