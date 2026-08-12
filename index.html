@@ -311,7 +311,7 @@
         </div>
       </div>
 
-      <!-- Module 2: Manpower Booking (ACTIVATED) -->
+      <!-- Module 2: Manpower Booking -->
       <div class="nav-card" onclick="navigateTo('modules/manpower-booking.html')">
         <div class="nav-card-icon">👷</div>
         <div>
@@ -320,12 +320,12 @@
         </div>
       </div>
 
-      <!-- Module 3: Walkie Talkie Declaration (Placeholder) -->
-      <div class="nav-card" style="opacity: 0.6; cursor: not-allowed;">
+      <!-- Module 3: Walkie Talkie Declaration (ACTIVATED) -->
+      <div class="nav-card" onclick="navigateTo('modules/walkie-talkie-declaration.html')">
         <div class="nav-card-icon">📻</div>
         <div>
           <div class="nav-card-title">Walkie Talkie Declaration</div>
-          <div class="nav-card-sub">Coming Soon</div>
+          <div class="nav-card-sub">Submit daily walkie talkie status</div>
         </div>
       </div>
 
@@ -363,7 +363,7 @@
 
         if (response.ok && (result.status === 'success' || result.Title || result.NAME || result.ID || result.COMPANY_ID || result.name)) {
           currentUser = result;
-          sessionStorage.setItem('userSession', JSON.stringify(result));
+          sessionStorage.getItem('userSession') || sessionStorage.setItem('userSession', JSON.stringify(result));
           showHomeView();
         } else {
           showError(result.message || 'Invalid Username or Password.');
