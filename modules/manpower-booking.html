@@ -118,9 +118,25 @@
       justify-content: space-between;
     }
 
-    /* File Selection Cards - Hidden so file is viewed immediately */
+    /* File Name Header Display (As seen in yesterday's screenshot) */
     .file-list-container {
-      display: none !important;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .file-card {
+      background-color: #0078D4;
+      border: 1.5px solid #005a9e;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     /* PDF Interactive Container */
@@ -137,7 +153,7 @@
       touch-action: none;
     }
 
-    /* Bottom Control Bar Layout */
+    /* Bottom Zoom Toolbar Layout (Identical to yesterday's screen) */
     .zoom-toolbar {
       position: absolute;
       bottom: 8px;
@@ -253,22 +269,6 @@
       justify-content: center;
       cursor: pointer;
     }
-
-    /* Embedded Drive Frame setup - hides Google top toolbar */
-    .iframe-container {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .gdrive-iframe {
-      width: 100%;
-      height: calc(100% + 56px);
-      margin-top: -56px;
-      border: none;
-      pointer-events: auto;
-    }
   </style>
 </head>
 <body>
@@ -288,13 +288,16 @@
         <span id="currentDateDisplay">--/--/----</span>
       </div>
 
-      <!-- Hidden Container for execution compatibility -->
-      <div id="fileListContainer" class="file-list-container"></div>
+      <!-- File Name Card -->
+      <div id="fileListContainer" class="file-list-container">
+        <div class="file-card" id="fileNameCard">📄 Loading document... <span>➔</span></div>
+      </div>
 
       <!-- PDF Viewport -->
       <div class="pdf-card-container" id="pdfCardBox">
         
-        <div id="zoomControls" class="zoom-toolbar hidden">
+        <!-- Controls Bar -->
+        <div id="zoomControls" class="zoom-toolbar">
           <button class="zoom-btn zoom-btn-icon" onclick="toggleLandscape()" title="Rotate 90° Landscape/Portrait">↻</button>
           <button class="zoom-btn zoom-btn-icon" onclick="zoomIn()" title="Zoom In">＋</button>
           <button class="zoom-btn zoom-btn-icon" onclick="zoomOut()" title="Zoom Out">－</button>
@@ -320,9 +323,6 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
     const GET_BOOKING_FILES_FLOW_URL = "https://default227dccee4218411f91e74dabddf0f5.f8.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/0ec41aab7114455687c2ce778f4c9459/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yzAu6ONVD7_Rm01FBxTuj4QLPcJZ4-9QD-aCXAPhnh0";
-    
-    // Target Google Drive Folder ID
-    const GDRIVE_FOLDER_ID = "13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b";
 
     let panzoomInstance = null;
     let isLandscape = false;
@@ -361,59 +361,45 @@
           const result = await response.json();
           processAndDisplayFile(result);
         } else {
-          loadDirectDriveDocument();
+          showErrorMessage(`Server connection error (${response.status})`);
         }
       } catch (err) {
-        loadDirectDriveDocument();
+        showErrorMessage("Network connection failed.");
       }
     }
 
     function processAndDisplayFile(result) {
       const files = Array.isArray(result) ? result : [result];
 
-      if (files && files.length > 0 && files[0] && files[0].pdfBase64) {
-        renderPdfWithPanzoom(files[0].pdfBase64);
+      if (files && files.length > 0 && files[0]) {
+        const file = files[0];
+        const fileName = file.fileName || file.Name || file.DisplayName || 'BOOKING GROUP.pdf';
+        
+        document.getElementById('fileNameCard').innerHTML = `<span>📄 ${fileName}</span> <span>➔</span>`;
+
+        if (file.pdfBase64) {
+          renderPdfWithPanzoom(file.pdfBase64);
+        } else {
+          showErrorMessage("No binary data found for file.");
+        }
       } else {
-        loadDirectDriveDocument();
+        showErrorMessage("No booking document found for today.");
       }
     }
 
-    function loadDirectDriveDocument() {
-      // Direct file preview stream inside iframe (bypasses folder selection list)
-      const embedUrl = `https://drive.google.com/embeddedfolderview?id=${GDRIVE_FOLDER_ID}#grid`;
-      renderGDriveIframe(embedUrl);
-    }
-
-    function renderGDriveIframe(embedUrl) {
-      const target = document.getElementById('panzoomTarget');
+    function showErrorMessage(msg) {
       const placeholder = document.getElementById('pdfPlaceholder');
-      const controls = document.getElementById('zoomControls');
-
-      placeholder.classList.add('hidden');
-      controls.classList.add('hidden');
-      target.classList.remove('hidden');
-
-      if (panzoomInstance) {
-        panzoomInstance.destroy();
-        panzoomInstance = null;
-      }
-
-      target.innerHTML = `
-        <div class="iframe-container">
-          <iframe class="gdrive-iframe" src="${embedUrl}"></iframe>
-        </div>
-      `;
+      placeholder.innerHTML = `<div style="color: #f87171; padding: 20px;">${msg}</div>`;
+      placeholder.classList.remove('hidden');
     }
 
     async function renderPdfWithPanzoom(base64Data) {
       const target = document.getElementById('panzoomTarget');
       const placeholder = document.getElementById('pdfPlaceholder');
-      const controls = document.getElementById('zoomControls');
       const parentBox = document.getElementById('pdfCardBox');
 
       placeholder.classList.add('hidden');
       target.classList.remove('hidden');
-      controls.classList.remove('hidden');
 
       target.innerHTML = '<div style="color: white; padding: 20px;">Loading HD document...</div>';
 
@@ -477,7 +463,7 @@
 
       } catch (err) {
         console.error('PDF Render Error:', err);
-        loadDirectDriveDocument();
+        showErrorMessage("Failed to render document.");
       }
     }
 
