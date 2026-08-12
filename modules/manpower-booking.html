@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
 
-  <!-- PDF.js Engine & Panzoom for Touch/Gesture Support -->
+  <!-- High Definition PDF Engine & Touch Panzoom -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
 
@@ -112,7 +112,7 @@
       justify-content: space-between;
     }
 
-    /* File Name Banner */
+    /* File Name Card */
     .file-list-container {
       display: flex;
       flex-direction: column;
@@ -133,7 +133,7 @@
       justify-content: space-between;
     }
 
-    /* Interactive Canvas Box */
+    /* PDF Container Card */
     .pdf-card-container {
       flex: 1;
       width: 100%;
@@ -147,7 +147,7 @@
       touch-action: none;
     }
 
-    /* Permanent Zoom Toolbar */
+    /* Permanent Zoom Controls Toolbar */
     .zoom-toolbar {
       position: absolute;
       bottom: 8px;
@@ -217,9 +217,11 @@
     }
 
     canvas.pdf-page-canvas {
-      width: 96% !important;
+      width: 98% !important;
+      max-height: 98% !important;
       height: auto !important;
-      margin: 8px 0;
+      object-fit: contain;
+      margin: auto;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
       border-radius: 4px;
       background-color: #ffffff;
@@ -286,10 +288,10 @@
         <div class="file-card" id="fileNameCard"><span>📄 Booking Document</span> <span>➔</span></div>
       </div>
 
-      <!-- PDF Canvas Area -->
+      <!-- PDF Canvas Viewport -->
       <div class="pdf-card-container" id="pdfCardBox">
         
-        <!-- Permanent Controls -->
+        <!-- Controls Bar ALWAYS THERE -->
         <div id="zoomControls" class="zoom-toolbar">
           <button class="zoom-btn zoom-btn-icon" onclick="toggleLandscape()" title="Rotate 90° Landscape/Portrait">↻</button>
           <button class="zoom-btn zoom-btn-icon" onclick="zoomIn()" title="Zoom In">＋</button>
@@ -315,6 +317,8 @@
   <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
+    const GDRIVE_FOLDER_ID = "13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b";
+
     let panzoomInstance = null;
     let isLandscape = false;
 
@@ -334,19 +338,54 @@
       const dd = String(now.getDate()).padStart(2, '0');
       const mm = String(now.getMonth() + 1).padStart(2, '0');
       const yyyy = now.getFullYear();
-      return { dayNum: dd, monthNum: mm, formattedDisplay: `${dd}/${mm}/${yyyy}` };
+      return { formattedDisplay: `${dd}/${mm}/${yyyy}` };
     }
 
-    async function loadPdfFromData(base64Data, fileName) {
+    async function fetchAndRenderPdf() {
+      const dateInfo = getDateParams();
+      document.getElementById('currentDateDisplay').innerText = dateInfo.formattedDisplay;
+
+      try {
+        // Query folder RSS/Atom feed to get exact file stream URL
+        const rssUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://drive.google.com/embeddedfolderview?id=${GDRIVE_FOLDER_ID}#list`)}`;
+        const response = await fetch(rssUrl);
+        const textData = await response.text();
+
+        const match = textData.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+        const nameMatch = textData.match(/class="entry-title">([^<]+)/);
+
+        if (match && match[1]) {
+          const fileId = match[1];
+          const fileName = nameMatch && nameMatch[1] ? nameMatch[1] : `BOOKING GROUP (${dateInfo.formattedDisplay}).pdf`;
+          
+          document.getElementById('fileNameCard').innerHTML = `<span>📄 ${fileName}</span> <span>➔</span>`;
+          
+          const fileDownloadUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://drive.google.com/uc?export=download&id=${fileId}`)}`;
+          renderPdfCanvas(fileDownloadUrl);
+        } else {
+          showError("No booking document found in Drive.");
+        }
+      } catch (err) {
+        showError("Unable to reach Google Drive server.");
+      }
+    }
+
+    function showError(msg) {
+      const placeholder = document.getElementById('pdfPlaceholder');
+      placeholder.innerHTML = `<div style="color: #f87171; padding: 20px;">${msg}</div>`;
+      placeholder.classList.remove('hidden');
+    }
+
+    async function renderPdfCanvas(pdfUrl) {
       const target = document.getElementById('panzoomTarget');
       const placeholder = document.getElementById('pdfPlaceholder');
       const parentBox = document.getElementById('pdfCardBox');
 
-      document.getElementById('fileNameCard').innerHTML = `<span>📄 ${fileName}</span> <span>➔</span>`;
-
       placeholder.classList.add('hidden');
       target.classList.remove('hidden');
       target.innerHTML = '';
+
+      isLandscape = false;
 
       if (panzoomInstance) {
         panzoomInstance.destroy();
@@ -354,21 +393,18 @@
       }
 
       try {
-        const cleanBase64 = base64Data.replace(/^data:application\/pdf;base64,/, "");
-        const rawBinary = atob(cleanBase64);
-        
-        const loadingTask = pdfjsLib.getDocument({ data: rawBinary });
+        const loadingTask = pdfjsLib.getDocument(pdfUrl);
         const pdf = await loadingTask.promise;
 
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum);
-          // Scale 4.0 renders extreme HD crispness
+          // High DPI scale for extreme text clarity
           const viewport = page.getViewport({ scale: 4.0 });
 
           const canvas = document.createElement('canvas');
           canvas.className = 'pdf-page-canvas';
+
           const context = canvas.getContext('2d');
-          
           canvas.height = viewport.height;
           canvas.width = viewport.width;
 
@@ -380,7 +416,7 @@
           }).promise;
         }
 
-        // Initialize Panzoom on parent container so touch events capture properly
+        // Initialize Panzoom over the rendered canvas
         panzoomInstance = Panzoom(target, {
           maxScale: 20,
           minScale: 0.5,
@@ -394,7 +430,7 @@
           }
         });
 
-        // Touch event bindings
+        // Enable touch and finger gestures
         parentBox.addEventListener('pointerdown', panzoomInstance.handleDown);
         parentBox.addEventListener('pointermove', panzoomInstance.handleMove);
         parentBox.addEventListener('pointerup', panzoomInstance.handleUp);
@@ -405,9 +441,8 @@
         }, { passive: false });
 
       } catch (err) {
-        console.error('Render Error:', err);
-        placeholder.innerHTML = `<div style="color: #ef4444; padding: 20px;">Failed to render HD document.</div>`;
-        placeholder.classList.remove('hidden');
+        console.error('PDF Render Error:', err);
+        showError("Failed to render document.");
       }
     }
 
@@ -438,8 +473,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       checkSession();
-      const dateInfo = getDateParams();
-      document.getElementById('currentDateDisplay').innerText = dateInfo.formattedDisplay;
+      fetchAndRenderPdf();
     });
   </script>
 
