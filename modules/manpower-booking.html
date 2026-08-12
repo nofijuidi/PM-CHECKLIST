@@ -11,8 +11,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
 
-  <!-- High Definition PDF Engine & Touch Panzoom -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- Panzoom Library for Touch Zoom & Dragging -->
   <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
 
   <style>
@@ -133,14 +132,14 @@
       justify-content: space-between;
     }
 
-    /* PDF Container Card */
+    /* PDF Container - DARK GREY BACKGROUND */
     .pdf-card-container {
       flex: 1;
       width: 100%;
       border: 1.5px solid #0078D4;
       border-radius: 12px;
       overflow: hidden;
-      background-color: #525659;
+      background-color: #525659; /* Dark Grey Background */
       display: flex;
       flex-direction: column;
       position: relative;
@@ -209,6 +208,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      background-color: #525659; /* Dark Grey Background */
       touch-action: none;
     }
 
@@ -216,31 +216,12 @@
       cursor: grabbing;
     }
 
-    canvas.pdf-page-canvas {
-      width: 98% !important;
-      max-height: 98% !important;
-      height: auto !important;
-      object-fit: contain;
-      margin: auto;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-      border-radius: 4px;
-      background-color: #ffffff;
-      touch-action: none;
-    }
-
-    .pdf-placeholder {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    /* Direct Embedded Viewer Frame */
+    .pdf-viewer-frame {
+      width: 100%;
       height: 100%;
-      color: #ffffff;
-      font-size: 14px;
-      text-align: center;
-      padding: 20px;
-    }
-
-    .hidden {
-      display: none !important;
+      border: none;
+      background-color: #525659;
     }
 
     .action-row {
@@ -263,14 +244,6 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-    }
-
-    /* Direct Fast Iframe Stream */
-    .fast-iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: white;
     }
   </style>
 </head>
@@ -296,29 +269,26 @@
         <div class="file-card" id="fileNameCard"><span>📄 Booking Document</span> <span>➔</span></div>
       </div>
 
-      <!-- PDF Canvas Viewport -->
+      <!-- PDF Card Box (Dark Grey Background) -->
       <div class="pdf-card-container" id="pdfCardBox">
         
-        <!-- Controls Bar ALWAYS PERMANENT -->
+        <!-- Controls Toolbar (Always Visible) -->
         <div id="zoomControls" class="zoom-toolbar">
-          <button class="zoom-btn zoom-btn-icon" onclick="toggleLandscape()" title="Rotate 90° Landscape/Portrait">↻</button>
+          <button class="zoom-btn zoom-btn-icon" onclick="toggleLandscape()" title="Rotate 90°">↻</button>
           <button class="zoom-btn zoom-btn-icon" onclick="zoomIn()" title="Zoom In">＋</button>
           <button class="zoom-btn zoom-btn-icon" onclick="zoomOut()" title="Zoom Out">－</button>
           <button class="zoom-btn zoom-btn-text" onclick="resetZoom()" title="Reset View">RESET</button>
         </div>
 
-        <div id="pdfPlaceholder" class="pdf-placeholder hidden">
-          Loading booking document...
-        </div>
-
         <div id="panzoomTarget" class="panzoom-wrapper">
-          <!-- Fast, direct Google Drive Preview Feed -->
+          <!-- Embeds Google Drive folder stream directly in full view without file lists -->
           <iframe 
-            id="gdriveFrame"
-            class="fast-iframe" 
-            src="https://drive.google.com/embeddedfolderview?id=13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b#list">
+            id="pdfViewerFrame"
+            class="pdf-viewer-frame" 
+            src="https://drive.google.com/embeddedfolderview?id=13bPq-SOX0REDTMGFG5w7h97Oq_H4Ep8b#grid">
           </iframe>
         </div>
+
       </div>
 
       <!-- Footer Action -->
@@ -354,7 +324,7 @@
       return { formattedDisplay: `${dd}/${mm}/${yyyy}` };
     }
 
-    function initFastViewer() {
+    function initViewer() {
       const dateInfo = getDateParams();
       document.getElementById('currentDateDisplay').innerText = dateInfo.formattedDisplay;
       document.getElementById('fileNameCard').innerHTML = `<span>📄 Booking Group (${dateInfo.formattedDisplay}).pdf</span> <span>➔</span>`;
@@ -362,7 +332,7 @@
       const target = document.getElementById('panzoomTarget');
       const parentBox = document.getElementById('pdfCardBox');
 
-      // Initialize Panzoom on the target wrapper for smooth touch gestures
+      // Initialize Panzoom on container
       panzoomInstance = Panzoom(target, {
         maxScale: 20,
         minScale: 0.5,
@@ -375,7 +345,6 @@
         }
       });
 
-      // Bind touch events to parent box
       parentBox.addEventListener('pointerdown', panzoomInstance.handleDown);
       parentBox.addEventListener('pointermove', panzoomInstance.handleMove);
       parentBox.addEventListener('pointerup', panzoomInstance.handleUp);
@@ -413,7 +382,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       checkSession();
-      initFastViewer();
+      initViewer();
     });
   </script>
 
