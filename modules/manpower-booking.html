@@ -210,7 +210,7 @@
       align-items: center;
       justify-content: center;
       touch-action: none;
-      transition: transform 0.25s cubic-bezier(0.2, 0, 0.2, 1);
+      /* CSS Transition removed to eliminate drag lag */
     }
 
     .panzoom-wrapper:active {
@@ -380,7 +380,6 @@
     async function renderPdfWithPanzoom(base64Data) {
       const target = document.getElementById('panzoomTarget');
       const placeholder = document.getElementById('pdfPlaceholder');
-      const parentBox = document.getElementById('pdfCardBox');
 
       placeholder.classList.add('hidden');
       target.classList.remove('hidden');
@@ -423,6 +422,7 @@
           }).promise;
         }
 
+        // Tuned Panzoom instance for real-time 1:1 finger tracking
         panzoomInstance = Panzoom(target, {
           maxScale: 20,
           minScale: 0.5,
@@ -430,17 +430,23 @@
           contain: false,
           startScale: 1,
           canvas: true,
+          cursor: 'grab',
+          handleStartEvent: (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          },
           setTransform: (elem, { scale, x, y }) => {
             const rot = isLandscape ? 90 : 0;
             elem.style.transform = `translate(${x}px, ${y}px) scale(${scale}) rotate(${rot}deg)`;
           }
         });
 
-        parentBox.addEventListener('pointerdown', panzoomInstance.handleDown);
-        parentBox.addEventListener('pointermove', panzoomInstance.handleMove);
-        parentBox.addEventListener('pointerup', panzoomInstance.handleUp);
+        // Direct non-passive pointer bindings for immediate drag response
+        target.addEventListener('pointerdown', panzoomInstance.handleDown, { passive: false });
+        target.addEventListener('pointermove', panzoomInstance.handleMove, { passive: false });
+        target.addEventListener('pointerup', panzoomInstance.handleUp, { passive: false });
 
-        parentBox.addEventListener('wheel', (e) => {
+        target.addEventListener('wheel', (e) => {
           e.preventDefault();
           panzoomInstance.zoomWithWheel(e);
         }, { passive: false });
