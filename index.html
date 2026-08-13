@@ -245,16 +245,39 @@
       margin-top: 3px; 
     }
 
-    /* Minimalist Peach Announcement Box (Matches Image) */
-    .announcement-box {
-      background-color: #fde8d7;
-      border-radius: 4px;
-      padding: 16px;
-      margin-top: 6px;
+    /* Announcement Notice Card */
+    .announcement-card {
+      background: #eff6ff;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-top: 8px;
       margin-bottom: 20px;
-      font-size: 14px;
-      line-height: 1.45;
-      color: #0f172a;
+    }
+
+    .announcement-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .announcement-icon {
+      font-size: 16px;
+    }
+
+    .announcement-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .announcement-text {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #1e3a8a;
       font-weight: 500;
       white-space: pre-line;
     }
@@ -338,8 +361,14 @@
         </div>
       </div>
 
-      <!-- Dynamic Plain Announcement Box (Placed Below Modules) -->
-      <div id="announcementBox" class="announcement-box hidden"></div>
+      <!-- Dynamic Announcement Banner -->
+      <div id="announcementBox" class="announcement-card hidden">
+        <div class="announcement-header">
+          <span class="announcement-icon">📢</span>
+          <span class="announcement-title" id="noticeTitle">NOTIS PORTAL</span>
+        </div>
+        <div class="announcement-text" id="noticeMessage">--</div>
+      </div>
 
       <button onclick="handleLogout()" class="btn-primary" style="background-color: #64748b; margin-top: auto;">
         Sign Out
@@ -354,11 +383,13 @@
 
     async function loadAnnouncement() {
       try {
+        // Path resolved directly to data/announcement.json with cache buster
         const response = await fetch(`data/announcement.json?v=${Date.now()}`);
         if (response.ok) {
           const data = await response.json();
           if (data.active && data.message && data.message.trim() !== '') {
-            document.getElementById('announcementBox').innerText = data.message;
+            document.getElementById('noticeTitle').innerText = data.title || 'NOTIS PORTAL';
+            document.getElementById('noticeMessage').innerText = data.message;
             document.getElementById('announcementBox').classList.remove('hidden');
           } else {
             document.getElementById('announcementBox').classList.add('hidden');
