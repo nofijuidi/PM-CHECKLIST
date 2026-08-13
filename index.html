@@ -383,7 +383,8 @@
 
     async function loadAnnouncement() {
       try {
-        const response = await fetch('./data/announcement.json', { cache: 'no-cache' });
+        // Path resolved directly to data/announcement.json with cache buster
+        const response = await fetch(`data/announcement.json?v=${Date.now()}`);
         if (response.ok) {
           const data = await response.json();
           if (data.active && data.message && data.message.trim() !== '') {
@@ -395,7 +396,7 @@
           }
         }
       } catch (e) {
-        // Hide silently if file does not exist or fails to parse
+        console.warn("Announcement fetch failed:", e);
         document.getElementById('announcementBox').classList.add('hidden');
       }
     }
