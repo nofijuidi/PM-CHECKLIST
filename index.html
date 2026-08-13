@@ -251,8 +251,7 @@
       border: 1.5px solid #bfdbfe;
       border-radius: 14px;
       padding: 14px 16px;
-      margin-top: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .announcement-header {
@@ -334,6 +333,15 @@
         Available Modules
       </div>
 
+      <!-- Dynamic Announcement Banner (Located directly below "Available Modules") -->
+      <div id="announcementBox" class="announcement-card hidden">
+        <div class="announcement-header">
+          <span class="announcement-icon">📢</span>
+          <span class="announcement-title" id="noticeTitle">NOTIS PORTAL</span>
+        </div>
+        <div class="announcement-text" id="noticeMessage">--</div>
+      </div>
+
       <!-- Module 1: Equipment Checklist -->
       <div class="nav-card" onclick="navigateTo('modules/equipment-checklist.html')">
         <div class="nav-card-icon">📋</div>
@@ -361,15 +369,6 @@
         </div>
       </div>
 
-      <!-- Dynamic Announcement Banner -->
-      <div id="announcementBox" class="announcement-card hidden">
-        <div class="announcement-header">
-          <span class="announcement-icon">📢</span>
-          <span class="announcement-title" id="noticeTitle">NOTIS PORTAL</span>
-        </div>
-        <div class="announcement-text" id="noticeMessage">--</div>
-      </div>
-
       <button onclick="handleLogout()" class="btn-primary" style="background-color: #64748b; margin-top: auto;">
         Sign Out
       </button>
@@ -383,7 +382,6 @@
 
     async function loadAnnouncement() {
       try {
-        // Path resolved directly to data/announcement.json with cache buster
         const response = await fetch(`data/announcement.json?v=${Date.now()}`);
         if (response.ok) {
           const data = await response.json();
